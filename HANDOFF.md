@@ -1,8 +1,34 @@
 # WIINZ — Project Handoff (for a fresh chat session)
 
 > Read this first. It's the source of truth for picking up work. Also read
-> `HANDOFF.md` alongside the memory index at
+> the memory index at
 > `C:\Users\HP\.claude\projects\D--Claude-WIINZ-App-2026\memory\MEMORY.md`.
+
+## ⚡ CURRENT STATE (updated 2026-07-11) — read this; it supersedes any stale detail below
+- **Codebase is now split into two independent Git repos** (private, GitHub org `wiinalgeria`):
+  - Backend: `wiinz_server/` → https://github.com/wiinalgeria/wiinz_backend (includes a **Dockerfile** for Coolify)
+  - App: `wiinz_app/` → https://github.com/wiinalgeria/wiinz_app
+  - The root folder `D:\Claude\WIINZ App 2026` is NOT a repo; each subfolder is its own repo.
+- **Backend persistence = MongoDB** (not the local JSON file anymore). `wiinz_server/db.js` keeps the
+  exact lowdb chained API but stores the whole DB as one doc in MongoDB (`state` collection); falls back
+  to in-memory if `MONGODB_URI` is unset. Secrets via env: `MONGODB_URI`, `JWT_SECRET`, `PORT`. `GET /health` exists.
+- **QR scanner = `qr_code_scanner_plus`** (ZXing, camera2) — swapped away from `mobile_scanner`
+  (Google ML Kit/CameraX) because it threw "An unexpected error occurred" on the user's device. Scan is
+  **camera-only** (manual code entry removed), and shows a **5-star point rating** after a deposit.
+- **Deploy in progress:** target host = **Coolify** (user's own instance) via the Dockerfile;
+  DB = **MongoDB Atlas** free M0 (Paris, cluster `wiinz`, host `wiinz.a9kqza1.mongodb.net`).
+  Remaining: create the Coolify app from the backend repo, set env vars, deploy, then repoint the app
+  `baseUrl` to `https://<coolify-domain>/api` and rebuild APK + `flutter build appbundle` for Play Store.
+- **Notifications:** in-app banner + system notification while the app is OPEN (poll every 8s via
+  `lib/widgets/notification_host.dart` + `lib/core/local_notify.dart`). Background/closed delivery was
+  attempted with `workmanager` but it **crashed the app on launch and was removed** — do it with **FCM** later.
+- **Other recent features:** signup validation (8-char password, confirm field, live red/green, required-field
+  red), login by phone OR email, password reset (admin-assisted) + change-password, temp-password flow,
+  base64 image rendering (ads/points/hero), promo popup with targeting filters, real leaderboard (+ dashboard
+  section), map "أظهر مكاني" + auto-center on user's wilaya + native stable pins, onboarding carousel, back-button→home.
+- **The most current running notes live in the memory files** at
+  `C:\Users\HP\.claude\projects\D--Claude-WIINZ-App-2026\memory\` (see `wiinz-deploy-progress.md`,
+  `wiinz-pending-edits.md`). Those, not the sections below, reflect the very latest.
 
 ## What WIINZ is
 Waste-collection / recycling rewards app for Algeria (Arabic, RTL). Citizens drop
@@ -20,8 +46,9 @@ README is the visual/behavior source of truth for colors, copy, layout).
 - `Claud Code Handoff Package/` — the Claude Design prototype + README.
 
 ## Tech / stack choices
-- **Backend**: Express + lowdb (`data/db.json`). Auth = JWT (bcrypt). No real auth on
-  `/api/admin/*` (local-dev only). Seeds from `db_defaults.js`; migrations at top of `server.js`.
+- **Backend**: Express. Auth = JWT (bcrypt). No real auth on `/api/admin/*` yet (run `/secure-app`
+  before exposing publicly). Persistence = **MongoDB** via `wiinz_server/db.js` (keeps the lowdb API;
+  see CURRENT STATE). Seeds from `db_defaults.js`; migrations run in `runMigrations()` after DB load.
 - **App base URL**: `lib/core/api_client.dart` → `ApiClient.baseUrl`. Currently
   `http://192.168.1.5:4000/api` (the dev PC's LAN IP, works for BOTH the phone and the
   emulator). For emulator-only you could use `http://10.0.2.2:4000/api`.
@@ -31,8 +58,8 @@ README is the visual/behavior source of truth for colors, copy, layout).
   firewall allows port 4000.
 - **Map**: MapLibre GL (`maplibre_gl`) + OpenFreeMap style
   `https://tiles.openfreemap.org/styles/liberty` (OSM, no API key). Location via `geolocator`.
-- **QR**: `mobile_scanner` (scanning, restricted to QR + noDuplicates + errorBuilder to
-  avoid a native null-ref crash) and `qr_flutter` (rendering).
+- **QR**: `qr_code_scanner_plus` (ZXing/camera2 — replaced `mobile_scanner`/ML Kit which failed on
+  the user's device) for scanning; `qr_flutter` for rendering.
 - **Icons**: `material_symbols_icons` mapped by name in `lib/widgets/ui.dart` (`wIcon`/`mi`).
   Brand/social icons via `font_awesome_flutter`. Fonts: Cairo + Noto Sans Arabic via `google_fonts`.
 - **Other pkgs**: `flutter_riverpod`, `go_router`, `shared_preferences`, `http`,
