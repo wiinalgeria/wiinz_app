@@ -1,0 +1,171 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import '../theme/app_theme.dart';
+
+/// Renders a store/point logo from a base64 data-URI, or a fallback storefront icon.
+Widget storeLogo(String logo, double size, {String fallbackIcon = 'storefront'}) {
+  if (logo.isNotEmpty && logo.startsWith('data:')) {
+    try {
+      final bytes = base64Decode(logo.substring(logo.indexOf(',') + 1));
+      return ClipRRect(borderRadius: BorderRadius.circular(size * 0.28), child: Image.memory(bytes, width: size, height: size, fit: BoxFit.cover));
+    } catch (_) {}
+  }
+  return Container(
+    width: size, height: size,
+    decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(size * 0.28)),
+    child: mi(fallbackIcon, size: size * 0.6, color: C.greenMid),
+  );
+}
+
+/// Decode a base64 data-URI into a MemoryImage, or null if it isn't one.
+MemoryImage? dataUriImage(String s) {
+  if (s.isNotEmpty && s.startsWith('data:')) {
+    try {
+      return MemoryImage(base64Decode(s.substring(s.indexOf(',') + 1)));
+    } catch (_) {}
+  }
+  return null;
+}
+
+/// Map the design's Material-Symbol ligature names to IconData (rounded style).
+const Map<String, IconData> _icons = {
+  'qr_code_scanner': Symbols.qr_code_scanner,
+  'qr_code_2': Symbols.qr_code_2,
+  'location_on': Symbols.location_on,
+  'notifications': Symbols.notifications,
+  'person': Symbols.person,
+  'redeem': Symbols.redeem,
+  'confirmation_number': Symbols.confirmation_number,
+  'leaderboard': Symbols.leaderboard,
+  'recycling': Symbols.recycling,
+  'mail': Symbols.mail,
+  'lock': Symbols.lock,
+  'visibility': Symbols.visibility,
+  'visibility_off': Symbols.visibility_off,
+  'person_off': Symbols.person_off,
+  'lock_reset': Symbols.lock_reset,
+  'travel_explore': Symbols.travel_explore,
+  'local_offer': Symbols.local_offer,
+  'phone': Symbols.phone,
+  'map': Symbols.map,
+  'expand_more': Symbols.expand_more,
+  'cake': Symbols.cake,
+  'male': Symbols.male,
+  'female': Symbols.female,
+  'arrow_forward': Symbols.arrow_forward,
+  'touch_app': Symbols.touch_app,
+  'my_location': Symbols.my_location,
+  'sort': Symbols.sort,
+  'call': Symbols.call,
+  'star': Symbols.star,
+  'chevron_right': Symbols.chevron_right,
+  'schedule': Symbols.schedule,
+  'inventory_2': Symbols.inventory_2,
+  'bolt': Symbols.bolt,
+  'apps': Symbols.apps,
+  'restaurant': Symbols.restaurant,
+  'fitness_center': Symbols.fitness_center,
+  'public': Symbols.public,
+  'local_cafe': Symbols.local_cafe,
+  'storefront': Symbols.storefront,
+  'shopping_bag': Symbols.shopping_bag,
+  'more_horiz': Symbols.more_horiz,
+  'smart_display': Symbols.smart_display,
+  'play_circle': Symbols.play_circle,
+  'group': Symbols.group,
+  'content_copy': Symbols.content_copy,
+  'ios_share': Symbols.ios_share,
+  'photo_camera': Symbols.photo_camera,
+  'edit': Symbols.edit,
+  'help': Symbols.help,
+  'info': Symbols.info,
+  'logout': Symbols.logout,
+  'add_circle': Symbols.add_circle,
+  'check_circle': Symbols.check_circle,
+  'campaign': Symbols.campaign,
+  'sell': Symbols.sell,
+  'card_giftcard': Symbols.card_giftcard,
+  'park': Symbols.park,
+  'water_drop': Symbols.water_drop,
+  'military_tech': Symbols.military_tech,
+  'workspace_premium': Symbols.workspace_premium,
+  'eco': Symbols.eco,
+  'close': Symbols.close,
+  'refresh': Symbols.refresh,
+  'undo': Symbols.undo,
+  'home': Symbols.home,
+  'grid_view': Symbols.grid_view,
+  'settings': Symbols.settings,
+  'add': Symbols.add,
+  'remove': Symbols.remove,
+  'directions': Symbols.directions,
+  'navigation': Symbols.navigation,
+  'support_agent': Symbols.support_agent,
+};
+
+IconData wIcon(String name) => _icons[name] ?? Symbols.circle;
+
+/// A Material-Symbol icon widget. [fill] toggles the filled variant.
+Widget mi(String name, {double size = 24, Color color = C.ink, bool fill = false, double weight = 400}) => Icon(
+      wIcon(name),
+      size: size,
+      color: color,
+      fill: fill ? 1 : 0,
+      weight: weight,
+    );
+
+Color hexColor(String hex, {Color fallback = C.green}) {
+  var h = hex.replaceAll('#', '').trim();
+  if (h.length == 6) h = 'FF$h';
+  final v = int.tryParse(h, radix: 16);
+  return v == null ? fallback : Color(v);
+}
+
+/// Full-width gradient primary button used across the app.
+class GradientButton extends StatelessWidget {
+  final String label;
+  final String? icon;
+  final VoidCallback onTap;
+  final double height;
+  final Gradient gradient;
+  final Color textColor;
+  final Widget? leading;
+
+  const GradientButton({
+    super.key, required this.label, this.icon, required this.onTap,
+    this.height = 58, this.gradient = C.greenButton, this.textColor = Colors.white, this.leading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(18), boxShadow: C.greenBtnShadow),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (leading != null) ...[leading!, const SizedBox(width: 12)],
+            if (leading == null && icon != null) ...[mi(icon!, color: textColor, size: 24), const SizedBox(width: 10)],
+            Text(label, style: cairo(17, w: FontWeight.w700, color: textColor)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void showToast(BuildContext context, String msg, {bool top = false}) {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.clearSnackBars();
+  messenger.showSnackBar(SnackBar(
+    content: Row(children: [mi('info', color: C.gold, size: 20), const SizedBox(width: 8), Expanded(child: Text(msg, style: cairo(14, w: FontWeight.w600, color: Colors.white)))]),
+    backgroundColor: C.ink,
+    behavior: SnackBarBehavior.floating,
+    margin: EdgeInsets.only(bottom: top ? 700 : 100, left: 24, right: 24),
+    duration: const Duration(seconds: 2),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  ));
+}
