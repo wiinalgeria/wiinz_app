@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -35,7 +36,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _locationGranted = false;
   bool _locationDenied = false;
   bool _loading = true;
+  bool _listExpanded = true; // collapse the point list to give the map more room
   StreamSubscription<Position>? _posSub;
+
+  // Fraction of the screen the point list occupies when expanded.
+  static const double _listFraction = 0.34;
+  double get _listHeight =>
+      _listExpanded ? MediaQuery.of(context).size.height * _listFraction : 96.0;
+
+  // Shift a camera target south so the pin sits centered in the VISIBLE map area
+  // (the part not covered by the bottom list), instead of behind the list.
+  LatLng _biasTarget(LatLng t, double zoom) {
+    if (!_listExpanded) return t;
+    final coveredPx = MediaQuery.of(context).size.height * _listFraction;
+    // MapLibre uses 512px tiles, so meters/logical-pixel = 156543.03*cos(lat)/2^(zoom+1).
+    final metersPerPx = 156543.03392 * math.cos(t.latitude * math.pi / 180) / math.pow(2, zoom + 1);
+    final offsetDeg = (metersPerPx * (coveredPx / 2)) / 111320.0;
+    return LatLng(t.latitude - offsetDeg, t.longitude);
+  }
 
   @override
   void initState() {
@@ -128,7 +146,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   void _recenterOnUser() {
     if (_map != null && _lastUser != null) {
-      _map!.animateCamera(CameraUpdate.newLatLngZoom(_lastUser!, 14));
+      _map!.animateCamera(CameraUpdate.newLatLngZoom(_biasTarget(_lastUser!, 14), 14));
     }
   }
 
@@ -150,7 +168,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (_map == null || _lastUser != null) return;
     final w = ref.read(sessionProvider).user?.wilaya;
     final c = _wilayaCenters[w];
-    if (c != null) _map!.animateCamera(CameraUpdate.newLatLngZoom(c, 11));
+    if (c != null) _map!.animateCamera(CameraUpdate.newLatLngZoom(_biasTarget(c, 11), 11));
   }
 
   // Tapped "أظهر مكاني": ensure we have a location, then jump to it.
@@ -293,10 +311,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         child: Text('تفعيل', style: cairo(12, w: FontWeight.w700, color: Colors.white)))),
                     ]),
                   )),
-                  // "show my location" control — always visible, appears instantly
-                  Positioned(
+                  // "show my location" control — always visible, sits just above the list
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOut,
                     right: 16,
-                    bottom: MediaQuery.of(context).size.height * 0.30 + 14,
+                    bottom: _listHeight + 14,
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       Pressable(
                         onTap: _showMyLocation,
@@ -326,19 +346,41 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Widget _bottomList() {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.30,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      height: _listHeight,
       decoration: BoxDecoration(color: C.sand, borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 30, offset: const Offset(0, -12))]),
       child: Column(children: [
-        Padding(padding: const EdgeInsets.fromLTRB(20, 12, 20, 8), child: Column(children: [
-          Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
-          const SizedBox(height: 12),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('أقرب نقاط الجمع', style: cairo(16, w: FontWeight.w800, color: C.forest)),
-            Row(children: [mi('sort', size: 16, color: C.green), const SizedBox(width: 4), Text(_locationGranted ? 'الأقرب أولاً' : 'كل النقاط', style: noto(12, color: C.textSecondary))]),
-          ]),
-        ])),
+        // Tap the handle/header to collapse the list (more map) or expand it back.
+        Pressable(
+          haptic: false,
+          onTap: () => setState(() => _listExpanded = !_listExpanded),
+          child: Padding(padding: const EdgeInsets.fromLTRB(20, 12, 20, 8), child: Column(children: [
+            Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
+            const SizedBox(height: 12),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Row(children: [
+                Text('أقرب نقاط الجمع', style: cairo(16, w: FontWeight.w800, color: C.forest)),
+                const SizedBox(width: 6),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(9)),
+                  child: Text('${_points.length}', style: cairo(11.5, w: FontWeight.w800, color: C.greenBtnEnd))),
+              ]),
+              Row(children: [
+                mi('sort', size: 16, color: C.green), const SizedBox(width: 4),
+                Text(_locationGranted ? 'الأقرب أولاً' : 'كل النقاط', style: noto(12, color: C.textSecondary)),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: _listExpanded ? 0 : 0.5,
+                  duration: const Duration(milliseconds: 220),
+                  child: mi('expand_more', size: 22, color: C.forest),
+                ),
+              ]),
+            ]),
+          ])),
+        ),
         Expanded(child: _loading
             ? const Center(child: CircularProgressIndicator())
             : ListView.separated(
@@ -396,9 +438,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void _showPinSheet(CollectionPoint p) {
     final navInset = MediaQuery.of(context).padding.bottom;
     showModalBottomSheet(
-      context: context, backgroundColor: C.sand,
+      context: context, backgroundColor: C.sand, isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: Padding(
+      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        child: SingleChildScrollView(child: Padding(
         padding: EdgeInsets.fromLTRB(22, 20, 22, 30 + navInset),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Center(child: Container(width: 44, height: 5, margin: const EdgeInsets.only(bottom: 18), decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3)))),
@@ -474,7 +518,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           GradientButton(label: 'امسح هنا واكسب النقاط', icon: 'qr_code_scanner', height: 56, onTap: () { Navigator.pop(context); context.go('/scan'); }),
           const SizedBox(height: 6),
         ]),
-      )),
+      )))),
     );
   }
 

@@ -147,6 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   height: 250,
                   child: PageView.builder(
                     controller: pageCtrl,
+                    reverse: true, // RTL: first slide on the right, advance right-to-left
                     itemCount: slides.length,
                     onPageChanged: (i) => setD(() => page = i),
                     itemBuilder: (_, i) {
@@ -183,17 +184,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   decoration: BoxDecoration(color: page == i ? C.green : const Color(0xFFD9E4D4), borderRadius: BorderRadius.circular(4)),
                 ))),
                 const SizedBox(height: 18),
+                // RTL: "التالي/ابدأ" on the RIGHT (first child), "السابق" on the LEFT.
                 Row(children: [
-                  // back button (hidden on the first slide)
-                  if (page > 0)
-                    Expanded(child: GestureDetector(
-                      onTap: () => pageCtrl.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
-                      child: Container(height: 52, alignment: Alignment.center,
-                        decoration: BoxDecoration(color: const Color(0xFFF1F8EF), borderRadius: BorderRadius.circular(15), border: Border.all(color: C.cardBorder)),
-                        child: Text('السابق', style: cairo(15, w: FontWeight.w700, color: C.forest))),
-                    )),
-                  if (page > 0) const SizedBox(width: 10),
-                  Expanded(child: GestureDetector(
+                  Expanded(child: Pressable(
                     onTap: () {
                       if (page < slides.length - 1) {
                         pageCtrl.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
@@ -206,6 +199,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         boxShadow: [BoxShadow(color: const Color(0xFF3D7C32).withValues(alpha: 0.45), blurRadius: 14, offset: const Offset(0, 6))]),
                       child: Text(page < slides.length - 1 ? 'التالي' : 'ابدأ الآن', style: cairo(15.5, w: FontWeight.w800, color: Colors.white))),
                   )),
+                  // back button (hidden on the first slide) — appears on the LEFT
+                  if (page > 0) const SizedBox(width: 10),
+                  if (page > 0)
+                    Expanded(child: Pressable(
+                      onTap: () => pageCtrl.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+                      child: Container(height: 52, alignment: Alignment.center,
+                        decoration: BoxDecoration(color: const Color(0xFFF1F8EF), borderRadius: BorderRadius.circular(15), border: Border.all(color: C.cardBorder)),
+                        child: Text('السابق', style: cairo(15, w: FontWeight.w700, color: C.forest))),
+                    )),
                 ]),
               ]),
             ),
