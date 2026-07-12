@@ -131,22 +131,26 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
   }
 
   Widget _catRow() {
+    // Extra height + Clip.none so the active chip's drop shadow renders fully
+    // instead of being cut off by the horizontal list's edge.
     return SizedBox(
-      height: 40,
+      height: 54,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.symmetric(vertical: 6),
         itemCount: _cats.length,
         separatorBuilder: (context, i) => const SizedBox(width: 9),
         itemBuilder: (context, i) {
           final (label, icon) = _cats[i];
           final on = _cat == label;
-          return GestureDetector(
+          return Pressable(
             onTap: () => setState(() => _cat = label),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               decoration: BoxDecoration(color: on ? C.green : Colors.white, borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: on ? C.green : C.cardBorder, width: 1.5),
-                boxShadow: on ? [BoxShadow(color: const Color(0xFF3D7C32).withValues(alpha: 0.6), blurRadius: 18, offset: const Offset(0, 8))] : null),
+                boxShadow: on ? [BoxShadow(color: const Color(0xFF3D7C32).withValues(alpha: 0.45), blurRadius: 16, offset: const Offset(0, 7))] : null),
               child: Row(children: [
                 mi(icon, size: 18, color: on ? Colors.white : const Color(0xFF4A463E)),
                 const SizedBox(width: 6),

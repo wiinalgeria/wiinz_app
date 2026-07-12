@@ -36,19 +36,22 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _locationGranted = false;
   bool _locationDenied = false;
   bool _loading = true;
-  bool _listExpanded = true; // collapse the point list to give the map more room
+  double? _listPx;        // current list height in px (null → default expanded)
+  bool _dragging = false; // true while the sheet is being finger-dragged
   StreamSubscription<Position>? _posSub;
 
-  // Fraction of the screen the point list occupies when expanded.
-  static const double _listFraction = 0.34;
-  double get _listHeight =>
-      _listExpanded ? MediaQuery.of(context).size.height * _listFraction : 96.0;
+  // Draggable range for the point list.
+  double get _collapsedH => 96.0;
+  double get _expandedH => MediaQuery.of(context).size.height * 0.34;
+  double get _maxListH => MediaQuery.of(context).size.height * 0.72;
+  double get _listHeight => (_listPx ?? _expandedH).clamp(_collapsedH, _maxListH);
+  bool get _listCollapsed => _listHeight < _expandedH * 0.6;
 
   // Shift a camera target south so the pin sits centered in the VISIBLE map area
   // (the part not covered by the bottom list), instead of behind the list.
   LatLng _biasTarget(LatLng t, double zoom) {
-    if (!_listExpanded) return t;
-    final coveredPx = MediaQuery.of(context).size.height * _listFraction;
+    final coveredPx = _listHeight;
+    if (coveredPx <= _collapsedH + 2) return t;
     // MapLibre uses 512px tiles, so meters/logical-pixel = 156543.03*cos(lat)/2^(zoom+1).
     final metersPerPx = 156543.03392 * math.cos(t.latitude * math.pi / 180) / math.pow(2, zoom + 1);
     final offsetDeg = (metersPerPx * (coveredPx / 2)) / 111320.0;
@@ -313,7 +316,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   )),
                   // "show my location" control — always visible, sits just above the list
                   AnimatedPositioned(
-                    duration: const Duration(milliseconds: 250),
+                    duration: _dragging ? Duration.zero : const Duration(milliseconds: 250),
                     curve: Curves.easeOut,
                     right: 16,
                     bottom: _listHeight + 14,
@@ -347,16 +350,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   Widget _bottomList() {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
+      duration: _dragging ? Duration.zero : const Duration(milliseconds: 250),
       curve: Curves.easeOut,
       height: _listHeight,
       decoration: BoxDecoration(color: C.sand, borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 30, offset: const Offset(0, -12))]),
       child: Column(children: [
-        // Tap the handle/header to collapse the list (more map) or expand it back.
-        Pressable(
-          haptic: false,
-          onTap: () => setState(() => _listExpanded = !_listExpanded),
+        // Drag the handle up/down to resize the list (down = more map), or tap
+        // it to snap between collapsed and expanded.
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _listPx = _listCollapsed ? _expandedH : _collapsedH),
+          onVerticalDragStart: (_) => setState(() => _dragging = true),
+          onVerticalDragUpdate: (d) => setState(() => _listPx = (_listHeight - d.delta.dy).clamp(_collapsedH, _maxListH)),
+          onVerticalDragEnd: (_) => setState(() => _dragging = false),
           child: Padding(padding: const EdgeInsets.fromLTRB(20, 12, 20, 8), child: Column(children: [
             Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
             const SizedBox(height: 12),
@@ -373,7 +380,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 Text(_locationGranted ? 'الأقرب أولاً' : 'كل النقاط', style: noto(12, color: C.textSecondary)),
                 const SizedBox(width: 8),
                 AnimatedRotation(
-                  turns: _listExpanded ? 0 : 0.5,
+                  turns: _listCollapsed ? 0.5 : 0,
                   duration: const Duration(milliseconds: 220),
                   child: mi('expand_more', size: 22, color: C.forest),
                 ),
