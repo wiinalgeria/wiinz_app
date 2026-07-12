@@ -298,7 +298,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     right: 16,
                     bottom: MediaQuery.of(context).size.height * 0.30 + 14,
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      GestureDetector(
+                      Pressable(
                         onTap: _showMyLocation,
                         child: Container(
                           height: 48, padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -352,7 +352,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Widget _pointCard(CollectionPoint p) {
-    return GestureDetector(
+    return Pressable(
+      pressedScale: 0.98,
       onTap: () => _showPinSheet(p),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

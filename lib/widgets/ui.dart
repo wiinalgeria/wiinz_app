@@ -1,7 +1,61 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../theme/app_theme.dart';
+
+/// Wraps any tappable so it feels alive: a subtle scale-down + light haptic on
+/// press, springing back on release. This is the single biggest "responsive"
+/// cue — every pressable in the app should feel like it heard the tap.
+///
+/// Press feedback is fast and ease-out on purpose (Emil Kowalski's framework:
+/// buttons must confirm the press instantly; 90–130ms, ease-out, never ease-in).
+class Pressable extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final double pressedScale;
+  final bool haptic;
+  final HitTestBehavior behavior;
+  const Pressable({
+    super.key,
+    required this.child,
+    required this.onTap,
+    this.pressedScale = 0.96,
+    this.haptic = true,
+    this.behavior = HitTestBehavior.opaque,
+  });
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  bool _down = false;
+  void _set(bool v) { if (mounted && _down != v) setState(() => _down = v); }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onTap != null;
+    return GestureDetector(
+      behavior: widget.behavior,
+      onTapDown: enabled ? (_) => _set(true) : null,
+      onTapUp: enabled ? (_) => _set(false) : null,
+      onTapCancel: enabled ? () => _set(false) : null,
+      onTap: enabled
+          ? () {
+              if (widget.haptic) HapticFeedback.lightImpact();
+              widget.onTap!();
+            }
+          : null,
+      child: AnimatedScale(
+        scale: _down ? widget.pressedScale : 1.0,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
 
 /// Renders a store/point logo from a base64 data-URI, or a fallback storefront icon.
 Widget storeLogo(String logo, double size, {String fallbackIcon = 'storefront'}) {
@@ -123,6 +177,8 @@ Color hexColor(String hex, {Color fallback = C.green}) {
 }
 
 /// Full-width gradient primary button used across the app.
+/// Pass [loading] while an async action runs: it shows a spinner and ignores
+/// taps, giving feedback and preventing accidental double-submits.
 class GradientButton extends StatelessWidget {
   final String label;
   final String? icon;
@@ -131,26 +187,39 @@ class GradientButton extends StatelessWidget {
   final Gradient gradient;
   final Color textColor;
   final Widget? leading;
+  final bool loading;
 
   const GradientButton({
     super.key, required this.label, this.icon, required this.onTap,
     this.height = 58, this.gradient = C.greenButton, this.textColor = Colors.white, this.leading,
+    this.loading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(18), boxShadow: C.greenBtnShadow),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (leading != null) ...[leading!, const SizedBox(width: 12)],
-            if (leading == null && icon != null) ...[mi(icon!, color: textColor, size: 24), const SizedBox(width: 10)],
-            Text(label, style: cairo(17, w: FontWeight.w700, color: textColor)),
-          ],
+    return Pressable(
+      onTap: loading ? null : onTap,
+      child: AnimatedOpacity(
+        opacity: loading ? 0.85 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(18), boxShadow: C.greenBtnShadow),
+          child: Center(
+            child: loading
+                ? SizedBox(
+                    width: 24, height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2.6, valueColor: AlwaysStoppedAnimation(textColor)),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (leading != null) ...[leading!, const SizedBox(width: 12)],
+                      if (leading == null && icon != null) ...[mi(icon!, color: textColor, size: 24), const SizedBox(width: 10)],
+                      Text(label, style: cairo(17, w: FontWeight.w700, color: textColor)),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

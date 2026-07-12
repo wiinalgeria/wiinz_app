@@ -52,11 +52,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 ),
               ),
             ),
+            // While the session/config check runs (can be slow on a cold server),
+            // show a gentle "connecting" hint so the screen never looks frozen.
+            if (session.checkingSession)
+              const Positioned(
+                left: 0, right: 0, bottom: 72,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 26, height: 26,
+                      child: CircularProgressIndicator(strokeWidth: 2.4, valueColor: AlwaysStoppedAnimation(Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
             // Only show the "start" button once we know the user is logged out.
             if (!session.checkingSession && !session.isLoggedIn)
               Positioned(
                 left: 34, right: 34, bottom: 58,
-                child: GestureDetector(
+                child: Pressable(
                   onTap: () => _start(session),
                   child: Container(
                     height: 60,

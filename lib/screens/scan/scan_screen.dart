@@ -15,7 +15,7 @@ class ScanScreen extends ConsumerStatefulWidget {
   ConsumerState<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends ConsumerState<ScanScreen> {
+class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObserver {
   // ZXing-based scanner (camera2) — no CameraX / Google ML Kit, so it works on
   // devices where the ML Kit stack fails ("An unexpected error occurred").
   final GlobalKey _qrKey = GlobalKey(debugLabel: 'wiinz-qr');
@@ -24,12 +24,30 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   bool _handling = false; // guards against double-detection while a deposit is in progress
   bool _denied = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
   void _onQRViewCreated(QRViewController controller) {
     _qr = controller;
     controller.scannedDataStream.listen((barcode) {
       final code = barcode.code;
       if (code != null) _submit(code);
     });
+  }
+
+  // Pause the camera when the app is backgrounded and resume it on return, so
+  // it doesn't come back as a frozen black frame after leaving and re-entering.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_qr == null) return;
+    if (state == AppLifecycleState.resumed) {
+      if (!_busy && !_handling) _qr?.resumeCamera();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _qr?.pauseCamera();
+    }
   }
 
   // On hot-reload the camera must be nudged (no-op in release).
@@ -42,6 +60,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _qr?.dispose();
     super.dispose();
   }
@@ -167,7 +186,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                         Text('مسح رمز QR', style: cairo(20, w: FontWeight.w800, color: Colors.white)),
-                        GestureDetector(onTap: () => context.go('/home'), child: Container(width: 40, height: 40,
+                        Pressable(onTap: () => context.go('/home'), child: Container(width: 40, height: 40,
                           decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)),
                           child: Transform.flip(flipX: true, child: mi('arrow_forward', size: 22, color: Colors.white)))),
                       ]),
@@ -190,7 +209,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               const SizedBox(height: 14),
               Text('لا تعرف أين توجد نقاط الجمع؟', style: noto(12.5, color: C.textTertiary)),
               const SizedBox(height: 10),
-              GestureDetector(onTap: () => context.go('/map'), child: Container(
+              Pressable(onTap: () => context.go('/map'), child: Container(
                 height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: C.tint4, width: 1.5)),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   mi('location_on', size: 22, color: C.green), const SizedBox(width: 9),

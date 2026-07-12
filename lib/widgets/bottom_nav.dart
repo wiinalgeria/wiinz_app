@@ -44,7 +44,8 @@ class WiinzBottomNav extends StatelessWidget {
               top: -24,
               child: Column(
                 children: [
-                  GestureDetector(
+                  Pressable(
+                    pressedScale: 0.92,
                     onTap: () => context.go('/scan'),
                     child: Container(
                       width: 62, height: 62,
@@ -71,11 +72,13 @@ class WiinzBottomNav extends StatelessWidget {
   Widget _tab(BuildContext context, String key, String label, String icon, String route) {
     final active = current == key;
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: Pressable(
+        pressedScale: 0.90,
         onTap: () => context.go(route),
         child: Center(
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(color: active ? const Color(0xFFDDF0E5) : Colors.transparent, borderRadius: BorderRadius.circular(16)),
             child: Column(

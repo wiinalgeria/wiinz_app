@@ -19,23 +19,48 @@ class NotificationHost extends ConsumerStatefulWidget {
   ConsumerState<NotificationHost> createState() => _NotificationHostState();
 }
 
-class _NotificationHostState extends ConsumerState<NotificationHost> {
+class _NotificationHostState extends ConsumerState<NotificationHost> with WidgetsBindingObserver {
   Timer? _poll;
   Timer? _hideTimer;
   String? _lastTopId;
   bool _primed = false;
+  bool _ticking = false; // guards against overlapping polls during a slow request
   AppNotification? _banner;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _poll?.cancel();
     _poll = Timer.periodic(const Duration(seconds: 8), (_) => _tick());
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startPolling();
+      _tick(); // refresh immediately on return instead of waiting up to 8s
+    } else {
+      // Stop polling while backgrounded so we don't stack hung requests.
+      _poll?.cancel();
+      _poll = null;
+    }
+  }
+
   Future<void> _tick() async {
+    if (_ticking) return;
     final loggedIn = ref.read(sessionProvider).user != null;
     if (!loggedIn) { _lastTopId = null; _primed = false; return; }
-    await ref.read(notifProvider.notifier).load();
+    _ticking = true;
+    try {
+      await ref.read(notifProvider.notifier).load();
+    } finally {
+      _ticking = false;
+    }
     if (!mounted) return;
     final items = ref.read(notifProvider).items;
     if (items.isEmpty) return;
@@ -64,7 +89,12 @@ class _NotificationHostState extends ConsumerState<NotificationHost> {
   }
 
   @override
-  void dispose() { _poll?.cancel(); _hideTimer?.cancel(); super.dispose(); }
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _poll?.cancel();
+    _hideTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
