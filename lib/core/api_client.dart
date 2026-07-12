@@ -14,7 +14,7 @@ class ApiClient {
   // Backend base URL.
   // - Real phone on the same Wi-Fi as the dev PC: use the PC's LAN IP.
   // - Android emulator only: use http://10.0.2.2:4000/api instead.
-  static const baseUrl = 'http://192.168.1.5:4000/api';
+  static const baseUrl = 'https://wiinz-server.onrender.com/api';
 
   String? token;
 
