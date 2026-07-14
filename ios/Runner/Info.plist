@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>يستخدم WIINZ الكاميرا لمسح رموز QR الخاصة بإعادة التدوير وكسب النقاط.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>يستخدم WIINZ موقعك لعرض أقرب نقاط إعادة التدوير على الخريطة.</string>
 </dict>
 </plist>

@@ -1,0 +1,68 @@
+# Codemagic CI/CD for WIINZ (Flutter iOS -> TestFlight)
+# ---------------------------------------------------------------------------
+# No Mac required: Codemagic builds on hosted macOS. Nothing secret lives here.
+#
+# BEFORE the first run (once Apple Developer Program enrollment is active):
+#   1. In Codemagic UI: Teams -> Integrations -> App Store Connect, add an
+#      App Store Connect API key (Admin/App Manager role). Name it exactly
+#      "WIINZ ASC Key" (or change the name under `integrations` below).
+#   2. In App Store Connect, create the app record with bundle id
+#      com.wiinalgeria.wiinz (Apps -> +). Automatic signing (below) will then
+#      register the identifier and create the distribution profile for you.
+#   3. Connect this GitHub repo (wiinalgeria/wiinz_app) in Codemagic and start
+#      the `ios-testflight` workflow.
+# ---------------------------------------------------------------------------
+
+workflows:
+  ios-testflight:
+    name: WIINZ iOS - TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    integrations:
+      # Must match the App Store Connect API key name you create in Codemagic UI.
+      app_store_connect: WIINZ ASC Key
+
+    environment:
+      ios_signing:
+        # Automatic signing: Codemagic uses the ASC API key to create/fetch the
+        # App Store distribution profile for this bundle id. No manual certs.
+        distribution_type: app_store
+        bundle_identifier: com.wiinalgeria.wiinz
+      vars:
+        BUNDLE_ID: "com.wiinalgeria.wiinz"
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+
+    publishing:
+      # Uses the same ASC API key integration to upload the .ipa to TestFlight.
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Optional: auto-add the build to an internal tester group once processed.
+        # beta_groups:
+        #   - Internal Testers
