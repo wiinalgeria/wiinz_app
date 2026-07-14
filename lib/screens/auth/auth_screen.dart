@@ -18,8 +18,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   String gender = 'male';
   String? wilaya;
   String? commune;
-  DateTime? birthdate;
+  int? _bDay, _bMonth, _bYear; // birthdate parts (month is 1-12)
   String? error;
+
+  // Algerian month names (Jan → Dec), used in the birthdate month dropdown.
+  static const _monthNames = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+  // Assembled ISO birthdate (yyyy-mm-dd) once all three parts are chosen.
+  String get _birthdateIso {
+    if (_bDay == null || _bMonth == null || _bYear == null) return '';
+    return DateTime(_bYear!, _bMonth!, _bDay!).toIso8601String().split('T').first;
+  }
+
+  static final _emailRe = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
   List<String> _wilayas = ['الجزائر'];
   Map<String, List<String>> _communesByWilaya = {'الجزائر': ['بلكور', 'باب الوادي', 'حسين داي']};
   List<String> get _communes => _communesByWilaya[wilaya] ?? const [];
@@ -108,6 +119,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         setState(() => error = 'كلمتا المرور غير متطابقتين');
         return;
       }
+      // Email is optional, but if the user typed one it must be a valid address.
+      if (email.text.trim().isNotEmpty && !_emailRe.hasMatch(email.text.trim())) {
+        setState(() => error = 'البريد الإلكتروني غير صالح (مثال: test@domain.com)');
+        return;
+      }
       final err = await notifier.signup({
         'name': name.text.trim(),
         'phone': phone.text.trim(),
@@ -116,7 +132,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         'wilaya': wilaya ?? _wilayas.first,
         'commune': commune ?? _communes.first,
         'gender': gender,
-        'birthdate': birthdate?.toIso8601String().split('T').first ?? '',
+        'birthdate': _birthdateIso,
         'inviteCode': invite.text.trim(),
       });
       if (!mounted) return;
@@ -207,66 +223,44 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 
-  Future<void> _pickBirthdate() async {
+  // Birthdate via three dropdowns: Day · Month (Algerian names) · Year.
+  Widget _birthdateField() {
     final now = DateTime.now();
-    // Custom picker (instead of showDatePicker) so the OK/Cancel buttons are
-    // centered, clearly clickable, and don't hug the bottom edge.
-    DateTime temp = birthdate ?? DateTime(now.year - 20);
-    final picked = await showDialog<DateTime>(
-      context: context,
-      builder: (dctx) => Theme(
-        data: Theme.of(dctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: C.green, onPrimary: Colors.white, onSurface: C.ink),
-        ),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-                child: Text('اختر تاريخ ميلادك', style: cairo(17, w: FontWeight.w800, color: C.forest)),
-              ),
-              SizedBox(
-                height: 320,
-                child: CalendarDatePicker(
-                  initialDate: temp,
-                  firstDate: DateTime(1940),
-                  lastDate: now,
-                  onDateChanged: (d) => temp = d,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 22),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(dctx),
-                    child: Container(
-                      height: 50, width: 118, alignment: Alignment.center,
-                      decoration: BoxDecoration(color: const Color(0xFFF1F8EF), borderRadius: BorderRadius.circular(14), border: Border.all(color: C.cardBorder)),
-                      child: Text('إلغاء', style: cairo(15, w: FontWeight.w700, color: C.forest)),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(dctx, temp),
-                    child: Container(
-                      height: 50, width: 118, alignment: Alignment.center,
-                      decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(14),
-                        boxShadow: [BoxShadow(color: const Color(0xFF3D7C32).withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 6))]),
-                      child: Text('حسناً', style: cairo(15, w: FontWeight.w800, color: Colors.white)),
-                    ),
-                  ),
-                ]),
-              ),
-            ]),
-          ),
-        ),
-      ),
+    final days = List.generate(31, (i) => i + 1);
+    final months = List.generate(12, (i) => i + 1); // stored 1-12
+    final years = List.generate(now.year - 1940 + 1, (i) => now.year - i); // newest first
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('تاريخ الميلاد', style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(flex: 5, child: _dateDropdown<int>(hint: 'اليوم', icon: 'cake', value: _bDay, items: days, label: (d) => '$d', onChanged: (v) => setState(() => _bDay = v))),
+          const SizedBox(width: 8),
+          Expanded(flex: 7, child: _dateDropdown<int>(hint: 'الشهر', value: _bMonth, items: months, label: (m) => _monthNames[m - 1], onChanged: (v) => setState(() => _bMonth = v))),
+          const SizedBox(width: 8),
+          Expanded(flex: 6, child: _dateDropdown<int>(hint: 'السنة', value: _bYear, items: years, label: (y) => '$y', onChanged: (v) => setState(() => _bYear = v))),
+        ]),
+      ],
     );
-    if (picked != null) setState(() => birthdate = picked);
+  }
+
+  Widget _dateDropdown<T>({required String hint, String? icon, required T? value, required List<T> items, required String Function(T) label, required ValueChanged<T> onChanged}) {
+    return Container(
+      height: 56,
+      padding: EdgeInsets.only(right: icon != null ? 12 : 10, left: 6),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
+      child: Row(children: [
+        if (icon != null) ...[mi(icon, size: 18, color: C.green), const SizedBox(width: 6)],
+        Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<T>(
+          value: value, isExpanded: true, isDense: true,
+          hint: Text(hint, style: noto(14, color: C.textTertiary), overflow: TextOverflow.ellipsis),
+          icon: mi('expand_more', size: 18, color: C.textTertiary),
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(label(e), style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
+          onChanged: (v) { if (v != null) onChanged(v); },
+        ))),
+      ]),
+    );
   }
 
   @override
@@ -289,7 +283,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 children: [
                   Image.asset('assets/images/wiin-logo-white.png', width: 158),
                   const SizedBox(height: 14),
-                  Text('أعد التدوير · اربح · استبدل', style: noto(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92))),
+                  Text('اجمع القارورات وحافظ على بيئتك', style: noto(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92))),
                 ],
               ),
             ),
@@ -316,11 +310,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       Expanded(child: _dropdown('البلدية', commune ?? (_communes.isNotEmpty ? _communes.first : ''), _communes, (v) => setState(() => commune = v), null)),
                     ]),
                     const SizedBox(height: 14),
-                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Expanded(child: _dateField()),
-                      const SizedBox(width: 10),
-                      Expanded(child: _genderPicker()),
-                    ]),
+                    _birthdateField(),
+                    const SizedBox(height: 14),
+                    _genderPicker(),
                     const SizedBox(height: 14),
                     _field('رمز الدعوة (اختياري)', invite, 'confirmation_number', hint: 'WIIN-U-000', ltr: true),
                   ],
@@ -452,31 +444,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           if (footer != null) Padding(padding: const EdgeInsets.only(top: 6, right: 4), child: footer),
         ],
       ),
-    );
-  }
-
-  Widget _dateField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('تاريخ الميلاد', style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: _pickBirthdate,
-          child: Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
-            child: Row(children: [
-              mi('cake', size: 20, color: C.green),
-              const SizedBox(width: 8),
-              Expanded(child: Text(
-                birthdate == null ? 'اختر التاريخ' : birthdate!.toIso8601String().split('T').first,
-                style: noto(14, color: birthdate == null ? C.textTertiary : C.ink), textDirection: TextDirection.ltr, textAlign: TextAlign.right)),
-            ]),
-          ),
-        ),
-      ],
     );
   }
 

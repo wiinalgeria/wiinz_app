@@ -161,15 +161,29 @@ class AppConfig {
 }
 
 class AdBanner {
-  final String id, title, subtitle, image;
-  AdBanner({required this.id, required this.title, required this.subtitle, this.image = ''});
-  factory AdBanner.fromJson(Map<String, dynamic> j) => AdBanner(id: j['id'] ?? '', title: j['title'] ?? '', subtitle: j['subtitle'] ?? '', image: j['image'] ?? '');
+  final String id, title, subtitle, image, ctaText, ctaUrl;
+  AdBanner({required this.id, required this.title, required this.subtitle, this.image = '', this.ctaText = '', this.ctaUrl = ''});
+  factory AdBanner.fromJson(Map<String, dynamic> j) => AdBanner(
+        id: j['id'] ?? '', title: j['title'] ?? '', subtitle: j['subtitle'] ?? '', image: j['image'] ?? '',
+        ctaText: j['ctaText'] ?? '', ctaUrl: j['ctaUrl'] ?? '');
 }
 
-class PromoAd {
+// One slide of the full-screen promotional popup. The popup can hold several
+// slides that auto-advance; [seconds] is how long this slide stays before the
+// next one slides up.
+class PromoSlide {
   final String title, subtitle, image, ctaText, ctaUrl;
-  PromoAd({this.title = '', this.subtitle = '', this.image = '', this.ctaText = '', this.ctaUrl = ''});
-  factory PromoAd.fromJson(Map<String, dynamic> j) => PromoAd(
+  final int seconds;
+  PromoSlide({this.title = '', this.subtitle = '', this.image = '', this.ctaText = '', this.ctaUrl = '', this.seconds = 5});
+  factory PromoSlide.fromJson(Map<String, dynamic> j) => PromoSlide(
         title: j['title'] ?? '', subtitle: j['subtitle'] ?? '', image: j['image'] ?? '',
-        ctaText: j['ctaText'] ?? '', ctaUrl: j['ctaUrl'] ?? '');
+        ctaText: j['ctaText'] ?? '', ctaUrl: j['ctaUrl'] ?? '',
+        seconds: _int(j['seconds']) < 2 ? 5 : _int(j['seconds']));
+}
+
+class Promo {
+  final List<PromoSlide> slides;
+  Promo({required this.slides});
+  factory Promo.fromJson(Map<String, dynamic> j) =>
+      Promo(slides: ((j['slides'] as List?) ?? const []).map((e) => PromoSlide.fromJson(e as Map<String, dynamic>)).toList());
 }

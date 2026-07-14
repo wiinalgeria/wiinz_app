@@ -131,13 +131,13 @@ class ApiClient {
     }
   }
 
-  Future<AdBanner?> homeAd() async {
+  // All active home ads (rendered as a stacked list). Empty on any failure.
+  Future<List<AdBanner>> homeAds() async {
     try {
       final b = await _get('/ads?placement=home');
-      final ads = (b['ads'] as List);
-      return ads.isNotEmpty ? AdBanner.fromJson(ads.first) : null;
+      return (b['ads'] as List).map((e) => AdBanner.fromJson(e)).toList();
     } catch (_) {
-      return null;
+      return const [];
     }
   }
 
@@ -145,10 +145,12 @@ class ApiClient {
     try { await _post('/points/rate', {'code': code, 'rating': rating}); } catch (_) {}
   }
 
-  Future<PromoAd?> getPromo() async {
+  Future<Promo?> getPromo() async {
     try {
       final b = await _get('/promo');
-      return b['promo'] == null ? null : PromoAd.fromJson(b['promo']);
+      if (b['promo'] == null) return null;
+      final promo = Promo.fromJson(b['promo']);
+      return promo.slides.isEmpty ? null : promo;
     } catch (_) {
       return null;
     }

@@ -26,7 +26,7 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen> {
+class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserver {
   MapLibreMapController? _map;
   List<CollectionPoint> _points = [];
   final Map<String, CollectionPoint> _symbolPoints = {};
@@ -35,6 +35,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   LatLng? _lastUser;
   bool _locationGranted = false;
   bool _locationDenied = false;
+  bool _locationActive = false; // permission granted AND device location service on
   bool _loading = true;
   double? _listPx;        // current list height in px (null → default expanded)
   bool _dragging = false; // true while the sheet is being finger-dragged
@@ -61,14 +62,22 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAskLocation());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkLocation());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _posSub?.cancel();
     super.dispose();
+  }
+
+  // Re-check when returning from the OS settings/location-services screen.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkLocation();
   }
 
   Future<void> _load() async {
@@ -81,42 +90,32 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-  // First-time entry: a prominent dialog asking to approve location.
-  Future<void> _maybeAskLocation() async {
+  // Location is REQUIRED to use the map. If permission is granted and the device
+  // location service is on, start locating; otherwise the build shows a blocking
+  // gate and the map/list can't be used.
+  Future<void> _checkLocation() async {
     final perm = await Geolocator.checkPermission();
     final on = await Geolocator.isLocationServiceEnabled();
-    if ((perm == LocationPermission.always || perm == LocationPermission.whileInUse) && on) {
-      _initLocation();
+    final active = on && (perm == LocationPermission.always || perm == LocationPermission.whileInUse);
+    if (mounted) setState(() { _locationActive = active; _locationDenied = !active; });
+    if (active && _lastUser == null) _initLocation();
+  }
+
+  // Gate button: request permission, and if needed push the user to turn on the
+  // device location service (or app settings when permission is permanently off).
+  Future<void> _activateLocation() async {
+    LocationPermission perm = await Geolocator.checkPermission();
+    if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
+    if (perm == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings(); // re-checked on resume
       return;
     }
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(width: 76, height: 76, decoration: const BoxDecoration(color: Color(0xFFEAF6EF), shape: BoxShape.circle), child: mi('my_location', size: 38, color: C.green)),
-            const SizedBox(height: 16),
-            Text('تفعيل الموقع', style: cairo(19, w: FontWeight.w800, color: C.forest)),
-            const SizedBox(height: 8),
-            Text('نحتاج إذن الوصول إلى موقعك لعرض أقرب نقاط الجمع إليك وحساب المسافات. الرجاء الموافقة للمتابعة.',
-                textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
-          ]),
-          actions: [
-            SizedBox(width: double.infinity, child: GestureDetector(
-              onTap: () { Navigator.pop(dctx); _initLocation(); },
-              child: Container(height: 52, alignment: Alignment.center,
-                decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(15)),
-                child: Text('السماح بالوصول إلى الموقع', style: cairo(15, w: FontWeight.w800, color: Colors.white))),
-            )),
-          ],
-        ),
-      ),
-    );
+    final on = await Geolocator.isLocationServiceEnabled();
+    if (!on) {
+      await Geolocator.openLocationSettings(); // re-checked on resume
+      return;
+    }
+    await _checkLocation();
   }
 
   Future<void> _initLocation() async {
@@ -338,6 +337,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   ),
                   // bottom list sheet
                   Align(alignment: Alignment.bottomCenter, child: _bottomList()),
+                  // blocking gate — the map is unusable until location is active
+                  if (!_locationActive) _locationGate(),
                 ],
               ),
             ),
@@ -346,6 +347,40 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         ),
       ),
     );
+  }
+
+  // Opaque full-cover gate shown when location isn't active. Blocks all map/list
+  // interaction and offers a single "enable location" action.
+  Widget _locationGate() {
+    return Positioned.fill(child: Container(
+      color: const Color(0xFFF6FBF4),
+      child: Center(child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 96, height: 96, decoration: const BoxDecoration(color: Color(0xFFEAF6EF), shape: BoxShape.circle),
+            child: mi('location_off', size: 46, color: C.green)),
+          const SizedBox(height: 20),
+          Text('الموقع مطلوب للخريطة', style: cairo(20, w: FontWeight.w800, color: C.forest)),
+          const SizedBox(height: 10),
+          Text('لعرض أقرب نقاط الجمع إليك وحساب المسافات، يجب تفعيل الموقع. لا يمكن استخدام الخريطة بدون تفعيل الموقع.',
+              textAlign: TextAlign.center, style: noto(14, color: C.textSecondary, height: 1.6)),
+          const SizedBox(height: 24),
+          GestureDetector(
+            onTap: _activateLocation,
+            child: Container(
+              height: 54, padding: const EdgeInsets.symmetric(horizontal: 28), alignment: Alignment.center,
+              decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(15),
+                boxShadow: [BoxShadow(color: const Color(0xFF3D7C32).withValues(alpha: 0.45), blurRadius: 14, offset: const Offset(0, 6))]),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                mi('my_location', size: 22, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('تفعيل الموقع', style: cairo(16, w: FontWeight.w800, color: Colors.white)),
+              ]),
+            ),
+          ),
+        ]),
+      )),
+    ));
   }
 
   Widget _bottomList() {

@@ -56,7 +56,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   Future<void> _changePassword() => showChangePasswordDialog(context, ref);
 
   void _shareInvite(WiinzUser user) {
-    final msg = 'انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القوارير وكسب النقاط والفوز بالهدايا! 🎁\n'
+    final msg = 'انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁\n'
         'استخدم رمز دعوتي عند التسجيل: ${user.inviteCode}\n'
         'حمّل التطبيق الآن وابدأ الربح معنا.';
     SharePlus.instance.share(ShareParams(text: msg, subject: 'انضم إلى WIINZ'));

@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/session.dart';
 import '../../core/notifications.dart';
 import '../../models/models.dart';
@@ -24,12 +26,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _pageCtrl = PageController(viewportFraction: 0.96);
   int _cardIndex = 0;
   bool _flipped = false;
-  AdBanner? _ad;
+  List<AdBanner> _ads = [];
 
   @override
   void initState() {
     super.initState();
-    _loadAd();
+    _loadAds();
     // Initial load so the bell's unread dot is correct on entry.
     // Realtime polling + incoming banner are handled globally by NotificationHost.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -43,64 +45,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _showTempPwPrompt();
       }
       if (showPromo && mounted) await _maybeShowPromo(); // promotional popup on app entry
+      await _ensureLocationPermission(); // ask for location once on entry (not if already granted)
     });
+  }
+
+  // Prompt for location permission when the user first enters the app after
+  // signing in. If it's already granted we don't ask again; if it was permanently
+  // denied we don't nag (they can enable it from the map gate / settings).
+  Future<void> _ensureLocationPermission() async {
+    try {
+      final perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) await Geolocator.requestPermission();
+    } catch (_) {}
   }
 
   Future<void> _maybeShowPromo() async {
     final promo = await ref.read(apiClientProvider).getPromo();
-    if (promo == null || !mounted) return;
-    final img = dataUriImage(promo.image);
+    if (promo == null || promo.slides.isEmpty || !mounted) return;
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (dctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Dialog(
-          backgroundColor: Colors.white,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 22),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          clipBehavior: Clip.antiAlias,
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Stack(children: [
-              if (img != null)
-                AspectRatio(aspectRatio: 4 / 3, child: Image(image: img, fit: BoxFit.cover, width: double.infinity))
-              else
-                Container(height: 150, width: double.infinity, decoration: const BoxDecoration(gradient: C.forestGrad),
-                  child: Center(child: mi('local_offer', size: 60, color: Colors.white))),
-              Positioned(top: 8, left: 8, child: GestureDetector(
-                onTap: () => Navigator.pop(dctx),
-                child: Container(width: 34, height: 34, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), shape: BoxShape.circle),
-                  child: mi('close', size: 20, color: Colors.white)),
-              )),
-            ]),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                if (promo.title.isNotEmpty) Text(promo.title, textAlign: TextAlign.center, style: cairo(19, w: FontWeight.w800, color: C.forest)),
-                if (promo.subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(promo.subtitle, textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
-                ],
-                const SizedBox(height: 18),
-                GestureDetector(
-                  onTap: () async {
-                    ref.read(apiClientProvider).promoClick();
-                    final url = promo.ctaUrl.trim();
-                    if (url.isNotEmpty) {
-                      try { await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication); } catch (_) {}
-                    }
-                    if (dctx.mounted) Navigator.pop(dctx);
-                  },
-                  child: Container(
-                    width: double.infinity, height: 54, alignment: Alignment.center,
-                    decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(16), boxShadow: C.greenBtnShadow),
-                    child: Text(promo.ctaText.isEmpty ? 'اكتشف المزيد' : promo.ctaText, style: cairo(16, w: FontWeight.w800, color: Colors.white)),
-                  ),
-                ),
-              ]),
-            ),
-          ]),
-        ),
+      builder: (dctx) => _PromoDialog(
+        promo: promo,
+        onCta: (url) async {
+          ref.read(apiClientProvider).promoClick();
+          if (url.trim().isNotEmpty) {
+            try { await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication); } catch (_) {}
+          }
+        },
       ),
     );
   }
@@ -116,7 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'travel_explore', 'location_on', Color(0xFFE3F0F7), Color(0xFF1C7ED6),
       ),
       (
-        'أودِع قواريرك',
+        'أودِع القارورات',
         'توجّه إلى النقطة وامسح رمز QR لإيداع القارورات',
         'qr_code_scanner', 'recycling', Color(0xFFEAF6EF), C.green,
       ),
@@ -147,7 +119,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   height: 250,
                   child: PageView.builder(
                     controller: pageCtrl,
-                    reverse: true, // RTL: first slide on the right, advance right-to-left
+                    reverse: false, // swipe + progress travel left → right
                     itemCount: slides.length,
                     onPageChanged: (i) => setD(() => page = i),
                     itemBuilder: (_, i) {
@@ -176,13 +148,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // page indicator
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(slides.length, (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: page == i ? 22 : 8, height: 8,
-                  decoration: BoxDecoration(color: page == i ? C.green : const Color(0xFFD9E4D4), borderRadius: BorderRadius.circular(4)),
-                ))),
+                // page indicator — forced LTR so the growing dot travels left → right
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(slides.length, (i) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: page == i ? 22 : 8, height: 8,
+                    decoration: BoxDecoration(color: page == i ? C.green : const Color(0xFFD9E4D4), borderRadius: BorderRadius.circular(4)),
+                  ))),
+                ),
                 const SizedBox(height: 18),
                 // RTL: "التالي/ابدأ" on the RIGHT (first child), "السابق" on the LEFT.
                 Row(children: [
@@ -246,9 +221,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Future<void> _loadAd() async {
-    final ad = await ref.read(apiClientProvider).homeAd();
-    if (mounted) setState(() => _ad = ad);
+  Future<void> _loadAds() async {
+    final ads = await ref.read(apiClientProvider).homeAds();
+    if (mounted) setState(() => _ads = ads);
+  }
+
+  Future<void> _openAd(AdBanner ad) async {
+    final url = ad.ctaUrl.trim();
+    if (url.isEmpty) return;
+    try { await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication); } catch (_) {}
   }
 
   @override
@@ -337,7 +318,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _adBanner(),
+                    ..._adsSection(),
                   ],
                 ),
               ),
@@ -536,33 +517,181 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }));
   }
 
-  Widget _adBanner() {
-    final title = _ad?.title ?? 'إنترنت أسرع مع شريكنا';
-    final sub = _ad?.subtitle ?? 'عرض حصري لمستخدمي WIINZ';
-    final adImg = dataUriImage(_ad?.image ?? '');
-    return Container(
-      height: 130,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(gradient: C.tealCard, borderRadius: BorderRadius.circular(22),
-        image: adImg == null ? null : DecorationImage(image: adImg, fit: BoxFit.cover),
-        boxShadow: [BoxShadow(color: C.teal1.withValues(alpha: 0.5), blurRadius: 26, offset: const Offset(0, 12))]),
-      child: Stack(children: [
-        // dark scrim so the title/subtitle stay legible over an uploaded image
-        if (adImg != null)
-          Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(
-            begin: Alignment.centerRight, end: Alignment.centerLeft,
-            colors: [Colors.black.withValues(alpha: 0.55), Colors.black.withValues(alpha: 0.15)])))),
-        if (adImg == null) Positioned(left: -30, bottom: -40, child: Container(width: 150, height: 150, decoration: BoxDecoration(color: C.gold.withValues(alpha: 0.85), shape: BoxShape.circle))),
-        if (adImg == null) Positioned(left: 20, top: 20, child: Container(width: 90, height: 90, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), shape: BoxShape.circle))),
-        Positioned(top: 8, right: 12, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(6)),
-          child: Text('إعلان', style: noto(10, w: FontWeight.w600, color: Colors.white)))),
-        Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: cairo(19, w: FontWeight.w800, color: Colors.white, height: 1.3)),
-          const SizedBox(height: 4),
-          Text(sub, style: noto(12.5, color: Colors.white.withValues(alpha: 0.85))),
-        ])),
-      ]),
+  // Home ads: one banner per active ad, stacked one under another. Each can
+  // carry a CTA button that opens its link outside the app.
+  List<Widget> _adsSection() {
+    final ads = _ads.isNotEmpty
+        ? _ads
+        : [AdBanner(id: '_', title: 'إنترنت أسرع مع شريكنا', subtitle: 'عرض حصري لمستخدمي WIINZ')];
+    final widgets = <Widget>[];
+    for (var i = 0; i < ads.length; i++) {
+      widgets.add(_adBanner(ads[i]));
+      if (i != ads.length - 1) widgets.add(const SizedBox(height: 12));
+    }
+    return widgets;
+  }
+
+  Widget _adBanner(AdBanner ad) {
+    final title = ad.title;
+    final sub = ad.subtitle;
+    final adImg = dataUriImage(ad.image);
+    final hasCta = ad.ctaUrl.trim().isNotEmpty;
+    final ctaLabel = ad.ctaText.trim().isEmpty ? 'اكتشف المزيد' : ad.ctaText.trim();
+    return GestureDetector(
+      onTap: hasCta ? () => _openAd(ad) : null,
+      child: Container(
+        height: 130,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(gradient: C.tealCard, borderRadius: BorderRadius.circular(22),
+          image: adImg == null ? null : DecorationImage(image: adImg, fit: BoxFit.cover),
+          boxShadow: [BoxShadow(color: C.teal1.withValues(alpha: 0.5), blurRadius: 26, offset: const Offset(0, 12))]),
+        child: Stack(children: [
+          // dark scrim so the title/subtitle stay legible over an uploaded image
+          if (adImg != null)
+            Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(
+              begin: Alignment.centerRight, end: Alignment.centerLeft,
+              colors: [Colors.black.withValues(alpha: 0.55), Colors.black.withValues(alpha: 0.15)])))),
+          if (adImg == null) Positioned(left: -30, bottom: -40, child: Container(width: 150, height: 150, decoration: BoxDecoration(color: C.gold.withValues(alpha: 0.85), shape: BoxShape.circle))),
+          if (adImg == null) Positioned(left: 20, top: 20, child: Container(width: 90, height: 90, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), shape: BoxShape.circle))),
+          Positioned(top: 8, right: 12, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(6)),
+            child: Text('إعلان', style: noto(10, w: FontWeight.w600, color: Colors.white)))),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: cairo(19, w: FontWeight.w800, color: Colors.white, height: 1.3), maxLines: 1, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+            Text(sub, style: noto(12.5, color: Colors.white.withValues(alpha: 0.85)), maxLines: 1, overflow: TextOverflow.ellipsis),
+            if (hasCta) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text(ctaLabel, style: cairo(12.5, w: FontWeight.w800, color: C.forest)),
+                  const SizedBox(width: 4),
+                  Transform.flip(flipX: true, child: mi('arrow_forward', size: 15, color: C.forest)),
+                ]),
+              ),
+            ],
+          ])),
+        ]),
+      ),
     );
+  }
+}
+
+/// Full-screen promotional popup that cycles through several slides, each shown
+/// for its own number of seconds before auto-advancing (also swipeable by hand).
+class _PromoDialog extends StatefulWidget {
+  final Promo promo;
+  final Future<void> Function(String url) onCta;
+  const _PromoDialog({required this.promo, required this.onCta});
+  @override
+  State<_PromoDialog> createState() => _PromoDialogState();
+}
+
+class _PromoDialogState extends State<_PromoDialog> {
+  final _ctrl = PageController();
+  Timer? _timer;
+  int _index = 0;
+  List<PromoSlide> get _slides => widget.promo.slides;
+
+  @override
+  void initState() {
+    super.initState();
+    _schedule();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _schedule() {
+    _timer?.cancel();
+    if (_slides.length < 2) return; // single slide: no auto-advance
+    _timer = Timer(Duration(seconds: _slides[_index].seconds), () {
+      if (!mounted) return;
+      final next = (_index + 1) % _slides.length;
+      _ctrl.animateToPage(next, duration: const Duration(milliseconds: 450), curve: Curves.easeInOut);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final h = (MediaQuery.of(context).size.height * 0.6).clamp(380.0, 520.0);
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Dialog(
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          height: h,
+          child: Stack(children: [
+            PageView.builder(
+              controller: _ctrl,
+              itemCount: _slides.length,
+              onPageChanged: (i) { setState(() => _index = i); _schedule(); },
+              itemBuilder: (_, i) => _slideView(_slides[i]),
+            ),
+            // close button
+            Positioned(top: 8, left: 8, child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(width: 34, height: 34, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), shape: BoxShape.circle),
+                child: mi('close', size: 20, color: Colors.white)),
+            )),
+            // slide dots
+            if (_slides.length > 1)
+              Positioned(bottom: 12, left: 0, right: 0, child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(_slides.length, (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: _index == i ? 20 : 7, height: 7,
+                  decoration: BoxDecoration(color: _index == i ? C.green : Colors.white.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(4)),
+                ))),
+              )),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _slideView(PromoSlide s) {
+    final img = dataUriImage(s.image);
+    final hasCta = s.ctaUrl.trim().isNotEmpty || s.ctaText.trim().isNotEmpty;
+    return Column(children: [
+      Expanded(child: img != null
+          ? Image(image: img, fit: BoxFit.cover, width: double.infinity)
+          : Container(width: double.infinity, decoration: const BoxDecoration(gradient: C.forestGrad),
+              child: Center(child: mi('local_offer', size: 60, color: Colors.white)))),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          if (s.title.isNotEmpty) Text(s.title, textAlign: TextAlign.center, style: cairo(19, w: FontWeight.w800, color: C.forest)),
+          if (s.subtitle.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(s.subtitle, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: noto(13.5, color: C.textSecondary, height: 1.6)),
+          ],
+          if (hasCta) ...[
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: () async {
+                await widget.onCta(s.ctaUrl);
+                if (mounted) Navigator.pop(context);
+              },
+              child: Container(
+                width: double.infinity, height: 52, alignment: Alignment.center,
+                decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(16), boxShadow: C.greenBtnShadow),
+                child: Text(s.ctaText.trim().isEmpty ? 'اكتشف المزيد' : s.ctaText.trim(), style: cairo(16, w: FontWeight.w800, color: Colors.white)),
+              ),
+            ),
+          ],
+        ]),
+      ),
+    ]);
   }
 }
 

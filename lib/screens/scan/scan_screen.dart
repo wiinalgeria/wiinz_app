@@ -114,11 +114,15 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
               const SizedBox(height: 6),
               Text('كيف كانت تجربتك في هذه النقطة؟', textAlign: TextAlign.center, style: noto(13, color: C.textSecondary)),
               const SizedBox(height: 16),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (i) => GestureDetector(
-                onTap: () => setD(() => rating = i + 1),
-                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: mi('star', size: 40, color: i < rating ? C.gold : const Color(0xFFDDD6C7), fill: i < rating)),
-              ))),
+              // Stars laid out left → right (star 1 on the left) regardless of RTL.
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (i) => GestureDetector(
+                  onTap: () => setD(() => rating = i + 1),
+                  child: Padding(padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: mi('star', size: 40, color: i < rating ? C.gold : const Color(0xFFDDD6C7), fill: i < rating)),
+                ))),
+              ),
             ]),
             actions: [
               TextButton(onPressed: () => Navigator.pop(dctx), child: Text('تخطّي', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),

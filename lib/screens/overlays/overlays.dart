@@ -147,7 +147,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
         initialChildSize: 0.88, maxChildSize: 0.92, minChildSize: 0.5, expand: false,
         builder: (context, scroll) => loading
             ? const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
-            : ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(22, 20, 22, 30), children: [
+            : ListView(controller: scroll, padding: EdgeInsets.fromLTRB(22, 20, 22, 30 + MediaQuery.of(context).padding.bottom), children: [
                 Center(child: _grabber()),
                 // level ring card
                 Container(
