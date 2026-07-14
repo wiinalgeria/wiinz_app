@@ -104,9 +104,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (dctx) => _PromoDialog(
         promo: promo,
-        onCta: (url) async {
-          ref.read(apiClientProvider).promoClick();
-          if (url.trim().isNotEmpty) {
+        onCta: (slide) async {
+          ref.read(apiClientProvider).promoClick(slide: slide.idx); // per-slide click stats
+          final url = slide.ctaUrl.trim();
+          if (url.isNotEmpty) {
             try { await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication); } catch (_) {}
           }
         },
@@ -375,7 +376,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         alignment: Alignment.center,
         children: [
           Align(alignment: Alignment.centerRight, child: Row(mainAxisSize: MainAxisSize.min, children: [
-            _circleBtn('person', () => context.go('/more'), gradient: C.avatarGrad, iconColor: Colors.white, border: Colors.white),
+            // profile picture (falls back to the person icon when none is set)
+            Pressable(
+              pressedScale: 0.88,
+              onTap: () => context.go('/more'),
+              child: avatarCircle(user.avatar, 44, border: Border.all(color: Colors.white, width: 2)),
+            ),
             const SizedBox(width: 10),
             Stack(children: [
               _circleBtn('notifications', () {
@@ -626,7 +632,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 /// for its own number of seconds before auto-advancing (also swipeable by hand).
 class _PromoDialog extends StatefulWidget {
   final Promo promo;
-  final Future<void> Function(String url) onCta;
+  final Future<void> Function(PromoSlide slide) onCta;
   const _PromoDialog({required this.promo, required this.onCta});
   @override
   State<_PromoDialog> createState() => _PromoDialogState();
@@ -724,7 +730,7 @@ class _PromoDialogState extends State<_PromoDialog> {
             const SizedBox(height: 16),
             Pressable(
               onTap: () async {
-                await widget.onCta(s.ctaUrl);
+                await widget.onCta(s);
                 if (mounted) Navigator.pop(context);
               },
               child: Container(

@@ -22,8 +22,10 @@ class MoreScreen extends ConsumerStatefulWidget {
 
 class _MoreScreenState extends ConsumerState<MoreScreen> {
   List<Referral> _referrals = [];
-  List<String> _wilayas = ['الجزائر', 'وهران', 'قسنطينة'];
-  List<String> _communes = ['بلكور', 'باب الوادي', 'حسين داي'];
+  List<String> _wilayas = ['الجزائر'];
+  // Communes keyed by wilaya, exactly as configured in the dashboard's قوائم التسجيل.
+  Map<String, List<String>> _communesByWilaya = {'الجزائر': ['بلكور', 'باب الوادي', 'حسين داي']};
+  List<String> _communesOf(String wilaya) => _communesByWilaya[wilaya] ?? const [];
 
   @override
   void initState() {
@@ -39,7 +41,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     } catch (_) {}
     try {
       final (w, cbw) = await api.locations();
-      if (mounted && w.isNotEmpty) setState(() { _wilayas = w; _communes = cbw.values.expand((e) => e).toSet().toList(); });
+      if (mounted && w.isNotEmpty) setState(() { _wilayas = w; _communesByWilaya = cbw; });
     } catch (_) {}
   }
 
@@ -94,16 +96,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     ),
   );
 
-  // Circular avatar that shows the uploaded picture, or a person icon fallback.
-  Widget _avatar(WiinzUser user, double size) {
-    final img = dataUriImage(user.avatar);
-    return Container(
-      width: size, height: size,
-      decoration: const BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle),
-      clipBehavior: Clip.antiAlias,
-      child: img != null ? Image(image: img, fit: BoxFit.cover, width: size, height: size) : mi('person', size: size * 0.55, color: Colors.white),
-    );
-  }
+  Widget _avatar(WiinzUser user, double size) => avatarCircle(user.avatar, size);
 
   void _shareInvite(WiinzUser user) {
     final msg = 'انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁\n'
@@ -310,15 +303,20 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     final phone = TextEditingController(text: user.phone);
     final address = TextEditingController(text: user.address);
     String wilaya = _wilayas.contains(user.wilaya) ? user.wilaya : _wilayas.first;
-    String commune = _communes.contains(user.commune) ? user.commune : _communes.first;
+    final startCommunes = _communesOf(wilaya);
+    String commune = startCommunes.contains(user.commune)
+        ? user.commune
+        : (startCommunes.isNotEmpty ? startCommunes.first : '');
     showModalBottomSheet(
       context: context, backgroundColor: C.sand, isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (_) => Directionality(textDirection: TextDirection.rtl, child: StatefulBuilder(
         builder: (context, setSheet) => Padding(
+          // keyboard inset + the Android gesture/nav bar, so the buttons never
+          // sit under the system bar
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: SingleChildScrollView(child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 20, 22, 30),
+            padding: EdgeInsets.fromLTRB(22, 20, 22, 30 + MediaQuery.of(context).padding.bottom),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
               const SizedBox(height: 16),
@@ -343,9 +341,15 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               _editField('رقم الهاتف', phone, 'phone', ltr: true),
               _editField('العنوان', address, 'location_on'),
               Row(children: [
-                Expanded(child: _editDropdown('الولاية', wilaya, _wilayas, 'map', (v) => setSheet(() => wilaya = v))),
+                // Changing the wilaya resets the commune to that wilaya's first,
+                // so the commune list always belongs to the chosen wilaya.
+                Expanded(child: _editDropdown('الولاية', wilaya, _wilayas, 'map', (v) => setSheet(() {
+                  wilaya = v;
+                  final list = _communesOf(v);
+                  commune = list.isNotEmpty ? list.first : '';
+                }))),
                 const SizedBox(width: 10),
-                Expanded(child: _editDropdown('البلدية', commune, _communes, null, (v) => setSheet(() => commune = v))),
+                Expanded(child: _editDropdown('البلدية', commune, _communesOf(wilaya), null, (v) => setSheet(() => commune = v))),
               ]),
               const SizedBox(height: 20),
               Row(children: [
@@ -376,6 +380,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           if (icon != null) ...[mi(icon, size: 20, color: C.green), const SizedBox(width: 8)],
           Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
             value: safe, isExpanded: true, icon: mi('expand_more', size: 20, color: C.textTertiary),
+            menuMaxHeight: 320, // keep the popup compact + scrollable, not full-screen
             items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
             onChanged: (v) { if (v != null) onChanged(v); },
           ))),
@@ -407,7 +412,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         builder: (context, setSheet) => Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: SingleChildScrollView(child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 20, 22, 30),
+            // + the Android nav-bar inset so the send/cancel row clears it
+            padding: EdgeInsets.fromLTRB(22, 20, 22, 30 + MediaQuery.of(context).padding.bottom),
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Center(child: Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3)))),
               const SizedBox(height: 16),
@@ -462,7 +468,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       context: context, backgroundColor: C.sand,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (_) => Directionality(textDirection: TextDirection.rtl, child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 34),
+        padding: EdgeInsets.fromLTRB(24, 20, 24, 34 + MediaQuery.of(context).padding.bottom),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
           const SizedBox(height: 20),

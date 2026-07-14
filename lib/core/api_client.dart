@@ -155,8 +155,9 @@ class ApiClient {
       return null;
     }
   }
-  Future<void> promoClick() async {
-    try { await _post('/promo/click'); } catch (_) {}
+  // [slide] is the slide's index in the admin's list, so clicks are attributed per slide.
+  Future<void> promoClick({int? slide}) async {
+    try { await _post('/promo/click', {'slide': slide}); } catch (_) {}
   }
 
   Future<List<AppNotification>> notifications() async {

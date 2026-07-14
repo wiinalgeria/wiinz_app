@@ -271,6 +271,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           value: value, isExpanded: true, isDense: true,
           hint: Text(hint, style: noto(14, color: C.textTertiary), overflow: TextOverflow.ellipsis),
           icon: mi('expand_more', size: 18, color: C.textTertiary),
+          menuMaxHeight: 280, // short, scrollable popup instead of a full-height list
           items: items.map((e) => DropdownMenuItem(value: e, child: Text(label(e), style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
           onChanged: (v) { if (v != null) onChanged(v); },
         ))),
@@ -478,6 +479,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             if (icon != null) ...[mi(icon, size: 20, color: C.green), const SizedBox(width: 8)],
             Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
               value: safeValue, isExpanded: true, icon: mi('expand_more', size: 20, color: C.textTertiary),
+              menuMaxHeight: 320, // short, scrollable popup instead of a full-height list
               items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
               onChanged: (v) { if (v != null) onChanged(v); },
             ))),

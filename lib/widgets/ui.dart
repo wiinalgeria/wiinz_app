@@ -72,6 +72,21 @@ Widget storeLogo(String logo, double size, {String fallbackIcon = 'storefront'})
   );
 }
 
+/// The user's profile picture as a circle — their uploaded photo when they have
+/// one, otherwise the green gradient + person icon. Single source of truth so the
+/// avatar looks identical everywhere (home bar, headers, settings, edit sheet).
+Widget avatarCircle(String avatar, double size, {Border? border}) {
+  final img = dataUriImage(avatar);
+  return Container(
+    width: size, height: size,
+    decoration: BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle, border: border),
+    clipBehavior: Clip.antiAlias,
+    child: img != null
+        ? Image(image: img, fit: BoxFit.cover, width: size, height: size)
+        : mi('person', size: size * 0.55, color: Colors.white),
+  );
+}
+
 /// Decode a base64 data-URI into a MemoryImage, or null if it isn't one.
 MemoryImage? dataUriImage(String s) {
   if (s.isNotEmpty && s.startsWith('data:')) {

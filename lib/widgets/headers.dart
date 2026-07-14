@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/session.dart';
 import '../theme/app_theme.dart';
 import 'ui.dart';
 
 /// Header for map / perks / gifts: title + avatar(→more) + back(→home).
-class PlainHeader extends StatelessWidget {
+class PlainHeader extends ConsumerWidget {
   final String title;
   final bool showAvatar;
   const PlainHeader(this.title, {super.key, this.showAvatar = true});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatar = ref.watch(sessionProvider).user?.avatar ?? '';
     return Container(
       height: 60,
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
@@ -24,8 +27,7 @@ class PlainHeader extends StatelessWidget {
               Pressable(
                 pressedScale: 0.88,
                 onTap: () => context.go('/more'),
-                child: Container(width: 42, height: 42, decoration: BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                  child: mi('person', size: 24, color: Colors.white)),
+                child: avatarCircle(avatar, 42, border: Border.all(color: Colors.white, width: 2)),
               ),
               const SizedBox(width: 10),
             ],

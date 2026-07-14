@@ -176,11 +176,13 @@ class AdBanner {
 class PromoSlide {
   final String title, subtitle, image, ctaText, ctaUrl;
   final int seconds;
-  PromoSlide({this.title = '', this.subtitle = '', this.image = '', this.ctaText = '', this.ctaUrl = '', this.seconds = 5});
+  final int idx; // position in the admin's slide list — used to attribute clicks
+  PromoSlide({this.title = '', this.subtitle = '', this.image = '', this.ctaText = '', this.ctaUrl = '', this.seconds = 5, this.idx = 0});
   factory PromoSlide.fromJson(Map<String, dynamic> j) => PromoSlide(
         title: j['title'] ?? '', subtitle: j['subtitle'] ?? '', image: j['image'] ?? '',
         ctaText: j['ctaText'] ?? '', ctaUrl: j['ctaUrl'] ?? '',
-        seconds: _int(j['seconds']) < 2 ? 5 : _int(j['seconds']));
+        seconds: _int(j['seconds']) < 2 ? 5 : _int(j['seconds']),
+        idx: _int(j['idx']));
 }
 
 class Promo {
