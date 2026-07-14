@@ -14,12 +14,14 @@ import 'screens/gifts/gifts_screen.dart';
 import 'screens/more/more_screen.dart';
 import 'widgets/notification_host.dart';
 import 'core/local_notify.dart';
+import 'core/push.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initLocalNotifications();
+  await initPush(); // Firebase Cloud Messaging (out-of-app notifications)
   runApp(const ProviderScope(child: WiinzApp()));
 }
 

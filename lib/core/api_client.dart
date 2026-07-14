@@ -86,6 +86,14 @@ class ApiClient {
       _post('/auth/change-password', {'currentPassword': currentPassword, 'newPassword': newPassword});
   Future<void> requestPasswordReset(String contact) async => _post('/auth/reset-request', {'contact': contact});
   Future<Map<String, dynamic>> me() => _get('/me');
+
+  // push device tokens (best-effort: never surface an error to the user)
+  Future<void> registerPushToken(String token) async {
+    try { await _post('/push/register', {'token': token}); } catch (_) {}
+  }
+  Future<void> unregisterPushToken(String token) async {
+    try { await _post('/push/unregister', {'token': token}); } catch (_) {}
+  }
   Future<Map<String, dynamic>> updateMe(Map<String, dynamic> patch) => _put('/me', patch);
 
   // catalog

@@ -33,6 +33,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- FCM: notifications that arrive while the app is closed land in this
+             channel (must match the channel created in push.dart and the
+             channelId the server sends), otherwise Android files them under a
+             silent low-importance default and they never make a sound. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="wiinz_general" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

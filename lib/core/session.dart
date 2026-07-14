@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
+import 'push.dart';
 import '../models/models.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
@@ -88,6 +90,7 @@ class SessionNotifier extends Notifier<SessionState> {
       _promoPending = true;
       await _cacheUser(res['user']);
       state = state.copyWith(user: WiinzUser.fromJson(res['user']), checkingSession: false, config: config);
+      _registerPush(); // restored session → make sure this phone can receive pushes
     } on ApiException catch (e) {
       // A connectivity/cold-start failure must NOT log the user out. If we have a
       // cached profile, go straight into the app and refresh in the background.
@@ -152,6 +155,31 @@ class SessionNotifier extends Notifier<SessionState> {
     _tempPwPrompt = u.tempPassword;
     _promoPending = true;
     state = state.copyWith(user: u);
+    _registerPush(); // fresh login/signup → bind this phone to the account
+  }
+
+  // ---- push notifications ----
+  // The FCM token identifies THIS phone. We hand it to the backend once the user
+  // is signed in, so broadcasts can reach them even with the app closed, and we
+  // re-register whenever FCM rotates the token.
+  String? _pushToken;
+  StreamSubscription<String>? _tokenSub;
+
+  Future<void> _registerPush() async {
+    final token = await pushToken();
+    if (token == null) return;
+    _pushToken = token;
+    await api.registerPushToken(token);
+    _tokenSub ??= onTokenRefresh?.listen((t) {
+      _pushToken = t;
+      if (state.isLoggedIn) api.registerPushToken(t);
+    });
+  }
+
+  // On logout: stop this phone from receiving the signed-out user's pushes.
+  Future<void> _unregisterPush() async {
+    final token = _pushToken;
+    if (token != null) await api.unregisterPushToken(token);
   }
 
   Future<void> markWelcomeSeen() async {
@@ -189,11 +217,12 @@ class SessionNotifier extends Notifier<SessionState> {
   }
 
   Future<void> logout() async {
+    await _unregisterPush(); // must run while the token is still valid
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_userKey);
     api.token = null;
-    state = SessionState(checkingSession: false, config: state.config);
+    state = SessionState(checkingSession: false, config: state.config, seenWelcome: state.seenWelcome);
   }
 }
 
