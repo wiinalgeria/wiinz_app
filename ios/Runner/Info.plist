@@ -70,5 +70,7 @@
 	<string>يستخدم WIINZ الكاميرا لمسح رموز QR الخاصة بإعادة التدوير وكسب النقاط.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>يستخدم WIINZ موقعك لعرض أقرب نقاط إعادة التدوير على الخريطة.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يستخدم WIINZ مكتبة الصور لاختيار صورة ملفك الشخصي.</string>
 </dict>
 </plist>

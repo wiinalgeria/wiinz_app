@@ -2,7 +2,7 @@ int _int(dynamic v) => v is int ? v : (v is num ? v.toInt() : int.tryParse('$v')
 double _dbl(dynamic v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 
 class WiinzUser {
-  final String id, name, email, phone, wilaya, commune, address, gender, tier, qrCode, inviteCode, cardCode;
+  final String id, name, email, phone, wilaya, commune, address, gender, tier, qrCode, inviteCode, cardCode, avatar;
   final int points;
   final int videosLeft;
   final bool tempPassword;
@@ -11,7 +11,7 @@ class WiinzUser {
     required this.id, required this.name, required this.email, required this.phone,
     required this.wilaya, required this.commune, required this.address, required this.gender,
     required this.tier, required this.qrCode, required this.inviteCode, required this.cardCode,
-    required this.points, required this.videosLeft, this.tempPassword = false,
+    required this.points, required this.videosLeft, this.tempPassword = false, this.avatar = '',
   });
 
   factory WiinzUser.fromJson(Map<String, dynamic> j) => WiinzUser(
@@ -20,13 +20,15 @@ class WiinzUser {
         gender: j['gender'] ?? 'male', tier: j['tier'] ?? 'أخضر',
         qrCode: j['qrCode'] ?? j['cardCode'] ?? '', inviteCode: j['inviteCode'] ?? '', cardCode: j['cardCode'] ?? '',
         points: _int(j['points']), videosLeft: _int(j['videosLeft']), tempPassword: j['tempPassword'] == true,
+        avatar: j['avatar'] ?? '',
       );
 
-  WiinzUser copyWith({int? points, int? videosLeft, String? name, String? phone, String? address, String? commune, String? wilaya, String? tier, bool? tempPassword}) => WiinzUser(
+  WiinzUser copyWith({int? points, int? videosLeft, String? name, String? phone, String? address, String? commune, String? wilaya, String? tier, bool? tempPassword, String? avatar}) => WiinzUser(
         id: id, name: name ?? this.name, email: email, phone: phone ?? this.phone,
         wilaya: wilaya ?? this.wilaya, commune: commune ?? this.commune, address: address ?? this.address,
         gender: gender, tier: tier ?? this.tier, qrCode: qrCode, inviteCode: inviteCode, cardCode: cardCode,
         points: points ?? this.points, videosLeft: videosLeft ?? this.videosLeft, tempPassword: tempPassword ?? this.tempPassword,
+        avatar: avatar ?? this.avatar,
       );
 }
 
@@ -141,13 +143,13 @@ class HistoryItem {
 }
 
 class LeaderRow {
-  final String id, initial, name;
+  final String id, initial, name, prize;
   final int score, rank;
   final bool isMe;
-  LeaderRow({required this.id, required this.initial, required this.name, required this.score, required this.rank, required this.isMe});
+  LeaderRow({required this.id, required this.initial, required this.name, required this.score, required this.rank, required this.isMe, this.prize = ''});
   factory LeaderRow.fromJson(Map<String, dynamic> j) => LeaderRow(
         id: '${j['id']}', initial: j['initial'] ?? '', name: j['name'] ?? '', score: _int(j['score']),
-        rank: _int(j['rank']), isMe: j['isMe'] == true);
+        rank: _int(j['rank']), isMe: j['isMe'] == true, prize: j['prize'] ?? '');
 }
 
 class AppConfig {

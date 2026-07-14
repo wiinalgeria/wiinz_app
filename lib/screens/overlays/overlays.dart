@@ -255,7 +255,19 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
         Container(width: 36, height: 36, alignment: Alignment.center, decoration: BoxDecoration(color: l.isMe ? C.green : const Color(0xFFF0E9DA), shape: BoxShape.circle),
           child: Text(l.initial, style: cairo(14, w: FontWeight.w800, color: l.isMe ? Colors.white : C.textSecondary))),
         const SizedBox(width: 11),
-        Expanded(child: Text(l.name, style: cairo(14, w: l.isMe ? FontWeight.w800 : FontWeight.w700, color: l.isMe ? C.forest : C.ink))),
+        Expanded(child: Row(children: [
+          Flexible(child: Text(l.name, style: cairo(14, w: l.isMe ? FontWeight.w800 : FontWeight.w700, color: l.isMe ? C.forest : C.ink), overflow: TextOverflow.ellipsis)),
+          if (l.prize.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: const Color(0xFFFCEBCB), borderRadius: BorderRadius.circular(999), border: Border.all(color: const Color(0xFFF3E1BC))),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                mi('emoji_events', size: 12, color: C.goldText), const SizedBox(width: 3),
+                Text(l.prize, style: cairo(10.5, w: FontWeight.w800, color: C.goldText)),
+              ])),
+          ],
+        ])),
+        const SizedBox(width: 8),
         Text('${l.score} Wz', style: cairo(14, w: FontWeight.w800, color: C.goldText)),
       ]),
     );

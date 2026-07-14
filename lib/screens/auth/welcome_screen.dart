@@ -29,7 +29,7 @@ class WelcomeScreen extends ConsumerWidget {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
+            padding: const EdgeInsets.fromLTRB(28, 24, 28, 44),
             child: Column(
               children: [
                 const Spacer(flex: 3),
@@ -38,10 +38,10 @@ class WelcomeScreen extends ConsumerWidget {
                 Text('مرحباً بك في WIINZ', textAlign: TextAlign.center,
                     style: cairo(26, w: FontWeight.w800, color: Colors.white)),
                 const SizedBox(height: 12),
-                Text('اجمع القارورات، اكسب النقاط، واربح الهدايا — وحافظ على بيئتك.',
+                Text('اجمع القارورات وحافظ على بيئتك',
                     textAlign: TextAlign.center,
                     style: noto(15, color: Colors.white.withValues(alpha: 0.92), height: 1.7)),
-                const Spacer(flex: 4),
+                const Spacer(flex: 3),
                 // إنشاء حساب — filled white/green primary
                 Pressable(
                   onTap: () => _go(ref, context, '/signup'),
@@ -69,7 +69,7 @@ class WelcomeScreen extends ConsumerWidget {
                     child: Text('تسجيل الدخول', style: cairo(18, w: FontWeight.w800, color: Colors.white)),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 28),
               ],
             ),
           ),

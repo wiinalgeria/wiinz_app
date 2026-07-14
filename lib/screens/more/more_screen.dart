@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
 import '../../core/session.dart';
 import '../../models/models.dart';
@@ -54,6 +56,64 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   }
 
   Future<void> _changePassword() => showChangePasswordDialog(context, ref);
+
+  // Let the user set/replace their profile picture — from the camera or gallery.
+  Future<void> _pickAvatar() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context, backgroundColor: C.sand,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: SafeArea(child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
+          const SizedBox(height: 16),
+          Text('صورة الملف الشخصي', style: cairo(17, w: FontWeight.w800, color: C.forest)),
+          const SizedBox(height: 16),
+          Row(children: [
+            Expanded(child: _sourceBtn('التقاط صورة', 'photo_camera', () => Navigator.pop(context, ImageSource.camera))),
+            const SizedBox(width: 12),
+            Expanded(child: _sourceBtn('من المعرض', 'photo_library', () => Navigator.pop(context, ImageSource.gallery))),
+          ]),
+        ]),
+      ))),
+    );
+    if (source == null) return;
+    try {
+      final x = await ImagePicker().pickImage(source: source, maxWidth: 512, maxHeight: 512, imageQuality: 70);
+      if (x == null) return;
+      final bytes = await x.readAsBytes();
+      if (bytes.length > 500000) { if (mounted) showToast(context, 'الصورة كبيرة جداً، اختر صورة أصغر'); return; }
+      final dataUri = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+      final err = await ref.read(sessionProvider.notifier).saveProfile({'avatar': dataUri});
+      if (mounted) showToast(context, err ?? 'تم تحديث صورتك ✓');
+    } catch (_) {
+      if (mounted) showToast(context, 'تعذّر اختيار الصورة');
+    }
+  }
+
+  Widget _sourceBtn(String label, String icon, VoidCallback onTap) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder)),
+      child: Column(children: [
+        Container(width: 48, height: 48, decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(14)), child: mi(icon, size: 26, color: C.greenMid)),
+        const SizedBox(height: 8),
+        Text(label, style: cairo(14, w: FontWeight.w700, color: C.ink)),
+      ]),
+    ),
+  );
+
+  // Circular avatar that shows the uploaded picture, or a person icon fallback.
+  Widget _avatar(WiinzUser user, double size) {
+    final img = dataUriImage(user.avatar);
+    return Container(
+      width: size, height: size,
+      decoration: const BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle),
+      clipBehavior: Clip.antiAlias,
+      child: img != null ? Image(image: img, fit: BoxFit.cover, width: size, height: size) : mi('person', size: size * 0.55, color: Colors.white),
+    );
+  }
 
   void _shareInvite(WiinzUser user) {
     final msg = 'انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁\n'
@@ -127,8 +187,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       child: Column(children: [
         Row(children: [
           Stack(children: [
-            Container(width: 66, height: 66, decoration: const BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle), child: mi('person', size: 36, color: Colors.white)),
-            Positioned(bottom: -2, left: -2, child: GestureDetector(onTap: () => _editProfile(user), child: Container(width: 26, height: 26,
+            _avatar(user, 66),
+            Positioned(bottom: -2, left: -2, child: GestureDetector(onTap: _pickAvatar, child: Container(width: 26, height: 26,
               decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: C.tint4, width: 1.5)), child: mi('photo_camera', size: 16, color: C.greenMid)))),
           ]),
           const SizedBox(width: 14),
@@ -272,6 +332,21 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
               const SizedBox(height: 16),
               Text('تعديل الملف الشخصي', style: cairo(19, w: FontWeight.w800, color: C.forest)),
+              const SizedBox(height: 16),
+              // profile picture — tap to change (camera / gallery)
+              GestureDetector(
+                onTap: () async { await _pickAvatar(); setSheet(() {}); },
+                child: Column(children: [
+                  Stack(children: [
+                    _avatar(ref.read(sessionProvider).user ?? user, 84),
+                    Positioned(bottom: 0, left: 0, child: Container(width: 30, height: 30,
+                      decoration: BoxDecoration(color: C.green, shape: BoxShape.circle, border: Border.all(color: C.sand, width: 2)),
+                      child: mi('photo_camera', size: 17, color: Colors.white))),
+                  ]),
+                  const SizedBox(height: 8),
+                  Text('تغيير الصورة', style: cairo(13, w: FontWeight.w700, color: C.greenMid)),
+                ]),
+              ),
               const SizedBox(height: 18),
               _editField('الاسم الكامل', name, 'person'),
               _editField('رقم الهاتف', phone, 'phone', ltr: true),
