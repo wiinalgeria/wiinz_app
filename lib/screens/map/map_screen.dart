@@ -308,7 +308,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
                       const SizedBox(width: 8),
                       Expanded(child: Text('فعّل الموقع لعرض أقرب نقاط الجمع وحساب المسافات', style: noto(11.5, color: const Color(0xFF8A6A1E)))),
                       const SizedBox(width: 6),
-                      GestureDetector(onTap: _enableLocation, child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      Pressable(pressedScale: 0.92, onTap: _enableLocation, child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(color: C.green, borderRadius: BorderRadius.circular(10)),
                         child: Text('تفعيل', style: cairo(12, w: FontWeight.w700, color: Colors.white)))),
                     ]),
@@ -365,7 +365,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
           Text('لعرض أقرب نقاط الجمع إليك وحساب المسافات، يجب تفعيل الموقع. لا يمكن استخدام الخريطة بدون تفعيل الموقع.',
               textAlign: TextAlign.center, style: noto(14, color: C.textSecondary, height: 1.6)),
           const SizedBox(height: 24),
-          GestureDetector(
+          Pressable(
             onTap: _activateLocation,
             child: Container(
               height: 54, padding: const EdgeInsets.symmetric(horizontal: 28), alignment: Alignment.center,
@@ -428,7 +428,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
             : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 itemCount: _points.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, i) => _pointCard(_points[i]),
               )),
       ]),
@@ -523,7 +523,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
           ),
           const SizedBox(height: 16),
           // open Google Maps turn-by-turn directions to this point — big, branded button
-          GestureDetector(
+          Pressable(
+            pressedScale: 0.98,
             onTap: () => _openDirections(p),
             child: Container(
               height: 62,

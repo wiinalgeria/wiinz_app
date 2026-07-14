@@ -14,7 +14,10 @@ Future<void> initLocalNotifications() async {
   const settings = InitializationSettings(android: android);
   try {
     await _plugin.initialize(settings);
-    await Permission.notification.request(); // Android 13+ runtime prompt
+    // NOTE: the permission request itself is NOT made here (cold boot, over the
+    // splash). Home calls ensureNotificationPermission() on entry instead, so
+    // the user sees the prompt in context and we don't burn Android's two
+    // prompt chances back-to-back.
   } catch (_) {}
 }
 

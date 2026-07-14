@@ -21,14 +21,16 @@ class PlainHeader extends StatelessWidget {
           Text(title, style: cairo(22, w: FontWeight.w800, color: C.forest)),
           Row(children: [
             if (showAvatar) ...[
-              GestureDetector(
+              Pressable(
+                pressedScale: 0.88,
                 onTap: () => context.go('/more'),
                 child: Container(width: 42, height: 42, decoration: BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
                   child: mi('person', size: 24, color: Colors.white)),
               ),
               const SizedBox(width: 10),
             ],
-            GestureDetector(
+            Pressable(
+              pressedScale: 0.88,
               onTap: () => context.go('/home'),
               child: Container(width: 42, height: 42, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: C.cardBorder)),
                 child: Transform.flip(flipX: true, child: mi('arrow_forward', size: 22, color: C.forest))),

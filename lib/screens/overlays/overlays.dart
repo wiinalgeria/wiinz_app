@@ -44,7 +44,7 @@ void showNotificationsSheet(BuildContext context, WidgetRef ref) {
                     ])),
                   ]),
                   const SizedBox(height: 10),
-                  GestureDetector(
+                  Pressable(
                     onTap: () { Navigator.pop(context); showChangePasswordDialog(opener, ref, confirmFirst: false); },
                     child: Container(height: 44, alignment: Alignment.center,
                       decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(12)),

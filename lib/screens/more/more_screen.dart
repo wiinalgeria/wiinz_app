@@ -7,7 +7,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../core/api_client.dart';
 import '../../core/session.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
@@ -44,17 +43,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     } catch (_) {}
   }
 
-  Future<void> _watchVideo() async {
-    try {
-      final res = await ref.read(apiClientProvider).watchVideo();
-      ref.read(sessionProvider.notifier).setPoints(res['newBalance']);
-      ref.read(sessionProvider.notifier).setVideosLeft(res['videosLeft']);
-      if (mounted) showToast(context, 'شكراً للمشاهدة! +${res['reward']} Wz 🎬');
-    } on ApiException catch (e) {
-      if (mounted) showToast(context, e.message == 'no videos left today' ? 'انتهت فيديوهات اليوم — عد غداً' : e.message);
-    }
-  }
-
+  // NOTE: the watch-video reward flow was removed with the feature marked
+  // "coming soon" (see _watchCard); restore it from git history when it ships.
   Future<void> _changePassword() => showChangePasswordDialog(context, ref);
 
   // Let the user set/replace their profile picture — from the camera or gallery.
@@ -91,7 +81,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     }
   }
 
-  Widget _sourceBtn(String label, String icon, VoidCallback onTap) => GestureDetector(
+  Widget _sourceBtn(String label, String icon, VoidCallback onTap) => Pressable(
     onTap: onTap,
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -134,7 +124,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           Container(height: 60, padding: const EdgeInsets.symmetric(horizontal: 20), color: C.sand,
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Text('المزيد', style: cairo(22, w: FontWeight.w800, color: C.forest)),
-              GestureDetector(onTap: () => context.go('/home'), child: Container(width: 42, height: 42,
+              Pressable(pressedScale: 0.88, onTap: () => context.go('/home'), child: Container(width: 42, height: 42,
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: C.cardBorder)),
                 child: Transform.flip(flipX: true, child: mi('arrow_forward', size: 22, color: C.forest)))),
             ])),
@@ -168,7 +158,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ]),
             ),
             const SizedBox(height: 12),
-            GestureDetector(onTap: () async { await ref.read(sessionProvider.notifier).logout(); if (context.mounted) context.go('/login'); },
+            Pressable(onTap: () async { await ref.read(sessionProvider.notifier).logout(); if (context.mounted) context.go('/login'); },
               child: Container(height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF3D9D5), width: 1.5)),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('logout', size: 22, color: C.danger), const SizedBox(width: 8), Text('تسجيل الخروج', style: cairo(15, w: FontWeight.w700, color: C.danger))]))),
             const SizedBox(height: 22),
@@ -188,7 +178,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         Row(children: [
           Stack(children: [
             _avatar(user, 66),
-            Positioned(bottom: -2, left: -2, child: GestureDetector(onTap: _pickAvatar, child: Container(width: 26, height: 26,
+            Positioned(bottom: -2, left: -2, child: Pressable(pressedScale: 0.82, onTap: _pickAvatar, child: Container(width: 26, height: 26,
               decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: C.tint4, width: 1.5)), child: mi('photo_camera', size: 16, color: C.greenMid)))),
           ]),
           const SizedBox(width: 14),
@@ -199,7 +189,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           ])),
         ]),
         const SizedBox(height: 14),
-        GestureDetector(onTap: () => _editProfile(user), child: Container(height: 44,
+        Pressable(onTap: () => _editProfile(user), child: Container(height: 44,
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13), border: Border.all(color: C.tint4, width: 1.5)),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('edit', size: 20, color: C.greenMid), const SizedBox(width: 8), Text('تعديل الملف الشخصي', style: cairo(14, w: FontWeight.w700, color: C.greenMid))]))),
       ]),
@@ -207,7 +197,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   }
 
   Widget _watchCard(WiinzUser user) {
-    return GestureDetector(
+    return Pressable(
+      pressedScale: 0.98,
       onTap: () => showToast(context, 'ستتوفر هذه الميزة قريباً ⏳'),
       child: Container(
         padding: const EdgeInsets.all(18),
@@ -246,10 +237,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(13), border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5)),
             alignment: Alignment.center, child: Text(user.inviteCode, style: cairo(20, w: FontWeight.w900, color: Colors.white, spacing: 2), textDirection: TextDirection.ltr))),
           const SizedBox(width: 10),
-          GestureDetector(onTap: () { Clipboard.setData(ClipboardData(text: user.inviteCode)); showToast(context, 'تم نسخ رمز الدعوة ✓'); },
+          Pressable(pressedScale: 0.88, onTap: () { Clipboard.setData(ClipboardData(text: user.inviteCode)); showToast(context, 'تم نسخ رمز الدعوة ✓'); },
             child: Container(width: 48, height: 48, decoration: BoxDecoration(color: C.green, borderRadius: BorderRadius.circular(13)), child: mi('content_copy', size: 22, color: Colors.white))),
           const SizedBox(width: 8),
-          GestureDetector(onTap: () => _shareInvite(user),
+          Pressable(pressedScale: 0.88, onTap: () => _shareInvite(user),
             child: Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)), child: mi('ios_share', size: 22, color: Colors.white))),
         ]),
         const SizedBox(height: 10),
@@ -290,7 +281,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   }
 
   Widget _shortcut(String label, String icon, Color bg, Color color, VoidCallback onTap) {
-    return Expanded(child: GestureDetector(onTap: onTap, child: Container(
+    return Expanded(child: Pressable(onTap: onTap, child: Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: C.cardBorder)),
       child: Column(children: [
@@ -302,7 +293,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   }
 
   Widget _settingRow(String label, String icon, VoidCallback onTap, {bool last = false}) {
-    return GestureDetector(onTap: onTap, child: Container(
+    return Pressable(pressedScale: 0.98, onTap: onTap, child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFF5EFE2)))),
       child: Row(children: [
@@ -334,7 +325,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               Text('تعديل الملف الشخصي', style: cairo(19, w: FontWeight.w800, color: C.forest)),
               const SizedBox(height: 16),
               // profile picture — tap to change (camera / gallery)
-              GestureDetector(
+              Pressable(
                 onTap: () async { await _pickAvatar(); setSheet(() {}); },
                 child: Column(children: [
                   Stack(children: [
@@ -358,7 +349,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ]),
               const SizedBox(height: 20),
               Row(children: [
-                GestureDetector(onTap: () => Navigator.pop(context), child: Container(width: 100, height: 54, alignment: Alignment.center,
+                Pressable(onTap: () => Navigator.pop(context), child: Container(width: 100, height: 54, alignment: Alignment.center,
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
                   child: Text('إلغاء', style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))))),
                 const SizedBox(width: 10),
@@ -433,7 +424,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: 'اكتب التفاصيل هنا…', hintStyle: noto(14, color: C.textTertiary)), style: noto(15, color: C.ink))),
               const SizedBox(height: 18),
               Row(children: [
-                GestureDetector(onTap: () => Navigator.pop(context), child: Container(width: 100, height: 54, alignment: Alignment.center,
+                Pressable(onTap: () => Navigator.pop(context), child: Container(width: 100, height: 54, alignment: Alignment.center,
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
                   child: Text('إلغاء', style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))))),
                 const SizedBox(width: 10),
@@ -461,7 +452,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
 
   // ---- About the app ----
   void _openAbout() {
-    Widget social(FaIconData icon, Color color, String url) => GestureDetector(
+    Widget social(FaIconData icon, Color color, String url) => Pressable(
+      pressedScale: 0.85,
       onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
       child: Container(width: 46, height: 46, decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
         child: Center(child: FaIcon(icon, size: 20, color: color))),

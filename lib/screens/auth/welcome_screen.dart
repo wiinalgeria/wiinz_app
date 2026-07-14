@@ -41,7 +41,7 @@ class WelcomeScreen extends ConsumerWidget {
                 Text('اجمع القارورات وحافظ على بيئتك',
                     textAlign: TextAlign.center,
                     style: noto(15, color: Colors.white.withValues(alpha: 0.92), height: 1.7)),
-                const Spacer(flex: 3),
+                const Spacer(flex: 2),
                 // إنشاء حساب — filled white/green primary
                 Pressable(
                   onTap: () => _go(ref, context, '/signup'),
@@ -69,7 +69,9 @@ class WelcomeScreen extends ConsumerWidget {
                     child: Text('تسجيل الدخول', style: cairo(18, w: FontWeight.w800, color: Colors.white)),
                   ),
                 ),
-                const SizedBox(height: 28),
+                // generous breathing room below so the buttons sit clearly above the bottom edge
+                const Spacer(flex: 1),
+                const SizedBox(height: 16),
               ],
             ),
           ),

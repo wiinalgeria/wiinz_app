@@ -31,6 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _cardIndex = 0;
   bool _flipped = false;
   List<AdBanner> _ads = [];
+  bool _adsLoaded = false; // true once the server answered (even with zero ads)
 
   @override
   void initState() {
@@ -259,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadAds() async {
     final ads = await ref.read(apiClientProvider).homeAds();
-    if (mounted) setState(() => _ads = ads);
+    if (mounted) setState(() { _ads = ads; _adsLoaded = true; });
   }
 
   Future<void> _openAd(AdBanner ad) async {
@@ -325,7 +326,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ])),
                     const SizedBox(height: 14),
                     // primary scan
-                    GestureDetector(
+                    Pressable(
                       onTap: () => context.go('/scan'),
                       child: Container(
                         height: 70,
@@ -340,7 +341,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
                     // secondary map
-                    GestureDetector(
+                    Pressable(
                       onTap: () => context.go('/map'),
                       child: Container(
                         height: 62,
@@ -386,7 +387,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ]),
           ])),
           Image.asset('assets/images/wiin-logo-green.png', width: 92),
-          Align(alignment: Alignment.centerLeft, child: GestureDetector(
+          Align(alignment: Alignment.centerLeft, child: Pressable(
+            pressedScale: 0.93,
             onTap: () => showStatsSheet(context, ref),
             child: Container(
               padding: const EdgeInsets.fromLTRB(10, 9, 20, 9),
@@ -406,7 +408,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _circleBtn(String icon, VoidCallback onTap, {Gradient? gradient, Color? bg, required Color iconColor, required Color border}) {
-    return GestureDetector(
+    return Pressable(
+      pressedScale: 0.88,
       onTap: onTap,
       child: Container(
         width: 44, height: 44,
@@ -556,11 +559,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // Home ads: one banner per active ad, stacked one under another. Each can
-  // carry a CTA button that opens its link outside the app.
+  // carry a CTA button that opens its link outside the app. If the admin has
+  // no active ads, the section simply disappears (no fake placeholder ad).
   List<Widget> _adsSection() {
+    if (_adsLoaded && _ads.isEmpty) return const [];
     final ads = _ads.isNotEmpty
         ? _ads
-        : [AdBanner(id: '_', title: 'إنترنت أسرع مع شريكنا', subtitle: 'عرض حصري لمستخدمي WIINZ')];
+        : [AdBanner(id: '_', title: 'إنترنت أسرع مع شريكنا', subtitle: 'عرض حصري لمستخدمي WIINZ')]; // pre-load placeholder
     final widgets = <Widget>[];
     for (var i = 0; i < ads.length; i++) {
       widgets.add(_adBanner(ads[i]));
@@ -575,7 +580,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final adImg = dataUriImage(ad.image);
     final hasCta = ad.ctaUrl.trim().isNotEmpty;
     final ctaLabel = ad.ctaText.trim().isEmpty ? 'اكتشف المزيد' : ad.ctaText.trim();
-    return GestureDetector(
+    return Pressable(
+      pressedScale: 0.98,
       onTap: hasCta ? () => _openAd(ad) : null,
       child: Container(
         height: 130,
@@ -675,7 +681,8 @@ class _PromoDialogState extends State<_PromoDialog> {
               itemBuilder: (_, i) => _slideView(_slides[i]),
             ),
             // close button
-            Positioned(top: 8, left: 8, child: GestureDetector(
+            Positioned(top: 8, left: 8, child: Pressable(
+              pressedScale: 0.85,
               onTap: () => Navigator.pop(context),
               child: Container(width: 34, height: 34, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), shape: BoxShape.circle),
                 child: mi('close', size: 20, color: Colors.white)),
@@ -715,7 +722,7 @@ class _PromoDialogState extends State<_PromoDialog> {
           ],
           if (hasCta) ...[
             const SizedBox(height: 16),
-            GestureDetector(
+            Pressable(
               onTap: () async {
                 await widget.onCta(s.ctaUrl);
                 if (mounted) Navigator.pop(context);

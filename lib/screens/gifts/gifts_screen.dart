@@ -120,7 +120,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
             Text(h.left, style: noto(12, color: Colors.white.withValues(alpha: 0.8))),
           ]),
           const SizedBox(height: 18),
-          GestureDetector(onTap: _busyId == h.id ? null : () => _claim(h.id, h.title, h.cost, confirmLabel: 'تأكيد'), child: Container(
+          Pressable(onTap: _busyId == h.id ? null : () => _claim(h.id, h.title, h.cost, confirmLabel: 'تأكيد'), child: Container(
             width: double.infinity, height: 52, decoration: BoxDecoration(gradient: C.goldGrad, borderRadius: BorderRadius.circular(15)),
             alignment: Alignment.center,
             child: _busyId == h.id ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Color(0xFF3D2A05), strokeWidth: 2))
@@ -188,7 +188,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
           Text(g.priceLabel, style: cairo(14, w: FontWeight.w800, color: C.goldText)),
         ])),
         const SizedBox(width: 8),
-        GestureDetector(onTap: _busyId == g.id ? null : () => _claim(g.id, g.title, g.cost), child: Container(
+        Pressable(pressedScale: 0.92, onTap: _busyId == g.id ? null : () => _claim(g.id, g.title, g.cost), child: Container(
           height: 42, padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(color: C.forest, borderRadius: BorderRadius.circular(12)),
           alignment: Alignment.center,

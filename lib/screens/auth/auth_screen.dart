@@ -370,8 +370,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
                   if (!signup)
                     Center(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
+                      child: Pressable(
+                        pressedScale: 0.97,
                         onTap: _forgotPassword,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
@@ -390,8 +390,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ),
 
                   // large tappable toggle (bordered button)
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                  Pressable(
+                    pressedScale: 0.98,
                     onTap: () => setState(() { signup = !signup; error = null; _showErrors = false; }),
                     child: Container(
                       height: 56,
@@ -490,7 +490,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Widget _genderPicker() {
     Widget btn(String key, String label, String icon) {
       final on = gender == key;
-      return Expanded(child: GestureDetector(
+      return Expanded(child: Pressable(
+        pressedScale: 0.95,
         onTap: () => setState(() => gender = key),
         child: Container(
           alignment: Alignment.center,

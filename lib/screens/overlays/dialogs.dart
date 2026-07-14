@@ -22,14 +22,14 @@ Future<bool> showConfirm(BuildContext context, {required String title, required 
           Text(message, style: noto(14, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
           const SizedBox(height: 22),
           Row(children: [
-            Expanded(child: GestureDetector(
+            Expanded(child: Pressable(
               onTap: () => Navigator.pop(context, false),
               child: Container(height: 54, alignment: Alignment.center,
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
                 child: Text(cancelLabel, style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459)))),
             )),
             const SizedBox(width: 10),
-            Expanded(child: GestureDetector(
+            Expanded(child: Pressable(
               onTap: () => Navigator.pop(context, true),
               child: Container(height: 54, alignment: Alignment.center,
                 decoration: BoxDecoration(gradient: LinearGradient(colors: [accent, accent]), borderRadius: BorderRadius.circular(16)),
@@ -73,7 +73,7 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
             Text('= ${count * pointsPerBottle} Wz', style: cairo(16, w: FontWeight.w800, color: C.goldText)),
             const SizedBox(height: 22),
             Row(children: [
-              Expanded(child: GestureDetector(
+              Expanded(child: Pressable(
                 onTap: () => Navigator.pop(context, null),
                 child: Container(height: 54, alignment: Alignment.center,
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
@@ -89,7 +89,8 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
   );
 }
 
-Widget _stepBtn(String icon, VoidCallback onTap, {bool enabled = true}) => GestureDetector(
+Widget _stepBtn(String icon, VoidCallback onTap, {bool enabled = true}) => Pressable(
+      pressedScale: 0.88,
       onTap: enabled ? onTap : null,
       child: Container(
         width: 52, height: 52,
@@ -197,7 +198,7 @@ Future<void> showCodePopup(BuildContext context, {required String title, require
                   ]),
                   if (store.hasLocation) ...[
                     const SizedBox(height: 10),
-                    GestureDetector(
+                    Pressable(
                       onTap: () => launchUrl(Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}'), mode: LaunchMode.externalApplication),
                       child: Container(height: 46, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13), border: Border.all(color: C.tint4, width: 1.5)),
                         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [

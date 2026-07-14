@@ -95,7 +95,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                     ),
                     const SizedBox(height: 12),
                     // leaderboard entry
-                    GestureDetector(
+                    Pressable(pressedScale: 0.98,
                       onTap: () => showStatsSheet(context, ref),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
@@ -154,11 +154,11 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
         ])),
         const SizedBox(width: 10),
         SizedBox(width: 120, child: Column(children: [
-          GestureDetector(onTap: () => showCodePopup(context, title: g.title, code: g.code, balance: ref.read(sessionProvider).user?.points ?? 0, store: g.store), child: Container(height: 44,
+          Pressable(onTap: () => showCodePopup(context, title: g.title, code: g.code, balance: ref.read(sessionProvider).user?.points ?? 0, store: g.store), child: Container(height: 44,
             decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(13)),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('qr_code_2', size: 18, color: Colors.white), const SizedBox(width: 5), Text('عرض الكود', style: cairo(14, w: FontWeight.w700, color: Colors.white))]))),
           const SizedBox(height: 7),
-          GestureDetector(onTap: _busyId == g.id ? null : () => _refund(g), child: Container(height: 40,
+          Pressable(pressedScale: 0.95, onTap: _busyId == g.id ? null : () => _refund(g), child: Container(height: 40,
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: C.inputBorder, width: 1.5)),
             child: _busyId == g.id
                 ? const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: C.goldText)))

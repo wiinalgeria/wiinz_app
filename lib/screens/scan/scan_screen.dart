@@ -61,7 +61,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _qr?.dispose();
+    // QRViewController self-disposes when the QRView unmounts (plugin ≥2.x).
     super.dispose();
   }
 
@@ -117,7 +117,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
               // Stars laid out left → right (star 1 on the left) regardless of RTL.
               Directionality(
                 textDirection: TextDirection.ltr,
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (i) => GestureDetector(
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (i) => Pressable(
+                  pressedScale: 0.8,
                   onTap: () => setD(() => rating = i + 1),
                   child: Padding(padding: const EdgeInsets.symmetric(horizontal: 3),
                     child: mi('star', size: 40, color: i < rating ? C.gold : const Color(0xFFDDD6C7), fill: i < rating)),
@@ -174,7 +175,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
                       Text('يحتاج التطبيق إلى إذن الكاميرا لمسح الرموز',
                         textAlign: TextAlign.center, style: noto(14, color: Colors.white.withValues(alpha: 0.85))),
                       const SizedBox(height: 16),
-                      GestureDetector(
+                      Pressable(
                         onTap: () async { await openAppSettings(); },
                         child: Container(padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
                           decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(12)),
