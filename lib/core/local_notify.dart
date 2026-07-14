@@ -18,6 +18,25 @@ Future<void> initLocalNotifications() async {
   } catch (_) {}
 }
 
+/// Ensure the OS notification permission is granted. Returns whether it ended up
+/// granted. Safe to call on every app entry: the system dialog is only shown when
+/// it can still be shown (i.e. not permanently denied).
+Future<bool> ensureNotificationPermission() async {
+  try {
+    var status = await Permission.notification.status;
+    if (status.isGranted) return true;
+    if (!status.isPermanentlyDenied) status = await Permission.notification.request();
+    return status.isGranted;
+  } catch (_) {
+    return true; // don't block/nag the app if the check fails
+  }
+}
+
+/// Opens the app's OS settings page so the user can re-enable notifications.
+Future<void> openNotificationSettings() async {
+  try { await openAppSettings(); } catch (_) {}
+}
+
 Future<void> showLocalNotification(String title, String body) async {
   const details = NotificationDetails(
     android: AndroidNotificationDetails(

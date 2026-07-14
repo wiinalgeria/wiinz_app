@@ -7,12 +7,16 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/session.dart';
 import '../../core/notifications.dart';
+import '../../core/local_notify.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
 import '../../widgets/change_password.dart';
 import '../../widgets/bottom_nav.dart';
 import '../overlays/overlays.dart';
+
+// Shown at most once per app launch so we don't nag on every return to Home.
+bool _notifNudgeShownThisSession = false;
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -45,6 +49,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _showTempPwPrompt();
       }
       if (showPromo && mounted) await _maybeShowPromo(); // promotional popup on app entry
+      await _ensureNotifPermission(); // ask for notifications on entry; nudge if disabled
       await _ensureLocationPermission(); // ask for location once on entry (not if already granted)
     });
   }
@@ -57,6 +62,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) await Geolocator.requestPermission();
     } catch (_) {}
+  }
+
+  // Ask for notification permission so the user gets alerts even outside the app.
+  // If notifications are disabled, nudge them (once per app session) to re-enable.
+  Future<void> _ensureNotifPermission() async {
+    final granted = await ensureNotificationPermission();
+    if (granted || !mounted || _notifNudgeShownThisSession) return;
+    _notifNudgeShownThisSession = true;
+    await showDialog<void>(
+      context: context,
+      builder: (dctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 64, height: 64, decoration: const BoxDecoration(color: Color(0xFFEAF6EF), shape: BoxShape.circle), child: mi('notifications_active', size: 32, color: C.green)),
+            const SizedBox(height: 14),
+            Text('فعّل الإشعارات', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+            const SizedBox(height: 8),
+            Text('الإشعارات معطّلة. فعّلها لتصلك التنبيهات عن الهدايا والنقاط الجديدة حتى وأنت خارج التطبيق.',
+                textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dctx), child: Text('لاحقاً', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+            TextButton(onPressed: () { Navigator.pop(dctx); openNotificationSettings(); },
+              child: Text('فتح الإعدادات', style: cairo(14, w: FontWeight.w800, color: C.green))),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _maybeShowPromo() async {
@@ -418,8 +454,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Row(children: [
               Image.asset('assets/images/wiin-logo-white.png', width: 62),
               const SizedBox(width: 8),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(999)),
-                child: Text('أخضر', style: cairo(10, w: FontWeight.w700, color: Colors.white))),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(999)),
+                child: Text('أخضر', style: cairo(14, w: FontWeight.w800, color: Colors.white))),
             ]),
             Container(width: 38, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(9)), child: mi('qr_code_2', size: 20, color: Colors.white)),
           ]),
@@ -488,15 +524,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Row(children: [
               Text('WIINZ', style: cairo(19, w: FontWeight.w800, color: Colors.white, spacing: 2)),
               const SizedBox(width: 8),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.28), borderRadius: BorderRadius.circular(999)),
-                child: Text(badge, style: cairo(10, w: FontWeight.w700, color: Colors.white))),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.28), borderRadius: BorderRadius.circular(999)),
+                child: Text(badge, style: cairo(14, w: FontWeight.w800, color: Colors.white))),
             ]),
-            Container(width: 34, height: 34, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.18), shape: BoxShape.circle), child: mi('lock', size: 20, color: Colors.white)),
+            // Bigger lock so it's obvious the tier is not yet available.
+            Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.22), shape: BoxShape.circle), child: mi('lock', size: 30, color: Colors.white)),
           ]),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           mi(icon, size: 34, color: Colors.white.withValues(alpha: 0.9)),
           Text(title, style: cairo(18, w: FontWeight.w800, color: Colors.white)),
-          Text('افتحها عند جمع $goal Wz', style: noto(12, color: Colors.white.withValues(alpha: 0.85))),
+          const SizedBox(height: 2),
+          Text('ستتوفر قريباً', style: cairo(16, w: FontWeight.w800, color: Colors.white)),
           const Spacer(),
           ClipRRect(borderRadius: BorderRadius.circular(999), child: LinearProgressIndicator(value: pct, minHeight: 8, backgroundColor: Colors.black.withValues(alpha: 0.22), valueColor: const AlwaysStoppedAnimation(Colors.white))),
           const SizedBox(height: 6),

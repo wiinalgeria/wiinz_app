@@ -11,15 +11,17 @@ class SessionState {
   final bool checkingSession;
   final WiinzUser? user;
   final AppConfig config;
+  final bool seenWelcome; // true once the first-run welcome screen has been shown
 
-  SessionState({this.loading = false, this.checkingSession = true, this.user, AppConfig? config})
+  SessionState({this.loading = false, this.checkingSession = true, this.user, AppConfig? config, this.seenWelcome = false})
       : config = config ?? AppConfig.fallback();
 
-  SessionState copyWith({bool? loading, bool? checkingSession, WiinzUser? user, AppConfig? config}) => SessionState(
+  SessionState copyWith({bool? loading, bool? checkingSession, WiinzUser? user, AppConfig? config, bool? seenWelcome}) => SessionState(
         loading: loading ?? this.loading,
         checkingSession: checkingSession ?? this.checkingSession,
         user: user ?? this.user,
         config: config ?? this.config,
+        seenWelcome: seenWelcome ?? this.seenWelcome,
       );
 
   bool get isLoggedIn => user != null;
@@ -28,6 +30,7 @@ class SessionState {
 class SessionNotifier extends Notifier<SessionState> {
   static const _tokenKey = 'wiinz_token';
   static const _userKey = 'wiinz_user'; // cached profile JSON for instant/offline restore
+  static const _welcomeKey = 'wiinz_seen_welcome'; // first-run welcome screen flag
   ApiClient get api => ref.read(apiClientProvider);
 
   Future<void> _cacheUser(Map<String, dynamic> userJson) async {
@@ -71,6 +74,7 @@ class SessionNotifier extends Notifier<SessionState> {
   Future<void> _restore() async {
     api.warmUp(); // start waking the (possibly sleeping) Render instance immediately
     final prefs = await SharedPreferences.getInstance();
+    state = state.copyWith(seenWelcome: prefs.getBool(_welcomeKey) ?? false);
     final token = prefs.getString(_tokenKey);
     final config = await api.config();
     if (token == null) {
@@ -148,6 +152,12 @@ class SessionNotifier extends Notifier<SessionState> {
     _tempPwPrompt = u.tempPassword;
     _promoPending = true;
     state = state.copyWith(user: u);
+  }
+
+  Future<void> markWelcomeSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_welcomeKey, true);
+    state = state.copyWith(seenWelcome: true);
   }
 
   void setUser(WiinzUser u) => state = state.copyWith(user: u);

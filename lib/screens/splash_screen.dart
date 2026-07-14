@@ -28,7 +28,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void _start(SessionState s) {
     if (_navigated || s.checkingSession) return;
     _navigated = true;
-    context.go(s.isLoggedIn ? '/home' : '/login');
+    // First-time users see the welcome screen; afterwards go straight to login.
+    context.go(s.isLoggedIn ? '/home' : (s.seenWelcome ? '/login' : '/welcome'));
   }
 
   @override

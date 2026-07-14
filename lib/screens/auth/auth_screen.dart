@@ -8,13 +8,14 @@ import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({super.key});
+  final bool initialSignup;
+  const AuthScreen({super.key, this.initialSignup = false});
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  bool signup = false;
+  late bool signup = widget.initialSignup;
   String gender = 'male';
   String? wilaya;
   String? commune;
@@ -49,8 +50,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void initState() {
     super.initState();
     _loadLocations();
-    // live-refresh so the password red/green state and required-field borders update as the user types
-    for (final c in [name, phone, password, confirmPassword]) {
+    // live-refresh so the password red/green state, email validity and
+    // required-field borders update as the user types
+    for (final c in [name, phone, email, password, confirmPassword]) {
       c.addListener(() { if (mounted) setState(() {}); });
     }
   }
@@ -71,6 +73,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final color = _pwValid ? C.green : (neutral ? C.textTertiary : C.danger);
     return Text(_pwValid ? '✓ كلمة مرور جيدة' : 'يجب أن تكون كلمة المرور 8 أحرف على الأقل',
         style: cairo(11.5, w: FontWeight.w700, color: color));
+  }
+
+  // Email is optional; when the user has typed something that isn't a valid
+  // address we warn softly in orange (not the hard red used for required fields).
+  static const _emailWarn = Color(0xFFE8890C);
+  bool get _emailValid => _emailRe.hasMatch(email.text.trim());
+  Color? _emailBorder() {
+    if (email.text.trim().isEmpty) return null;
+    return _emailValid ? C.green : _emailWarn;
+  }
+  Widget? _emailFooter() {
+    if (email.text.trim().isEmpty || _emailValid) return null;
+    return Text('الإيمايل غير صالح', style: cairo(11.5, w: FontWeight.w700, color: _emailWarn));
   }
 
   Color? _confBorder() {
@@ -319,8 +334,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
                   _field(signup ? 'البريد الإلكتروني (غير إلزامي)' : 'البريد الإلكتروني أو رقم الهاتف',
                       email, 'mail',
-                      hint: signup ? 'name@wiinz.com' : 'name@wiinz.com أو 05 00 00 00 00',
-                      ltr: true, keyboard: signup ? TextInputType.emailAddress : TextInputType.text),
+                      hint: signup ? 'exemple@domain.com' : 'name@wiinz.com أو 05 00 00 00 00',
+                      ltr: true, keyboard: signup ? TextInputType.emailAddress : TextInputType.text,
+                      borderColor: signup ? _emailBorder() : null, footer: signup ? _emailFooter() : null),
                   _field('كلمة المرور', password, 'lock', obscure: true, ltr: true, hint: '••••••••',
                       visible: _showPassword, onToggleVisible: () => setState(() => _showPassword = !_showPassword),
                       borderColor: signup ? _pwBorder() : null, footer: signup ? _pwFooter() : null),

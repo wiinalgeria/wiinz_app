@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/map/map_screen.dart';
@@ -40,8 +41,9 @@ final _router = GoRouter(
   initialLocation: '/splash',
   routes: [
     GoRoute(path: '/splash', builder: (c, s) => const SplashScreen()),
+    GoRoute(path: '/welcome', builder: (c, s) => const WelcomeScreen()),
     GoRoute(path: '/login', builder: (c, s) => const AuthScreen()),
-    GoRoute(path: '/signup', builder: (c, s) => const AuthScreen()),
+    GoRoute(path: '/signup', builder: (c, s) => const AuthScreen(initialSignup: true)),
     GoRoute(path: '/home', pageBuilder: (c, s) => _fade(const HomeScreen())),
     GoRoute(path: '/map', pageBuilder: (c, s) => _fade(_homeBack(const MapScreen()))),
     GoRoute(path: '/scan', pageBuilder: (c, s) => _fade(_homeBack(const ScanScreen()))),
