@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/i18n.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
 import 'ui.dart';
@@ -59,7 +60,7 @@ class WiinzBottomNav extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text('امسح', style: cairo(10.5, w: FontWeight.w800, color: C.greenMid)),
+                  Text(tr('امسح'), style: cairo(10.5, w: FontWeight.w800, color: C.greenMid)),
                 ],
               ),
             ),
@@ -86,7 +87,7 @@ class WiinzBottomNav extends StatelessWidget {
               children: [
                 mi(icon, size: 24, color: active ? C.forest : C.textTertiary, fill: active),
                 const SizedBox(height: 2),
-                Text(label, style: cairo(10.5, w: active ? FontWeight.w800 : FontWeight.w600, color: active ? C.forest : C.textTertiary)),
+                Text(tr(label), style: cairo(10.5, w: active ? FontWeight.w800 : FontWeight.w600, color: active ? C.forest : C.textTertiary)),
               ],
             ),
           ),

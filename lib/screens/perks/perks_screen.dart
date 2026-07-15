@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../../core/session.dart';
@@ -49,9 +50,9 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
   Future<void> _refund(MyGift g) async {
     final ok = await showConfirm(
       context,
-      title: 'استرجاع نقاط ${g.title}؟',
-      message: g.cost > 0 ? 'ستُعاد ${g.cost} Wz إلى رصيدك وتُحذف الهدية من «مكافأتي».' : 'ستُحذف الهدية من «مكافأتي».',
-      confirmLabel: 'نعم، استرجع', icon: 'undo', accent: C.goldText,
+      title: trf('استرجاع نقاط {title}؟', {'title': g.title}),
+      message: g.cost > 0 ? trf('ستُعاد {n} Wz إلى رصيدك وتُحذف الهدية من «مكافأتي».', {'n': '${g.cost}'}) : tr('ستُحذف الهدية من «مكافأتي».'),
+      confirmLabel: tr('نعم، استرجع'), icon: 'undo', accent: C.goldText,
     );
     if (!ok) return;
     setState(() => _busyId = g.id);
@@ -59,7 +60,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
       final res = await ref.read(apiClientProvider).refundGift(g.id);
       ref.read(sessionProvider.notifier).setPoints(res['newBalance']);
       setState(() => _myGifts.removeWhere((x) => x.id == g.id));
-      if (mounted) showToast(context, g.cost > 0 ? 'تم استرجاع ${g.cost} Wz' : 'تمت الإزالة', top: true);
+      if (mounted) showToast(context, g.cost > 0 ? trf('تم استرجاع {n} Wz', {'n': '${g.cost}'}) : tr('تمت الإزالة'), top: true);
     } on ApiException catch (e) {
       if (mounted) showToast(context, e.message, top: true);
     } finally {
@@ -69,6 +70,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     final balance = ref.watch(sessionProvider).user?.points ?? 0;
     return Scaffold(
       body: SafeArea(
@@ -88,7 +90,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                         Container(width: 34, height: 34, decoration: const BoxDecoration(gradient: C.goldGrad, shape: BoxShape.circle), alignment: Alignment.center,
                           child: Text('Wz', style: cairo(13, w: FontWeight.w800, color: Colors.white))),
                         const SizedBox(width: 10),
-                        Text('رصيدك الحالي', style: noto(13, color: const Color(0xFF8A6A1E))),
+                        Text(tr('رصيدك الحالي'), style: noto(13, color: const Color(0xFF8A6A1E))),
                         const Spacer(),
                         Text.rich(TextSpan(text: '$balance ', style: cairo(20, w: FontWeight.w800, color: C.goldText), children: [TextSpan(text: 'Wz', style: cairo(13, w: FontWeight.w800, color: C.goldText))])),
                       ]),
@@ -104,8 +106,8 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                           Container(width: 42, height: 42, decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(12)), child: mi('leaderboard', size: 24, color: C.greenMid)),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('ترتيبك المحلي', style: cairo(15, w: FontWeight.w700, color: C.ink)),
-                            Text('من أصل $_totalPlayers في $_zone', style: noto(12, color: C.textSecondary)),
+                            Text(tr('ترتيبك المحلي'), style: cairo(15, w: FontWeight.w700, color: C.ink)),
+                            Text(trf('من أصل {n} في {zone}', {'n': '$_totalPlayers', 'zone': _zone}), style: noto(12, color: C.textSecondary)),
                           ])),
                           Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(12)),
                             child: Text('#$_myRank', style: cairo(18, w: FontWeight.w900, color: C.greenMid))),
@@ -115,17 +117,17 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Text('هداياي', style: cairo(16, w: FontWeight.w800, color: C.forest)),
+                    Text(tr('هداياي'), style: cairo(16, w: FontWeight.w800, color: C.forest)),
                     const SizedBox(height: 4),
-                    Text('اعرض الكود لموظف المتجر ليمسحه ويسلّمك هديتك', style: noto(12, color: C.textSecondary)),
+                    Text(tr('اعرض الكود لموظف المتجر ليمسحه ويسلّمك هديتك'), style: noto(12, color: C.textSecondary)),
                     const SizedBox(height: 12),
                     if (_myGifts.isEmpty)
                       Padding(padding: const EdgeInsets.symmetric(vertical: 30), child: Column(children: [
                         mi('card_giftcard', size: 44, color: const Color(0xFFD8CDB8)),
                         const SizedBox(height: 10),
-                        Text('لا توجد مكافآت بعد', style: cairo(15, w: FontWeight.w700, color: C.textTertiary)),
+                        Text(tr('لا توجد مكافآت بعد'), style: cairo(15, w: FontWeight.w700, color: C.textTertiary)),
                         const SizedBox(height: 4),
-                        Text('اختر هدية من صفحة «الهدايا» لتظهر هنا', style: noto(12.5, color: C.textTertiary)),
+                        Text(tr('اختر هدية من صفحة «الهدايا» لتظهر هنا'), style: noto(12.5, color: C.textTertiary)),
                       ]))
                     else ..._myGifts.map(_giftCard),
                   ]),
@@ -156,13 +158,13 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
         SizedBox(width: 120, child: Column(children: [
           Pressable(onTap: () => showCodePopup(context, title: g.title, code: g.code, balance: ref.read(sessionProvider).user?.points ?? 0, store: g.store), child: Container(height: 44,
             decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(13)),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('qr_code_2', size: 18, color: Colors.white), const SizedBox(width: 5), Text('عرض الكود', style: cairo(14, w: FontWeight.w700, color: Colors.white))]))),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('qr_code_2', size: 18, color: Colors.white), const SizedBox(width: 5), Text(tr('عرض الكود'), style: cairo(14, w: FontWeight.w700, color: Colors.white))]))),
           const SizedBox(height: 7),
           Pressable(pressedScale: 0.95, onTap: _busyId == g.id ? null : () => _refund(g), child: Container(height: 40,
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: C.inputBorder, width: 1.5)),
             child: _busyId == g.id
                 ? const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: C.goldText)))
-                : Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('undo', size: 16, color: const Color(0xFF8A6A1E)), const SizedBox(width: 5), Text('رد النقاط', style: cairo(13.5, w: FontWeight.w700, color: const Color(0xFF8A6A1E)))]))),
+                : Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('undo', size: 16, color: const Color(0xFF8A6A1E)), const SizedBox(width: 5), Text(tr('رد النقاط'), style: cairo(13.5, w: FontWeight.w700, color: const Color(0xFF8A6A1E)))]))),
         ])),
       ]),
     );

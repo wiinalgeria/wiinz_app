@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
 import '../../widgets/change_password.dart';
 import '../../widgets/bottom_nav.dart';
+import '../../widgets/language_selector.dart';
 
 class MoreScreen extends ConsumerStatefulWidget {
   const MoreScreen({super.key});
@@ -54,12 +56,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     final source = await showModalBottomSheet<ImageSource>(
       context: context, backgroundColor: C.sand,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: SafeArea(child: Padding(
+      builder: (_) => Directionality(textDirection: appDirection, child: SafeArea(child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
           const SizedBox(height: 16),
-          Text('صورة الملف الشخصي', style: cairo(17, w: FontWeight.w800, color: C.forest)),
+          Text(tr('صورة الملف الشخصي'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
           const SizedBox(height: 16),
           Row(children: [
             Expanded(child: _sourceBtn('التقاط صورة', 'photo_camera', () => Navigator.pop(context, ImageSource.camera))),
@@ -74,12 +76,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       final x = await ImagePicker().pickImage(source: source, maxWidth: 512, maxHeight: 512, imageQuality: 70);
       if (x == null) return;
       final bytes = await x.readAsBytes();
-      if (bytes.length > 500000) { if (mounted) showToast(context, 'الصورة كبيرة جداً، اختر صورة أصغر'); return; }
+      if (bytes.length > 500000) { if (mounted) showToast(context, tr('الصورة كبيرة جداً، اختر صورة أصغر')); return; }
       final dataUri = 'data:image/jpeg;base64,${base64Encode(bytes)}';
       final err = await ref.read(sessionProvider.notifier).saveProfile({'avatar': dataUri});
-      if (mounted) showToast(context, err ?? 'تم تحديث صورتك ✓');
+      if (mounted) showToast(context, err ?? tr('تم تحديث صورتك ✓'));
     } catch (_) {
-      if (mounted) showToast(context, 'تعذّر اختيار الصورة');
+      if (mounted) showToast(context, tr('تعذّر اختيار الصورة'));
     }
   }
 
@@ -91,7 +93,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       child: Column(children: [
         Container(width: 48, height: 48, decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(14)), child: mi(icon, size: 26, color: C.greenMid)),
         const SizedBox(height: 8),
-        Text(label, style: cairo(14, w: FontWeight.w700, color: C.ink)),
+        Text(tr(label), style: cairo(14, w: FontWeight.w700, color: C.ink)),
       ]),
     ),
   );
@@ -99,14 +101,15 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   Widget _avatar(WiinzUser user, double size) => avatarCircle(user.avatar, size);
 
   void _shareInvite(WiinzUser user) {
-    final msg = 'انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁\n'
-        'استخدم رمز دعوتي عند التسجيل: ${user.inviteCode}\n'
-        'حمّل التطبيق الآن وابدأ الربح معنا.';
-    SharePlus.instance.share(ShareParams(text: msg, subject: 'انضم إلى WIINZ'));
+    final msg = '${tr('انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁')}\n'
+        '${tr('استخدم رمز دعوتي عند التسجيل:')} ${user.inviteCode}\n'
+        '${tr('حمّل التطبيق الآن وابدأ الربح معنا.')}';
+    SharePlus.instance.share(ShareParams(text: msg, subject: tr('انضم إلى WIINZ')));
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     final user = ref.watch(sessionProvider).user;
     if (user == null) return const SizedBox();
     return Scaffold(
@@ -116,7 +119,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           // more header (title + back)
           Container(height: 60, padding: const EdgeInsets.symmetric(horizontal: 20), color: C.sand,
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('المزيد', style: cairo(22, w: FontWeight.w800, color: C.forest)),
+              Text(tr('المزيد'), style: cairo(22, w: FontWeight.w800, color: C.forest)),
               Pressable(pressedScale: 0.88, onTap: () => context.go('/home'), child: Container(width: 42, height: 42,
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: C.cardBorder)),
                 child: Transform.flip(flipX: true, child: mi('arrow_forward', size: 22, color: C.forest)))),
@@ -130,7 +133,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             const SizedBox(height: 22),
             _referralsCard(),
             const SizedBox(height: 12),
-            Text('اختصارات', style: cairo(13, w: FontWeight.w700, color: C.textSecondary)),
+            Text(tr('اختصارات'), style: cairo(13, w: FontWeight.w700, color: C.textSecondary)),
             const SizedBox(height: 10),
             Row(children: [
               _shortcut('مكافأتي', 'confirmation_number', C.tint1, C.greenMid, () => context.go('/perks')),
@@ -140,22 +143,23 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               _shortcut('نقاط الجمع', 'location_on', const Color(0xFFE3F0F7), const Color(0xFF1C7ED6), () => context.go('/map')),
             ]),
             const SizedBox(height: 24),
-            Text('الإعدادات', style: cairo(13, w: FontWeight.w700, color: C.textSecondary)),
+            Text(tr('الإعدادات'), style: cairo(13, w: FontWeight.w700, color: C.textSecondary)),
             const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: C.cardBorder)),
               child: Column(children: [
                 _settingRow('تغيير كلمة المرور', 'lock', _changePassword),
                 _settingRow('المساعدة والدعم', 'help', _openSupport),
+                _settingRow('تغيير اللغة', 'language', () => showLanguageSheet(context, ref), trailingText: langNames[currentLang]),
                 _settingRow('عن التطبيق', 'info', _openAbout, last: true),
               ]),
             ),
             const SizedBox(height: 12),
             Pressable(onTap: () async { await ref.read(sessionProvider.notifier).logout(); if (context.mounted) context.go('/login'); },
               child: Container(height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF3D9D5), width: 1.5)),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('logout', size: 22, color: C.danger), const SizedBox(width: 8), Text('تسجيل الخروج', style: cairo(15, w: FontWeight.w700, color: C.danger))]))),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('logout', size: 22, color: C.danger), const SizedBox(width: 8), Text(tr('تسجيل الخروج'), style: cairo(15, w: FontWeight.w700, color: C.danger))]))),
             const SizedBox(height: 22),
-            Center(child: Text('WIINZ · الإصدار 2.0', style: noto(12, color: C.textTertiary))),
+            Center(child: Text(tr('WIINZ · الإصدار 2.0'), style: noto(12, color: C.textTertiary))),
           ])),
           const WiinzBottomNav(current: null),
         ]),
@@ -184,7 +188,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         const SizedBox(height: 14),
         Pressable(onTap: () => _editProfile(user), child: Container(height: 44,
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13), border: Border.all(color: C.tint4, width: 1.5)),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('edit', size: 20, color: C.greenMid), const SizedBox(width: 8), Text('تعديل الملف الشخصي', style: cairo(14, w: FontWeight.w700, color: C.greenMid))]))),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('edit', size: 20, color: C.greenMid), const SizedBox(width: 8), Text(tr('تعديل الملف الشخصي'), style: cairo(14, w: FontWeight.w700, color: C.greenMid))]))),
       ]),
     );
   }
@@ -192,7 +196,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   Widget _watchCard(WiinzUser user) {
     return Pressable(
       pressedScale: 0.98,
-      onTap: () => showToast(context, 'ستتوفر هذه الميزة قريباً ⏳'),
+      onTap: () => showToast(context, tr('ستتوفر هذه الميزة قريباً ⏳')),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(gradient: C.tealCard, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: C.teal1.withValues(alpha: 0.5), blurRadius: 26, offset: const Offset(0, 12))]),
@@ -201,17 +205,17 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             Container(width: 52, height: 52, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(16)), child: mi('smart_display', size: 30, color: Colors.white)),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('شاهد الفيديوهات واربح النقاط', style: cairo(16, w: FontWeight.w800, color: Colors.white)),
-              Text('شاهد إعلاناً قصيراً واكسب حتى 5 Wz يومياً', style: noto(12, color: Colors.white.withValues(alpha: 0.85))),
+              Text(tr('شاهد الفيديوهات واربح النقاط'), style: cairo(16, w: FontWeight.w800, color: Colors.white)),
+              Text(tr('شاهد إعلاناً قصيراً واكسب حتى 5 Wz يومياً'), style: noto(12, color: Colors.white.withValues(alpha: 0.85))),
             ])),
           ]),
           const SizedBox(height: 14),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(999)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [mi('schedule', size: 15, color: C.goldLight), const SizedBox(width: 6), Text('ستتوفر قريباً', style: cairo(12, w: FontWeight.w700, color: Colors.white))])),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [mi('schedule', size: 15, color: C.goldLight), const SizedBox(width: 6), Text(tr('ستتوفر قريباً'), style: cairo(12, w: FontWeight.w700, color: Colors.white))])),
             // button intentionally shown as disabled ("coming soon")
             Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.45), borderRadius: BorderRadius.circular(999)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [Text('شاهد الآن', style: cairo(13, w: FontWeight.w800, color: C.teal1.withValues(alpha: 0.55))), const SizedBox(width: 6), mi('lock', size: 16, color: C.teal1.withValues(alpha: 0.55))])),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [Text(tr('شاهد الآن'), style: cairo(13, w: FontWeight.w800, color: C.teal1.withValues(alpha: 0.55))), const SizedBox(width: 6), mi('lock', size: 16, color: C.teal1.withValues(alpha: 0.55))])),
           ]),
         ]),
       ),
@@ -223,21 +227,21 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(color: C.forest, borderRadius: BorderRadius.circular(20)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [mi('redeem', size: 20, color: const Color(0xFFCFF3E0)), const SizedBox(width: 8), Text('رمز الدعوة الخاص بك', style: cairo(14, w: FontWeight.w700, color: const Color(0xFFCFF3E0)))]),
+        Row(children: [mi('redeem', size: 20, color: const Color(0xFFCFF3E0)), const SizedBox(width: 8), Text(tr('رمز الدعوة الخاص بك'), style: cairo(14, w: FontWeight.w700, color: const Color(0xFFCFF3E0)))]),
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: Container(padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(13), border: Border.all(color: Colors.white.withValues(alpha: 0.35), width: 1.5)),
             alignment: Alignment.center, child: Text(user.inviteCode, style: cairo(20, w: FontWeight.w900, color: Colors.white, spacing: 2), textDirection: TextDirection.ltr))),
           const SizedBox(width: 10),
-          Pressable(pressedScale: 0.88, onTap: () { Clipboard.setData(ClipboardData(text: user.inviteCode)); showToast(context, 'تم نسخ رمز الدعوة ✓'); },
+          Pressable(pressedScale: 0.88, onTap: () { Clipboard.setData(ClipboardData(text: user.inviteCode)); showToast(context, tr('تم نسخ رمز الدعوة ✓')); },
             child: Container(width: 48, height: 48, decoration: BoxDecoration(color: C.green, borderRadius: BorderRadius.circular(13)), child: mi('content_copy', size: 22, color: Colors.white))),
           const SizedBox(width: 8),
           Pressable(pressedScale: 0.88, onTap: () => _shareInvite(user),
             child: Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)), child: mi('ios_share', size: 22, color: Colors.white))),
         ]),
         const SizedBox(height: 10),
-        Text('شارك رمزك واحصل على 20 Wz لكل صديق ينضم 🎉', style: noto(11.5, color: Colors.white.withValues(alpha: 0.6))),
+        Text(tr('شارك رمزك واحصل على 20 Wz لكل صديق ينضم 🎉'), style: noto(11.5, color: Colors.white.withValues(alpha: 0.6))),
       ]),
     );
   }
@@ -251,13 +255,13 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           Row(children: [
             Container(width: 40, height: 40, decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(12)), child: mi('group', size: 22, color: C.greenMid)),
             const SizedBox(width: 12),
-            Text('أصدقاء انضموا برمزك', style: cairo(15, w: FontWeight.w700, color: C.ink)),
+            Text(tr('أصدقاء انضموا برمزك'), style: cairo(15, w: FontWeight.w700, color: C.ink)),
           ]),
           Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(10)),
             child: Text('${_referrals.length}', style: cairo(15, w: FontWeight.w800, color: C.greenMid))),
         ]),
         if (_referrals.isEmpty)
-          Padding(padding: const EdgeInsets.only(top: 12), child: Text('لم ينضم أحد بعد — شارك رمزك لتبدأ الربح', style: noto(12.5, color: C.textTertiary)))
+          Padding(padding: const EdgeInsets.only(top: 12), child: Text(tr('لم ينضم أحد بعد — شارك رمزك لتبدأ الربح'), style: noto(12.5, color: C.textTertiary)))
         else
           ..._referrals.map((r) => Container(
             margin: const EdgeInsets.only(top: 8), padding: const EdgeInsets.only(top: 8),
@@ -280,19 +284,21 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
       child: Column(children: [
         Container(width: 44, height: 44, decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)), child: mi(icon, size: 24, color: color)),
         const SizedBox(height: 8),
-        Text(label, style: cairo(13, w: FontWeight.w700, color: C.ink)),
+        Text(tr(label), style: cairo(13, w: FontWeight.w700, color: C.ink)),
       ]),
     )));
   }
 
-  Widget _settingRow(String label, String icon, VoidCallback onTap, {bool last = false}) {
+  Widget _settingRow(String label, String icon, VoidCallback onTap, {bool last = false, String? trailingText}) {
     return Pressable(pressedScale: 0.98, onTap: onTap, child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFF5EFE2)))),
       child: Row(children: [
         Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFF1EEE6), borderRadius: BorderRadius.circular(12)), child: mi(icon, size: 22, color: const Color(0xFF6B6459))),
         const SizedBox(width: 14),
-        Expanded(child: Text(label, style: cairo(15, w: FontWeight.w700, color: C.ink))),
+        Expanded(child: Text(tr(label), style: cairo(15, w: FontWeight.w700, color: C.ink))),
+        if (trailingText != null) Text(trailingText, style: cairo(13, w: FontWeight.w700, color: C.greenMid)),
+        const SizedBox(width: 6),
         Transform.flip(flipX: true, child: mi('chevron_right', size: 22, color: const Color(0xFFC7BCA8))),
       ]),
     ));
@@ -310,7 +316,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     showModalBottomSheet(
       context: context, backgroundColor: C.sand, isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: StatefulBuilder(
+      builder: (_) => Directionality(textDirection: appDirection, child: StatefulBuilder(
         builder: (context, setSheet) => Padding(
           // keyboard inset + the Android gesture/nav bar, so the buttons never
           // sit under the system bar
@@ -320,7 +326,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
               const SizedBox(height: 16),
-              Text('تعديل الملف الشخصي', style: cairo(19, w: FontWeight.w800, color: C.forest)),
+              Text(tr('تعديل الملف الشخصي'), style: cairo(19, w: FontWeight.w800, color: C.forest)),
               const SizedBox(height: 16),
               // profile picture — tap to change (camera / gallery)
               Pressable(
@@ -333,7 +339,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                       child: mi('photo_camera', size: 17, color: Colors.white))),
                   ]),
                   const SizedBox(height: 8),
-                  Text('تغيير الصورة', style: cairo(13, w: FontWeight.w700, color: C.greenMid)),
+                  Text(tr('تغيير الصورة'), style: cairo(13, w: FontWeight.w700, color: C.greenMid)),
                 ]),
               ),
               const SizedBox(height: 18),
@@ -355,11 +361,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               Row(children: [
                 Pressable(onTap: () => Navigator.pop(context), child: Container(width: 100, height: 54, alignment: Alignment.center,
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
-                  child: Text('إلغاء', style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))))),
+                  child: Text(tr('إلغاء'), style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))))),
                 const SizedBox(width: 10),
-                Expanded(child: GradientButton(label: 'حفظ التغييرات', height: 54, onTap: () async {
+                Expanded(child: GradientButton(label: tr('حفظ التغييرات'), height: 54, onTap: () async {
                   await ref.read(sessionProvider.notifier).saveProfile({'name': name.text.trim(), 'phone': phone.text.trim(), 'address': address.text.trim(), 'wilaya': wilaya, 'commune': commune});
-                  if (context.mounted) { Navigator.pop(context); showToast(context, 'تم حفظ التغييرات ✓'); }
+                  if (context.mounted) { Navigator.pop(context); showToast(context, tr('تم حفظ التغييرات ✓')); }
                 })),
               ]),
             ]),
@@ -372,7 +378,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   Widget _editDropdown(String label, String value, List<String> items, String? icon, ValueChanged<String> onChanged) {
     final safe = items.contains(value) ? value : (items.isNotEmpty ? items.first : null);
     return Padding(padding: const EdgeInsets.only(bottom: 14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+      Text(tr(label), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
       const SizedBox(height: 8),
       Container(height: 56, padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
@@ -390,7 +396,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
 
   Widget _editField(String label, TextEditingController c, String icon, {bool ltr = false}) {
     return Padding(padding: const EdgeInsets.only(bottom: 14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+      Text(tr(label), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
       const SizedBox(height: 8),
       Container(height: 56, padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
@@ -408,7 +414,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     showModalBottomSheet(
       context: context, backgroundColor: C.sand, isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: StatefulBuilder(
+      builder: (_) => Directionality(textDirection: appDirection, child: StatefulBuilder(
         builder: (context, setSheet) => Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: SingleChildScrollView(child: Padding(
@@ -417,35 +423,35 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Center(child: Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3)))),
               const SizedBox(height: 16),
-              Row(children: [mi('support_agent', size: 24, color: C.green), const SizedBox(width: 8), Text('المساعدة والدعم', style: cairo(19, w: FontWeight.w800, color: C.forest))]),
+              Row(children: [mi('support_agent', size: 24, color: C.green), const SizedBox(width: 8), Text(tr('المساعدة والدعم'), style: cairo(19, w: FontWeight.w800, color: C.forest))]),
               const SizedBox(height: 4),
-              Text('صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIINZ.', style: noto(13, color: C.textSecondary)),
+              Text(tr('صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIINZ.'), style: noto(13, color: C.textSecondary)),
               const SizedBox(height: 18),
               _editField('عنوان المشكلة / الاقتراح', subject, 'help'),
-              Text('التفاصيل', style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+              Text(tr('التفاصيل'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
               const SizedBox(height: 8),
               Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
                 child: TextField(controller: details, maxLines: 4, textAlign: TextAlign.right,
-                  decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: 'اكتب التفاصيل هنا…', hintStyle: noto(14, color: C.textTertiary)), style: noto(15, color: C.ink))),
+                  decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: tr('اكتب التفاصيل هنا…'), hintStyle: noto(14, color: C.textTertiary)), style: noto(15, color: C.ink))),
               const SizedBox(height: 18),
               Row(children: [
                 Pressable(onTap: () => Navigator.pop(context), child: Container(width: 100, height: 54, alignment: Alignment.center,
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
-                  child: Text('إلغاء', style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))))),
+                  child: Text(tr('إلغاء'), style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))))),
                 const SizedBox(width: 10),
                 Expanded(child: GradientButton(
                   label: sending ? '' : 'إرسال', icon: sending ? null : 'ios_share', height: 54,
                   leading: sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : null,
                   onTap: () async {
-                    if (subject.text.trim().isEmpty) { showToast(context, 'أدخل عنوان المشكلة'); return; }
+                    if (subject.text.trim().isEmpty) { showToast(context, tr('أدخل عنوان المشكلة')); return; }
                     setSheet(() => sending = true);
                     try {
                       await ref.read(apiClientProvider).submitSupport(subject.text.trim(), details.text.trim());
-                      if (context.mounted) { Navigator.pop(context); showToast(context, 'تم إرسال رسالتك ✓ سنتواصل معك قريباً'); }
+                      if (context.mounted) { Navigator.pop(context); showToast(context, tr('تم إرسال رسالتك ✓ سنتواصل معك قريباً')); }
                     } catch (_) {
                       setSheet(() => sending = false);
-                      if (context.mounted) showToast(context, 'تعذّر الإرسال، حاول مجدداً');
+                      if (context.mounted) showToast(context, tr('تعذّر الإرسال، حاول مجدداً'));
                     }
                   })),
               ]),
@@ -467,7 +473,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     showModalBottomSheet(
       context: context, backgroundColor: C.sand,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: Padding(
+      builder: (_) => Directionality(textDirection: appDirection, child: Padding(
         padding: EdgeInsets.fromLTRB(24, 20, 24, 34 + MediaQuery.of(context).padding.bottom),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
@@ -476,9 +482,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           const SizedBox(height: 16),
           Text('WIIN ALGERIA', style: cairo(20, w: FontWeight.w900, color: C.forest)),
           const SizedBox(height: 4),
-          Text('شركة ناشئة في تسيير النفايات وإعادة التدوير', style: noto(13.5, color: C.textSecondary), textAlign: TextAlign.center),
+          Text(tr('شركة ناشئة في تسيير النفايات وإعادة التدوير'), style: noto(13.5, color: C.textSecondary), textAlign: TextAlign.center),
           const SizedBox(height: 6),
-          Text('طُوّر ونُشر بواسطة WIIN ALGERIA', style: noto(12, color: C.textTertiary), textAlign: TextAlign.center),
+          Text(tr('طُوّر ونُشر بواسطة WIIN ALGERIA'), style: noto(12, color: C.textTertiary), textAlign: TextAlign.center),
           const SizedBox(height: 22),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             social(FontAwesomeIcons.facebookF, const Color(0xFF1877F2), 'https://www.facebook.com/wiin.algeria/'),
@@ -492,7 +498,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             social(FontAwesomeIcons.tiktok, C.ink, 'https://www.tiktok.com/@wiinalgeria0'),
           ]),
           const SizedBox(height: 20),
-          Text('WIINZ · الإصدار 2.0', style: noto(12, color: C.textTertiary)),
+          Text(tr('WIINZ · الإصدار 2.0'), style: noto(12, color: C.textTertiary)),
         ]),
       )),
     );

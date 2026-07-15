@@ -159,6 +159,7 @@ const Map<String, IconData> _icons = {
   'logout': Symbols.logout,
   'add_circle': Symbols.add_circle,
   'check_circle': Symbols.check_circle,
+  'language': Symbols.language,
   'campaign': Symbols.campaign,
   'sell': Symbols.sell,
   'card_giftcard': Symbols.card_giftcard,

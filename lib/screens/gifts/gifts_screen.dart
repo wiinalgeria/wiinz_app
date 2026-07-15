@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../../core/session.dart';
@@ -46,8 +47,8 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
     // choosing a gift → confirm only → redeemed straight to مكافأتي
     final ok = await showConfirm(
       context,
-      title: 'استلام $title؟',
-      message: cost > 0 ? 'سيتم خصم $cost Wz وتُضاف الهدية إلى «مكافأتي».' : 'ستُضاف الهدية مجاناً إلى «مكافأتي».',
+      title: trf('استلام {title}؟', {'title': title}),
+      message: cost > 0 ? trf('سيتم خصم {cost} Wz وتُضاف الهدية إلى «مكافأتي».', {'cost': '$cost'}) : tr('ستُضاف الهدية مجاناً إلى «مكافأتي».'),
       confirmLabel: confirmLabel, icon: 'redeem', accent: C.green,
     );
     if (!ok) return;
@@ -55,7 +56,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
     try {
       final res = await ref.read(apiClientProvider).claimGift(id);
       ref.read(sessionProvider.notifier).setPoints(res['newBalance']);
-      if (mounted) showToast(context, 'تمت إضافة الهدية إلى «مكافأتي» 🎁');
+      if (mounted) showToast(context, tr('تمت إضافة الهدية إلى «مكافأتي» 🎁'));
     } on ApiException catch (e) {
       if (mounted) showToast(context, e.message);
     } finally {
@@ -65,6 +66,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     final filtered = _cat == 'الكل' ? _gifts : _gifts.where((g) => g.cat == _cat).toList();
     return Scaffold(
       body: SafeArea(
@@ -74,7 +76,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
           Expanded(child: _loading
               ? const Center(child: CircularProgressIndicator())
               : ListView(padding: const EdgeInsets.fromLTRB(20, 8, 20, 20), children: [
-                  Text('مكافآت خاصة ومحدودة — متوفرة لفترة قصيرة فقط ✨', style: noto(13.5, color: C.textSecondary)),
+                  Text(tr('مكافآت خاصة ومحدودة — متوفرة لفترة قصيرة فقط ✨'), style: noto(13.5, color: C.textSecondary)),
                   const SizedBox(height: 18),
                   if (_hero != null) _heroCard(_hero!),
                   const SizedBox(height: 18),
@@ -84,7 +86,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
                     Padding(padding: const EdgeInsets.all(30), child: Column(children: [
                       mi('redeem', size: 40, color: const Color(0xFFD8CDB8)),
                       const SizedBox(height: 8),
-                      Text('لا توجد هدايا في هذه الفئة حالياً', style: cairo(14, w: FontWeight.w700, color: C.textTertiary)),
+                      Text(tr('لا توجد هدايا في هذه الفئة حالياً'), style: cairo(14, w: FontWeight.w700, color: C.textTertiary)),
                     ]))
                   else ...filtered.map(_giftCard),
                 ])),
@@ -103,7 +105,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
         Positioned(top: 0, left: 0, child: Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
           decoration: BoxDecoration(color: C.gold, borderRadius: BorderRadius.circular(999),
             boxShadow: [BoxShadow(color: C.gold.withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 3))]),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [mi('bolt', size: 14, color: const Color(0xFF3D2A05)), const SizedBox(width: 3), Text('محدود', style: cairo(11, w: FontWeight.w800, color: const Color(0xFF3D2A05)))]))),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [mi('bolt', size: 14, color: const Color(0xFF3D2A05)), const SizedBox(width: 3), Text(tr('محدود'), style: cairo(11, w: FontWeight.w800, color: const Color(0xFF3D2A05)))]))),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const SizedBox(height: 30),
           h.logo.isNotEmpty ? storeLogo(h.logo, 48) : mi('redeem', size: 40, color: C.gold),
@@ -120,7 +122,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
             Text(h.left, style: noto(12, color: Colors.white.withValues(alpha: 0.8))),
           ]),
           const SizedBox(height: 18),
-          Pressable(onTap: _busyId == h.id ? null : () => _claim(h.id, h.title, h.cost, confirmLabel: 'تأكيد'), child: Container(
+          Pressable(onTap: _busyId == h.id ? null : () => _claim(h.id, h.title, h.cost, confirmLabel: tr('تأكيد')), child: Container(
             width: double.infinity, height: 52, decoration: BoxDecoration(gradient: C.goldGrad, borderRadius: BorderRadius.circular(15)),
             alignment: Alignment.center,
             child: _busyId == h.id ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Color(0xFF3D2A05), strokeWidth: 2))
@@ -193,7 +195,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
           decoration: BoxDecoration(color: C.forest, borderRadius: BorderRadius.circular(12)),
           alignment: Alignment.center,
           child: _busyId == g.id ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : Text('استلام', style: cairo(13, w: FontWeight.w700, color: Colors.white)))),
+            : Text(tr('استلام'), style: cairo(13, w: FontWeight.w700, color: Colors.white)))),
       ]),
     );
   }

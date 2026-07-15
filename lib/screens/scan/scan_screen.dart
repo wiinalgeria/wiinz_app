@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
@@ -86,7 +87,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
     } on ApiException catch (e) {
       if (mounted) showToast(context, e.message);
     } catch (_) {
-      if (mounted) showToast(context, 'حدث خطأ، حاول مجدداً');
+      if (mounted) showToast(context, tr('حدث خطأ، حاول مجدداً'));
     } finally {
       _handling = false;
       if (mounted) {
@@ -103,16 +104,16 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
       context: context,
       builder: (dctx) => StatefulBuilder(
         builder: (dctx, setD) => Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: appDirection,
           child: AlertDialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             content: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 56, height: 56, decoration: const BoxDecoration(color: Color(0xFFEAF6EF), shape: BoxShape.circle), child: mi('recycling', size: 28, color: C.green)),
               const SizedBox(height: 14),
-              Text('قيّم نقطة الجمع', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+              Text(tr('قيّم نقطة الجمع'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
               const SizedBox(height: 6),
-              Text('كيف كانت تجربتك في هذه النقطة؟', textAlign: TextAlign.center, style: noto(13, color: C.textSecondary)),
+              Text(tr('كيف كانت تجربتك في هذه النقطة؟'), textAlign: TextAlign.center, style: noto(13, color: C.textSecondary)),
               const SizedBox(height: 16),
               // Stars laid out left → right (star 1 on the left) regardless of RTL.
               Directionality(
@@ -126,14 +127,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
               ),
             ]),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dctx), child: Text('تخطّي', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+              TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('تخطّي'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
               TextButton(
                 onPressed: rating == 0 ? null : () {
                   ref.read(apiClientProvider).ratePoint(code, rating);
                   Navigator.pop(dctx);
-                  if (mounted) showToast(context, 'شكراً لتقييمك ⭐');
+                  if (mounted) showToast(context, tr('شكراً لتقييمك ⭐'));
                 },
-                child: Text('إرسال التقييم', style: cairo(14, w: FontWeight.w800, color: rating == 0 ? C.textTertiary : C.green)),
+                child: Text(tr('إرسال التقييم'), style: cairo(14, w: FontWeight.w800, color: rating == 0 ? C.textTertiary : C.green)),
               ),
             ],
           ),
@@ -144,6 +145,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     return Scaffold(
       backgroundColor: const Color(0xFF0C0F0C),
       resizeToAvoidBottomInset: true,
@@ -172,14 +174,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       mi('qr_code_scanner', size: 56, color: Colors.white.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
-                      Text('يحتاج التطبيق إلى إذن الكاميرا لمسح الرموز',
+                      Text(tr('يحتاج التطبيق إلى إذن الكاميرا لمسح الرموز'),
                         textAlign: TextAlign.center, style: noto(14, color: Colors.white.withValues(alpha: 0.85))),
                       const SizedBox(height: 16),
                       Pressable(
                         onTap: () async { await openAppSettings(); },
                         child: Container(padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
                           decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(12)),
-                          child: Text('فتح الإعدادات', style: cairo(14, w: FontWeight.w700, color: Colors.white))),
+                          child: Text(tr('فتح الإعدادات'), style: cairo(14, w: FontWeight.w700, color: Colors.white))),
                       ),
                     ]),
                   ))),
@@ -190,7 +192,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                        Text('مسح رمز QR', style: cairo(20, w: FontWeight.w800, color: Colors.white)),
+                        Text(tr('مسح رمز QR'), style: cairo(20, w: FontWeight.w800, color: Colors.white)),
                         Pressable(onTap: () => context.go('/home'), child: Container(width: 40, height: 40,
                           decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)),
                           child: Transform.flip(flipX: true, child: mi('arrow_forward', size: 22, color: Colors.white)))),
@@ -198,7 +200,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
                     ),
                     const Spacer(),
                     Padding(padding: const EdgeInsets.fromLTRB(40, 0, 40, 24),
-                      child: Text('وجّه الكاميرا نحو رمز QR الموجود على نقطة الجمع', textAlign: TextAlign.center, style: noto(14, color: Colors.white.withValues(alpha: 0.85)))),
+                      child: Text(tr('وجّه الكاميرا نحو رمز QR الموجود على نقطة الجمع'), textAlign: TextAlign.center, style: noto(14, color: Colors.white.withValues(alpha: 0.85)))),
                   ]),
                 ),
               ],
@@ -212,13 +214,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
             child: SafeArea(top: false, child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
               const SizedBox(height: 14),
-              Text('لا تعرف أين توجد نقاط الجمع؟', style: noto(12.5, color: C.textTertiary)),
+              Text(tr('لا تعرف أين توجد نقاط الجمع؟'), style: noto(12.5, color: C.textTertiary)),
               const SizedBox(height: 10),
               Pressable(onTap: () => context.go('/map'), child: Container(
                 height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: C.tint4, width: 1.5)),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   mi('location_on', size: 22, color: C.green), const SizedBox(width: 9),
-                  Text('اعرض نقاط الجمع على الخريطة', style: cairo(15, w: FontWeight.w700, color: C.forest)),
+                  Text(tr('اعرض نقاط الجمع على الخريطة'), style: cairo(15, w: FontWeight.w700, color: C.forest)),
                 ]))),
             ]))),
         ],

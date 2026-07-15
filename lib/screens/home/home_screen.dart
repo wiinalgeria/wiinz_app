@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -74,22 +75,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await showDialog<void>(
       context: context,
       builder: (dctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: appDirection,
         child: AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 64, height: 64, decoration: const BoxDecoration(color: Color(0xFFEAF6EF), shape: BoxShape.circle), child: mi('notifications_active', size: 32, color: C.green)),
             const SizedBox(height: 14),
-            Text('فعّل الإشعارات', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+            Text(tr('فعّل الإشعارات'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             const SizedBox(height: 8),
-            Text('الإشعارات معطّلة. فعّلها لتصلك التنبيهات عن الهدايا والنقاط الجديدة حتى وأنت خارج التطبيق.',
+            Text(tr('الإشعارات معطّلة. فعّلها لتصلك التنبيهات عن الهدايا والنقاط الجديدة حتى وأنت خارج التطبيق.'),
                 textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dctx), child: Text('لاحقاً', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+            TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('لاحقاً'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
             TextButton(onPressed: () { Navigator.pop(dctx); openNotificationSettings(); },
-              child: Text('فتح الإعدادات', style: cairo(14, w: FontWeight.w800, color: C.green))),
+              child: Text(tr('فتح الإعدادات'), style: cairo(14, w: FontWeight.w800, color: C.green))),
           ],
         ),
       ),
@@ -141,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (dctx) => StatefulBuilder(
         builder: (dctx, setD) => Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: appDirection,
           child: Dialog(
             backgroundColor: Colors.white,
             insetPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -151,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 Image.asset('assets/images/wiin-logo-green.png', width: 104),
                 const SizedBox(height: 14),
-                Text('اجمع القارورات، اكسب النقاط، واربح الهدايا', textAlign: TextAlign.center, style: cairo(16.5, w: FontWeight.w800, color: C.forest, height: 1.5)),
+                Text(tr('اجمع القارورات، اكسب النقاط، واربح الهدايا'), textAlign: TextAlign.center, style: cairo(16.5, w: FontWeight.w800, color: C.forest, height: 1.5)),
                 const SizedBox(height: 16),
                 SizedBox(
                   height: 250,
@@ -177,10 +178,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ]),
                         ),
                         const SizedBox(height: 22),
-                        Text(s.$1, textAlign: TextAlign.center, style: cairo(19, w: FontWeight.w800, color: C.ink)),
+                        Text(tr(s.$1), textAlign: TextAlign.center, style: cairo(19, w: FontWeight.w800, color: C.ink)),
                         const SizedBox(height: 8),
                         Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(s.$2, textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6))),
+                          child: Text(tr(s.$2), textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6))),
                       ]);
                     },
                   ),
@@ -219,7 +220,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onTap: () => pageCtrl.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
                       child: Container(height: 52, alignment: Alignment.center,
                         decoration: BoxDecoration(color: const Color(0xFFF1F8EF), borderRadius: BorderRadius.circular(15), border: Border.all(color: C.cardBorder)),
-                        child: Text('السابق', style: cairo(15, w: FontWeight.w700, color: C.forest))),
+                        child: Text(tr('السابق'), style: cairo(15, w: FontWeight.w700, color: C.forest))),
                     )),
                 ]),
               ]),
@@ -235,23 +236,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog<void>(
       context: context,
       builder: (dctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: appDirection,
         child: AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 56, height: 56, decoration: const BoxDecoration(color: Color(0xFFFCEBCB), shape: BoxShape.circle), child: mi('lock_reset', size: 28, color: Color(0xFFB7791F))),
             const SizedBox(height: 14),
-            Text('كلمة مرور مؤقتة', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+            Text(tr('كلمة مرور مؤقتة'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             const SizedBox(height: 8),
-            Text('تم تعيين كلمة مرور مؤقتة لحسابك من قِبل الإدارة. هل تريد تغييرها الآن إلى كلمة مرور خاصة بك؟',
+            Text(tr('تم تعيين كلمة مرور مؤقتة لحسابك من قِبل الإدارة. هل تريد تغييرها الآن إلى كلمة مرور خاصة بك؟'),
                 textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dctx), child: Text('تخطّي', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+            TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('تخطّي'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
             TextButton(
               onPressed: () { Navigator.pop(dctx); showChangePasswordDialog(context, ref, confirmFirst: false); },
-              child: Text('تغيير كلمة المرور', style: cairo(14, w: FontWeight.w800, color: C.green)),
+              child: Text(tr('تغيير كلمة المرور'), style: cairo(14, w: FontWeight.w800, color: C.green)),
             ),
           ],
         ),
@@ -278,6 +279,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     final session = ref.watch(sessionProvider);
     final user = session.user;
     final cfg = session.config;
@@ -297,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text.rich(TextSpan(text: 'مرحباً، ', style: noto(14, color: C.textSecondary), children: [
+                      child: Text.rich(TextSpan(text: tr('مرحباً، '), style: noto(14, color: C.textSecondary), children: [
                         TextSpan(text: user.name, style: cairo(14, w: FontWeight.w700, color: C.ink)),
                         const TextSpan(text: ' 👋'),
                       ])),
@@ -336,7 +338,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Container(width: 44, height: 44, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14)),
                             child: mi('qr_code_scanner', color: Colors.white, size: 26)),
                           const SizedBox(width: 12),
-                          Text('مسح رمز QR لكسب النقاط', style: cairo(18, w: FontWeight.w700, color: Colors.white)),
+                          Text(tr('مسح رمز QR لكسب النقاط'), style: cairo(18, w: FontWeight.w700, color: Colors.white)),
                         ]),
                       ),
                     ),
@@ -351,7 +353,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                           mi('location_on', size: 24, color: C.green),
                           const SizedBox(width: 10),
-                          Text('اكتشف نقاط الجمع القريبة', style: cairo(16, w: FontWeight.w700, color: C.forest)),
+                          Text(tr('اكتشف نقاط الجمع القريبة'), style: cairo(16, w: FontWeight.w700, color: C.forest)),
                         ]),
                       ),
                     ),
@@ -464,7 +466,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Image.asset('assets/images/wiin-logo-white.png', width: 62),
               const SizedBox(width: 8),
               Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(999)),
-                child: Text('أخضر', style: cairo(14, w: FontWeight.w800, color: Colors.white))),
+                child: Text(tr('أخضر'), style: cairo(14, w: FontWeight.w800, color: Colors.white))),
             ]),
             Container(width: 38, height: 32, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(9)), child: mi('qr_code_2', size: 20, color: Colors.white)),
           ]),
@@ -510,10 +512,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisAlignment: MainAxisAlignment.center, children: [
           Text('WIINZ', style: cairo(18, w: FontWeight.w800, color: Colors.white, spacing: 1)),
           const SizedBox(height: 12),
-          Text('الكود الشخصي', style: noto(12, color: Colors.white.withValues(alpha: 0.6))),
+          Text(tr('الكود الشخصي'), style: noto(12, color: Colors.white.withValues(alpha: 0.6))),
           Text(user.name, style: cairo(17, w: FontWeight.w700, color: Colors.white)),
           const SizedBox(height: 14),
-          Text('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك', style: noto(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.right),
+          Text(tr('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك'), style: noto(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.right),
         ])),
       ]),
     );
@@ -534,7 +536,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Text('WIINZ', style: cairo(19, w: FontWeight.w800, color: Colors.white, spacing: 2)),
               const SizedBox(width: 8),
               Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.28), borderRadius: BorderRadius.circular(999)),
-                child: Text(badge, style: cairo(14, w: FontWeight.w800, color: Colors.white))),
+                child: Text(tr(badge), style: cairo(14, w: FontWeight.w800, color: Colors.white))),
             ]),
             // Bigger lock so it's obvious the tier is not yet available.
             Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.22), shape: BoxShape.circle), child: mi('lock', size: 30, color: Colors.white)),
@@ -543,13 +545,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mi(icon, size: 34, color: Colors.white.withValues(alpha: 0.9)),
           Text(title, style: cairo(18, w: FontWeight.w800, color: Colors.white)),
           const SizedBox(height: 2),
-          Text('ستتوفر قريباً', style: cairo(16, w: FontWeight.w800, color: Colors.white)),
+          Text(tr('ستتوفر قريباً'), style: cairo(16, w: FontWeight.w800, color: Colors.white)),
           const Spacer(),
           ClipRRect(borderRadius: BorderRadius.circular(999), child: LinearProgressIndicator(value: pct, minHeight: 8, backgroundColor: Colors.black.withValues(alpha: 0.22), valueColor: const AlwaysStoppedAnimation(Colors.white))),
           const SizedBox(height: 6),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text('$balance / $goal Wz', style: cairo(11, w: FontWeight.w700, color: Colors.white)),
-            Text('باقٍ $left Wz', style: cairo(11, w: FontWeight.w700, color: Colors.white)),
+            Text(trf('باقٍ {n} Wz', {'n': '$left'}), style: cairo(11, w: FontWeight.w700, color: Colors.white)),
           ]),
         ],
       ),
@@ -571,7 +573,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_adsLoaded && _ads.isEmpty) return const [];
     final ads = _ads.isNotEmpty
         ? _ads
-        : [AdBanner(id: '_', title: 'إنترنت أسرع مع شريكنا', subtitle: 'عرض حصري لمستخدمي WIINZ')]; // pre-load placeholder
+        : [AdBanner(id: '_', title: tr('إنترنت أسرع مع شريكنا'), subtitle: tr('عرض حصري لمستخدمي WIINZ'))]; // pre-load placeholder
     final widgets = <Widget>[];
     for (var i = 0; i < ads.length; i++) {
       widgets.add(_adBanner(ads[i]));
@@ -604,7 +606,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (adImg == null) Positioned(left: -30, bottom: -40, child: Container(width: 150, height: 150, decoration: BoxDecoration(color: C.gold.withValues(alpha: 0.85), shape: BoxShape.circle))),
           if (adImg == null) Positioned(left: 20, top: 20, child: Container(width: 90, height: 90, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), shape: BoxShape.circle))),
           Positioned(top: 8, right: 12, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(6)),
-            child: Text('إعلان', style: noto(10, w: FontWeight.w600, color: Colors.white)))),
+            child: Text(tr('إعلان'), style: noto(10, w: FontWeight.w600, color: Colors.white)))),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, style: cairo(19, w: FontWeight.w800, color: Colors.white, height: 1.3), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
@@ -671,7 +673,7 @@ class _PromoDialogState extends State<_PromoDialog> {
   Widget build(BuildContext context) {
     final h = (MediaQuery.of(context).size.height * 0.6).clamp(380.0, 520.0);
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: appDirection,
       child: Dialog(
         backgroundColor: Colors.white,
         insetPadding: const EdgeInsets.symmetric(horizontal: 22),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -190,7 +191,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
   Future<void> _openDirections(CollectionPoint p) async {
     final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving');
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (mounted) showToast(context, 'تعذّر فتح خرائط Google');
+      if (mounted) showToast(context, tr('تعذّر فتح خرائط Google'));
     }
   }
 
@@ -271,6 +272,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -295,8 +297,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
                     decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.95), borderRadius: BorderRadius.circular(16),
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, 8))]),
                     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text('نقاط الجمع القريبة', style: cairo(16, w: FontWeight.w800, color: C.forest)),
-                      Row(children: [mi('my_location', size: 16, color: C.green), const SizedBox(width: 5), Text('${_points.length} نقاط', style: cairo(12, w: FontWeight.w700, color: C.green))]),
+                      Text(tr('نقاط الجمع القريبة'), style: cairo(16, w: FontWeight.w800, color: C.forest)),
+                      Row(children: [mi('my_location', size: 16, color: C.green), const SizedBox(width: 5), Text(trf('{n} نقاط', {'n': '${_points.length}'}), style: cairo(12, w: FontWeight.w700, color: C.green))]),
                     ]),
                   )),
                   // location-denied banner
@@ -306,11 +308,11 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
                     child: Row(children: [
                       mi('location_on', size: 20, color: C.gold),
                       const SizedBox(width: 8),
-                      Expanded(child: Text('فعّل الموقع لعرض أقرب نقاط الجمع وحساب المسافات', style: noto(11.5, color: const Color(0xFF8A6A1E)))),
+                      Expanded(child: Text(tr('فعّل الموقع لعرض أقرب نقاط الجمع وحساب المسافات'), style: noto(11.5, color: const Color(0xFF8A6A1E)))),
                       const SizedBox(width: 6),
                       Pressable(pressedScale: 0.92, onTap: _enableLocation, child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(color: C.green, borderRadius: BorderRadius.circular(10)),
-                        child: Text('تفعيل', style: cairo(12, w: FontWeight.w700, color: Colors.white)))),
+                        child: Text(tr('تفعيل'), style: cairo(12, w: FontWeight.w700, color: Colors.white)))),
                     ]),
                   )),
                   // "show my location" control — always visible, sits just above the list
@@ -329,7 +331,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
                           child: Row(children: [
                             mi('my_location', size: 20, color: Colors.white),
                             const SizedBox(width: 8),
-                            Text('أظهر مكاني', style: cairo(14.5, w: FontWeight.w800, color: Colors.white)),
+                            Text(tr('أظهر مكاني'), style: cairo(14.5, w: FontWeight.w800, color: Colors.white)),
                           ]),
                         ),
                       ),
@@ -360,9 +362,9 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
           Container(width: 96, height: 96, decoration: const BoxDecoration(color: Color(0xFFEAF6EF), shape: BoxShape.circle),
             child: mi('location_off', size: 46, color: C.green)),
           const SizedBox(height: 20),
-          Text('الموقع مطلوب للخريطة', style: cairo(20, w: FontWeight.w800, color: C.forest)),
+          Text(tr('الموقع مطلوب للخريطة'), style: cairo(20, w: FontWeight.w800, color: C.forest)),
           const SizedBox(height: 10),
-          Text('لعرض أقرب نقاط الجمع إليك وحساب المسافات، يجب تفعيل الموقع. لا يمكن استخدام الخريطة بدون تفعيل الموقع.',
+          Text(tr('لعرض أقرب نقاط الجمع إليك وحساب المسافات، يجب تفعيل الموقع. لا يمكن استخدام الخريطة بدون تفعيل الموقع.'),
               textAlign: TextAlign.center, style: noto(14, color: C.textSecondary, height: 1.6)),
           const SizedBox(height: 24),
           Pressable(
@@ -374,7 +376,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 mi('my_location', size: 22, color: Colors.white),
                 const SizedBox(width: 8),
-                Text('تفعيل الموقع', style: cairo(16, w: FontWeight.w800, color: Colors.white)),
+                Text(tr('تفعيل الموقع'), style: cairo(16, w: FontWeight.w800, color: Colors.white)),
               ]),
             ),
           ),
@@ -404,7 +406,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
             const SizedBox(height: 12),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Row(children: [
-                Text('أقرب نقاط الجمع', style: cairo(16, w: FontWeight.w800, color: C.forest)),
+                Text(tr('أقرب نقاط الجمع'), style: cairo(16, w: FontWeight.w800, color: C.forest)),
                 const SizedBox(width: 6),
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(9)),
@@ -482,7 +484,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
     showModalBottomSheet(
       context: context, backgroundColor: C.sand, isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => Directionality(textDirection: TextDirection.rtl, child: ConstrainedBox(
+      builder: (_) => Directionality(textDirection: appDirection, child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         child: SingleChildScrollView(child: Padding(
         padding: EdgeInsets.fromLTRB(22, 20, 22, 30 + navInset),
@@ -499,7 +501,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
             ])),
             if (p.distanceLabel.isNotEmpty)
               Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(12)),
-                child: Column(children: [Text(p.distanceLabel, style: cairo(15, w: FontWeight.w800, color: C.greenBtnEnd)), Text('من موقعك', style: noto(10, color: const Color(0xFF6B7F73)))])),
+                child: Column(children: [Text(p.distanceLabel, style: cairo(15, w: FontWeight.w800, color: C.greenBtnEnd)), Text(tr('من موقعك'), style: noto(10, color: const Color(0xFF6B7F73)))])),
           ]),
           const SizedBox(height: 16),
           Row(children: [
@@ -515,10 +517,10 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
               Container(width: 36, height: 36, decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(10)), child: mi('call', size: 20, color: C.green)),
               const SizedBox(width: 10),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('رقم الهاتف', style: noto(11, color: C.textSecondary)),
+                Text(tr('رقم الهاتف'), style: noto(11, color: C.textSecondary)),
                 Text(p.phone, style: cairo(15, w: FontWeight.w700, color: C.ink), textDirection: TextDirection.ltr),
               ])),
-              Text('اتصل', style: cairo(12, w: FontWeight.w700, color: C.green)),
+              Text(tr('اتصل'), style: cairo(12, w: FontWeight.w700, color: C.green)),
             ]),
           ),
           const SizedBox(height: 16),
@@ -541,24 +543,24 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
                 ),
                 const SizedBox(width: 12),
                 Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text.rich(TextSpan(children: const [
-                    TextSpan(text: 'الاتجاهات عبر ', style: TextStyle()),
-                    TextSpan(text: 'G', style: TextStyle(color: Color(0xFF4285F4))),
-                    TextSpan(text: 'o', style: TextStyle(color: Color(0xFFEA4335))),
-                    TextSpan(text: 'o', style: TextStyle(color: Color(0xFFFBBC05))),
-                    TextSpan(text: 'g', style: TextStyle(color: Color(0xFF4285F4))),
-                    TextSpan(text: 'l', style: TextStyle(color: Color(0xFF34A853))),
-                    TextSpan(text: 'e', style: TextStyle(color: Color(0xFFEA4335))),
-                    TextSpan(text: ' Maps', style: TextStyle(color: Color(0xFF5F6368))),
-                  ], style: cairo(15.5, w: FontWeight.w800)), textDirection: TextDirection.rtl),
-                  Text('افتح الملاحة خطوة بخطوة', style: noto(11, color: C.textTertiary)),
+                  Text.rich(TextSpan(children: [
+                    TextSpan(text: tr('الاتجاهات عبر '), style: const TextStyle()),
+                    const TextSpan(text: 'G', style: TextStyle(color: Color(0xFF4285F4))),
+                    const TextSpan(text: 'o', style: TextStyle(color: Color(0xFFEA4335))),
+                    const TextSpan(text: 'o', style: TextStyle(color: Color(0xFFFBBC05))),
+                    const TextSpan(text: 'g', style: TextStyle(color: Color(0xFF4285F4))),
+                    const TextSpan(text: 'l', style: TextStyle(color: Color(0xFF34A853))),
+                    const TextSpan(text: 'e', style: TextStyle(color: Color(0xFFEA4335))),
+                    const TextSpan(text: ' Maps', style: TextStyle(color: Color(0xFF5F6368))),
+                  ], style: cairo(15.5, w: FontWeight.w800)), textDirection: appDirection),
+                  Text(tr('افتح الملاحة خطوة بخطوة'), style: noto(11, color: C.textTertiary)),
                 ])),
                 Transform.flip(flipX: true, child: mi('chevron_right', size: 22, color: const Color(0xFF1A73E8))),
               ]),
             ),
           ),
           const SizedBox(height: 12),
-          GradientButton(label: 'امسح هنا واكسب النقاط', icon: 'qr_code_scanner', height: 56, onTap: () { Navigator.pop(context); context.go('/scan'); }),
+          GradientButton(label: tr('امسح هنا واكسب النقاط'), icon: 'qr_code_scanner', height: 56, onTap: () { Navigator.pop(context); context.go('/scan'); }),
           const SizedBox(height: 6),
         ]),
       )))),
@@ -572,7 +574,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
       mi(icon, size: 20, color: C.green),
       const SizedBox(width: 8),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: noto(11, color: C.textSecondary)),
+        Text(tr(label), style: noto(11, color: C.textSecondary)),
         Text(value, style: cairo(13, w: FontWeight.w700, color: C.ink), overflow: TextOverflow.ellipsis),
       ])),
     ]),

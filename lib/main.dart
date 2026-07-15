@@ -15,11 +15,13 @@ import 'screens/more/more_screen.dart';
 import 'widgets/notification_host.dart';
 import 'core/local_notify.dart';
 import 'core/push.dart';
+import 'core/i18n.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initLocale(); // restore the saved language before the first frame
   await initLocalNotifications();
   await initPush(); // Firebase Cloud Messaging (out-of-app notifications)
   runApp(const ProviderScope(child: WiinzApp()));
@@ -60,19 +62,20 @@ class WiinzApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(localeProvider); // rebuild the app when language changes
     return MaterialApp.router(
       title: 'WIINZ',
       debugShowCheckedModeBanner: false,
       theme: appTheme,
-      locale: const Locale('ar'),
-      supportedLocales: const [Locale('ar'), Locale('en')],
+      locale: Locale(lang),
+      supportedLocales: const [Locale('ar'), Locale('fr'), Locale('en')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: appDirection, // RTL for Arabic, LTR for French/English
         child: NotificationHost(navigatorKey: rootNavigatorKey, child: child!),
       ),
       routerConfig: _router,

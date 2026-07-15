@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/session.dart';
@@ -21,7 +22,7 @@ class PlainHeader extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: cairo(22, w: FontWeight.w800, color: C.forest)),
+          Text(tr(title), style: cairo(22, w: FontWeight.w800, color: C.forest)),
           Row(children: [
             if (showAvatar) ...[
               Pressable(

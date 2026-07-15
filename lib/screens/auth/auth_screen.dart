@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../../core/api_client.dart';
 import '../../core/session.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
+import '../../widgets/language_selector.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   final bool initialSignup;
@@ -62,7 +64,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Color? _reqBorder(TextEditingController c) => (_showErrors && c.text.trim().isEmpty) ? C.danger : null;
   Widget? _reqFooter(TextEditingController c) =>
-      (_showErrors && c.text.trim().isEmpty) ? Text('هذا الحقل مطلوب', style: cairo(11.5, w: FontWeight.w700, color: C.danger)) : null;
+      (_showErrors && c.text.trim().isEmpty) ? Text(tr('هذا الحقل مطلوب'), style: cairo(11.5, w: FontWeight.w700, color: C.danger)) : null;
 
   Color? _pwBorder() {
     if (password.text.isEmpty && !_showErrors) return null;
@@ -71,7 +73,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Widget _pwFooter() {
     final neutral = password.text.isEmpty && !_showErrors;
     final color = _pwValid ? C.green : (neutral ? C.textTertiary : C.danger);
-    return Text(_pwValid ? '✓ كلمة مرور جيدة' : 'يجب أن تكون كلمة المرور 8 أحرف على الأقل',
+    return Text(_pwValid ? tr('✓ كلمة مرور جيدة') : tr('يجب أن تكون كلمة المرور 8 أحرف على الأقل'),
         style: cairo(11.5, w: FontWeight.w700, color: color));
   }
 
@@ -85,7 +87,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
   Widget? _emailFooter() {
     if (email.text.trim().isEmpty || _emailValid) return null;
-    return Text('الإيمايل غير صالح', style: cairo(11.5, w: FontWeight.w700, color: _emailWarn));
+    return Text(tr('الإيمايل غير صالح'), style: cairo(11.5, w: FontWeight.w700, color: _emailWarn));
   }
 
   Color? _confBorder() {
@@ -95,10 +97,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
   Widget? _confFooter() {
     if (confirmPassword.text.isNotEmpty && confirmPassword.text != password.text) {
-      return Text('كلمتا المرور غير متطابقتين', style: cairo(11.5, w: FontWeight.w700, color: C.danger));
+      return Text(tr('كلمتا المرور غير متطابقتين'), style: cairo(11.5, w: FontWeight.w700, color: C.danger));
     }
     if (confirmPassword.text.isEmpty && _showErrors) {
-      return Text('هذا الحقل مطلوب', style: cairo(11.5, w: FontWeight.w700, color: C.danger));
+      return Text(tr('هذا الحقل مطلوب'), style: cairo(11.5, w: FontWeight.w700, color: C.danger));
     }
     return null;
   }
@@ -123,20 +125,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     if (signup) {
       setState(() => _showErrors = true);
       if (name.text.trim().isEmpty || phone.text.trim().isEmpty || password.text.isEmpty || confirmPassword.text.isEmpty) {
-        setState(() => error = 'يرجى ملء جميع الحقول الإلزامية المطلوبة');
+        setState(() => error = tr('يرجى ملء جميع الحقول الإلزامية المطلوبة'));
         return;
       }
       if (password.text.length < 8) {
-        setState(() => error = 'كلمة المرور قصيرة (8 أحرف على الأقل)');
+        setState(() => error = tr('كلمة المرور قصيرة (8 أحرف على الأقل)'));
         return;
       }
       if (password.text != confirmPassword.text) {
-        setState(() => error = 'كلمتا المرور غير متطابقتين');
+        setState(() => error = tr('كلمتا المرور غير متطابقتين'));
         return;
       }
       // Email is optional, but if the user typed one it must be a valid address.
       if (email.text.trim().isNotEmpty && !_emailRe.hasMatch(email.text.trim())) {
-        setState(() => error = 'البريد الإلكتروني غير صالح (مثال: test@domain.com)');
+        setState(() => error = tr('البريد الإلكتروني غير صالح (مثال: test@domain.com)'));
         return;
       }
       final err = await notifier.signup({
@@ -164,7 +166,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     showDialog<void>(
       context: context,
       builder: (dctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: appDirection,
         child: AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -177,9 +179,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           actions: [
             if (badPassword)
               TextButton(onPressed: () { Navigator.pop(dctx); _forgotPassword(); },
-                child: Text('نسيت كلمة المرور؟', style: cairo(14, w: FontWeight.w800, color: C.green))),
+                child: Text(tr('نسيت كلمة المرور؟'), style: cairo(14, w: FontWeight.w800, color: C.green))),
             TextButton(onPressed: () => Navigator.pop(dctx),
-              child: Text('حسناً', style: cairo(14, w: FontWeight.w800, color: C.textSecondary))),
+              child: Text(tr('حسناً'), style: cairo(14, w: FontWeight.w800, color: C.textSecondary))),
           ],
         ),
       ),
@@ -193,13 +195,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       context: context,
       builder: (dctx) => StatefulBuilder(
         builder: (dctx, setD) => Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: appDirection,
           child: AlertDialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('استعادة كلمة المرور', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+            title: Text(tr('استعادة كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIINZ لإعادة تعيين كلمة مرورك.',
+              Text(tr('أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIINZ لإعادة تعيين كلمة مرورك.'),
                   style: noto(13, color: C.textSecondary, height: 1.5)),
               const SizedBox(height: 14),
               Container(
@@ -209,14 +211,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   mi('person', size: 20, color: C.green), const SizedBox(width: 8),
                   Expanded(child: TextField(
                     controller: controller, textDirection: TextDirection.ltr, textAlign: TextAlign.right,
-                    decoration: InputDecoration(hintText: 'الهاتف أو البريد', border: InputBorder.none, isDense: true, hintStyle: noto(14, color: C.textTertiary)),
+                    decoration: InputDecoration(hintText: tr('الهاتف أو البريد'), border: InputBorder.none, isDense: true, hintStyle: noto(14, color: C.textTertiary)),
                     style: noto(15, color: C.ink),
                   )),
                 ]),
               ),
             ]),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dctx), child: Text('إلغاء', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+              TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
               TextButton(
                 onPressed: sending ? null : () async {
                   final contact = controller.text.trim();
@@ -247,14 +249,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('تاريخ الميلاد', style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+        Text(tr('تاريخ الميلاد'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
         const SizedBox(height: 8),
         Row(children: [
-          Expanded(flex: 5, child: _dateDropdown<int>(hint: 'اليوم', icon: 'cake', value: _bDay, items: days, label: (d) => '$d', onChanged: (v) => setState(() => _bDay = v))),
+          Expanded(flex: 5, child: _dateDropdown<int>(hint: tr('اليوم'), icon: 'cake', value: _bDay, items: days, label: (d) => '$d', onChanged: (v) => setState(() => _bDay = v))),
           const SizedBox(width: 8),
-          Expanded(flex: 7, child: _dateDropdown<int>(hint: 'الشهر', value: _bMonth, items: months, label: (m) => _monthNames[m - 1], onChanged: (v) => setState(() => _bMonth = v))),
+          Expanded(flex: 7, child: _dateDropdown<int>(hint: tr('الشهر'), value: _bMonth, items: months, label: (m) => _monthNames[m - 1], onChanged: (v) => setState(() => _bMonth = v))),
           const SizedBox(width: 8),
-          Expanded(flex: 6, child: _dateDropdown<int>(hint: 'السنة', value: _bYear, items: years, label: (y) => '$y', onChanged: (v) => setState(() => _bYear = v))),
+          Expanded(flex: 6, child: _dateDropdown<int>(hint: tr('السنة'), value: _bYear, items: years, label: (y) => '$y', onChanged: (v) => setState(() => _bYear = v))),
         ]),
       ],
     );
@@ -281,6 +283,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     final loading = ref.watch(sessionProvider).loading;
     return Scaffold(
       body: SingleChildScrollView(
@@ -297,9 +300,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ),
               child: Column(
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Align(alignment: AlignmentDirectional.centerStart, child: LanguagePill(textColor: Colors.white)),
+                  ),
+                  const SizedBox(height: 6),
                   Image.asset('assets/images/wiin-logo-white.png', width: 158),
                   const SizedBox(height: 14),
-                  Text('اجمع القارورات وحافظ على بيئتك', style: noto(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92))),
+                  Text(tr('اجمع القارورات وحافظ على بيئتك'), style: noto(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92))),
                 ],
               ),
             ),
@@ -314,7 +322,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const SizedBox(height: 24),
 
                   if (signup) ...[
-                    _field('الاسم الكامل', name, 'person', hint: 'اكتب اسمك', borderColor: _reqBorder(name), footer: _reqFooter(name)),
+                    _field('الاسم الكامل', name, 'person', hint: tr('اكتب اسمك'), borderColor: _reqBorder(name), footer: _reqFooter(name)),
                     _field('رقم الهاتف', phone, 'phone', hint: '05 00 00 00 00', ltr: true, keyboard: TextInputType.phone, maxLength: 10, digitsOnly: true,
                         borderColor: _reqBorder(phone), footer: _reqFooter(phone)),
                     Row(children: [
@@ -376,7 +384,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         onTap: _forgotPassword,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                          child: Text('نسيت كلمة المرور؟', textAlign: TextAlign.center, style: cairo(16, w: FontWeight.w800, color: const Color(0xFF3c8a2b))),
+                          child: Text(tr('نسيت كلمة المرور؟'), textAlign: TextAlign.center, style: cairo(16, w: FontWeight.w800, color: const Color(0xFF3c8a2b))),
                         ),
                       ),
                     ),
@@ -385,7 +393,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Row(children: [
                       const Expanded(child: Divider(color: C.inputBorder)),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text('أو', style: noto(12, color: C.textTertiary))),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(tr('أو'), style: noto(12, color: C.textTertiary))),
                       const Expanded(child: Divider(color: C.inputBorder)),
                     ]),
                   ),
@@ -432,7 +440,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+          Text(tr(label), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
           const SizedBox(height: 8),
           Container(
             height: 56,
@@ -447,7 +455,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 inputFormatters: formatters.isEmpty ? null : formatters,
                 textDirection: ltr ? TextDirection.ltr : null,
                 textAlign: TextAlign.right,
-                decoration: InputDecoration(hintText: hint, border: InputBorder.none, isDense: true, hintStyle: noto(15, color: C.textTertiary)),
+                decoration: InputDecoration(hintText: hint == null ? null : tr(hint), border: InputBorder.none, isDense: true, hintStyle: noto(15, color: C.textTertiary)),
                 style: noto(16, color: C.ink),
               )),
               if (hasEye)
@@ -469,7 +477,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+        Text(tr(label), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
         const SizedBox(height: 8),
         Container(
           height: 56,
@@ -502,7 +510,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             mi(icon, size: 18, color: on ? C.forest : C.textSecondary),
             const SizedBox(width: 4),
-            Text(label, style: cairo(14, w: FontWeight.w700, color: on ? C.forest : C.textSecondary)),
+            Text(tr(label), style: cairo(14, w: FontWeight.w700, color: on ? C.forest : C.textSecondary)),
           ]),
         ),
       ));
@@ -510,7 +518,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('الجنس', style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+        Text(tr('الجنس'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
         const SizedBox(height: 8),
         Container(
           height: 56, padding: const EdgeInsets.all(5),

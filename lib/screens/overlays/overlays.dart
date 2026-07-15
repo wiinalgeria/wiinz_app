@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/session.dart';
 import '../../models/models.dart';
@@ -16,7 +17,7 @@ void showNotificationsSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context, backgroundColor: C.sand, isScrollControlled: true,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-    builder: (_) => Directionality(textDirection: TextDirection.rtl, child: ConstrainedBox(
+    builder: (_) => Directionality(textDirection: appDirection, child: ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxH),
       child: Padding(
       padding: EdgeInsets.fromLTRB(22, 20, 22, 20 + navInset),
@@ -27,7 +28,7 @@ void showNotificationsSheet(BuildContext context, WidgetRef ref) {
           final tempPw = ref.read(sessionProvider).user?.tempPassword == true;
           return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Center(child: _grabber()),
-            Text('الإشعارات', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+            Text(tr('الإشعارات'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             const SizedBox(height: 8),
             if (tempPw)
               Container(
@@ -39,8 +40,8 @@ void showNotificationsSheet(BuildContext context, WidgetRef ref) {
                     Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFFCEBCB), borderRadius: BorderRadius.circular(12)), child: mi('lock_reset', size: 22, color: const Color(0xFFB7791F))),
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('كلمة مرور مؤقتة', style: cairo(14, w: FontWeight.w800, color: C.forest)),
-                      Text('تم تعيين كلمة مرور مؤقتة لحسابك. غيّرها الآن.', style: noto(12, color: C.textSecondary)),
+                      Text(tr('كلمة مرور مؤقتة'), style: cairo(14, w: FontWeight.w800, color: C.forest)),
+                      Text(tr('تم تعيين كلمة مرور مؤقتة لحسابك. غيّرها الآن.'), style: noto(12, color: C.textSecondary)),
                     ])),
                   ]),
                   const SizedBox(height: 10),
@@ -48,14 +49,14 @@ void showNotificationsSheet(BuildContext context, WidgetRef ref) {
                     onTap: () { Navigator.pop(context); showChangePasswordDialog(opener, ref, confirmFirst: false); },
                     child: Container(height: 44, alignment: Alignment.center,
                       decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(12)),
-                      child: Text('تغيير كلمة المرور', style: cairo(14, w: FontWeight.w800, color: Colors.white))),
+                      child: Text(tr('تغيير كلمة المرور'), style: cairo(14, w: FontWeight.w800, color: Colors.white))),
                   ),
                 ]),
               ),
             if (snap.connectionState == ConnectionState.waiting)
               const Padding(padding: EdgeInsets.all(30), child: Center(child: CircularProgressIndicator()))
             else if (items.isEmpty && !tempPw)
-              Padding(padding: const EdgeInsets.all(24), child: Center(child: Text('لا توجد إشعارات', style: noto(13, color: C.textTertiary))))
+              Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد إشعارات'), style: noto(13, color: C.textTertiary))))
             else
               Flexible(child: ListView(
                 shrinkWrap: true,
@@ -141,8 +142,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
     final zone = board?['zone'] ?? '';
     final ahead = board?['ahead'] ?? 0;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
+    return Directionality(textDirection: appDirection,
       child: DraggableScrollableSheet(
         initialChildSize: 0.88, maxChildSize: 0.92, minChildSize: 0.5, expand: false,
         builder: (context, scroll) => loading
@@ -166,11 +166,11 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                       const SizedBox(width: 16),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: C.green.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(999)),
-                          child: Row(mainAxisSize: MainAxisSize.min, children: [mi('eco', size: 15, color: const Color(0xFFCFF3E0)), const SizedBox(width: 5), Text('المستوى: $levelName', style: cairo(12, w: FontWeight.w700, color: const Color(0xFFCFF3E0)))])),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [mi('eco', size: 15, color: const Color(0xFFCFF3E0)), const SizedBox(width: 5), Text(trf('المستوى: {name}', {'name': tr(levelName)}), style: cairo(12, w: FontWeight.w700, color: const Color(0xFFCFF3E0)))])),
                         const SizedBox(height: 8),
-                        Text.rich(TextSpan(text: 'باقٍ ', style: noto(12.5, color: Colors.white.withValues(alpha: 0.75)), children: [
+                        Text.rich(TextSpan(text: tr('باقٍ '), style: noto(12.5, color: Colors.white.withValues(alpha: 0.75)), children: [
                           TextSpan(text: '$nextLeft Wz', style: cairo(12.5, w: FontWeight.w800, color: C.goldLight)),
-                          TextSpan(text: ' للوصول إلى ', style: noto(12.5, color: Colors.white.withValues(alpha: 0.75))),
+                          TextSpan(text: tr(' للوصول إلى '), style: noto(12.5, color: Colors.white.withValues(alpha: 0.75))),
                           TextSpan(text: nextName, style: cairo(12.5, w: FontWeight.w700, color: Colors.white)),
                         ]), textAlign: TextAlign.right),
                       ])),
@@ -189,8 +189,8 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                 ]),
                 const SizedBox(height: 22),
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Row(children: [mi('leaderboard', size: 20, color: C.greenMid), const SizedBox(width: 6), Text('لوحة الصدارة · $zone', style: cairo(15, w: FontWeight.w800, color: C.forest))]),
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF1EEE6), borderRadius: BorderRadius.circular(999)), child: Text('هذا الأسبوع', style: noto(11, color: C.textSecondary))),
+                  Row(children: [mi('leaderboard', size: 20, color: C.greenMid), const SizedBox(width: 6), Text(trf('لوحة الصدارة · {zone}', {'zone': '$zone'}), style: cairo(15, w: FontWeight.w800, color: C.forest))]),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF1EEE6), borderRadius: BorderRadius.circular(999)), child: Text(tr('هذا الأسبوع'), style: noto(11, color: C.textSecondary))),
                 ]),
                 const SizedBox(height: 10),
                 Container(
@@ -199,11 +199,11 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                   child: Row(children: [
                     mi('military_tech', size: 22, color: C.greenMid),
                     const SizedBox(width: 10),
-                    Expanded(child: Text.rich(TextSpan(text: 'أنت في المركز ', style: cairo(13.5, w: FontWeight.w700, color: C.forest), children: [
+                    Expanded(child: Text.rich(TextSpan(text: tr('أنت في المركز '), style: cairo(13.5, w: FontWeight.w700, color: C.forest), children: [
                       TextSpan(text: '#$myRank', style: cairo(13.5, w: FontWeight.w900, color: C.forest)),
-                      TextSpan(text: ' من $totalPlayers', style: cairo(13.5, w: FontWeight.w700, color: C.forest)),
+                      TextSpan(text: tr(' من $totalPlayers'), style: cairo(13.5, w: FontWeight.w700, color: C.forest)),
                     ]))),
-                    Text(myRank > 1 ? 'تحتاج $ahead Wz للتقدم' : 'في الصدارة! 🏆', style: cairo(11.5, w: FontWeight.w700, color: C.greenBtnEnd)),
+                    Text(myRank > 1 ? trf('تحتاج {n} Wz للتقدم', {'n': '$ahead'}) : tr('في الصدارة! 🏆'), style: cairo(11.5, w: FontWeight.w700, color: C.greenBtnEnd)),
                   ]),
                 ),
                 const SizedBox(height: 10),
@@ -213,9 +213,9 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                   child: Column(children: leaders.map((l) => _leaderRow(l)).toList()),
                 ),
                 const SizedBox(height: 20),
-                Text('سجل النقاط', style: cairo(15, w: FontWeight.w800, color: C.forest)),
+                Text(tr('سجل النقاط'), style: cairo(15, w: FontWeight.w800, color: C.forest)),
                 const SizedBox(height: 8),
-                if (history.isEmpty) Padding(padding: const EdgeInsets.all(16), child: Center(child: Text('لا توجد حركات بعد', style: noto(13, color: C.textTertiary))))
+                if (history.isEmpty) Padding(padding: const EdgeInsets.all(16), child: Center(child: Text(tr('لا توجد حركات بعد'), style: noto(13, color: C.textTertiary))))
                 else ...history.map((h) => Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFF0E9DA)))),

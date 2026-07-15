@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
 import '../core/session.dart';
@@ -13,20 +14,20 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: appDirection,
         child: AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 56, height: 56, decoration: const BoxDecoration(color: Color(0xFFEAF6EF), shape: BoxShape.circle), child: mi('lock', size: 28, color: C.green)),
             const SizedBox(height: 14),
-            Text('تغيير كلمة المرور', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+            Text(tr('تغيير كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             const SizedBox(height: 6),
-            Text('هل تريد تغيير كلمة مرورك؟', textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary)),
+            Text(tr('هل تريد تغيير كلمة مرورك؟'), textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary)),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text('إلغاء', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
-            TextButton(onPressed: () => Navigator.pop(dctx, true), child: Text('تأكيد', style: cairo(14, w: FontWeight.w800, color: C.green))),
+            TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+            TextButton(onPressed: () => Navigator.pop(dctx, true), child: Text(tr('تأكيد'), style: cairo(14, w: FontWeight.w800, color: C.green))),
           ],
         ),
       ),
@@ -61,11 +62,11 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
           ]),
         );
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: appDirection,
           child: AlertDialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('تغيير كلمة المرور', style: cairo(18, w: FontWeight.w800, color: C.forest)),
+            title: Text(tr('تغيير كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               pwField(current, 'كلمة المرور الحالية', showCur, () => setD(() => showCur = !showCur)),
               pwField(next, 'كلمة المرور الجديدة', showNew, () => setD(() => showNew = !showNew)),
@@ -73,7 +74,7 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
               if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: noto(12.5, color: C.danger))),
             ]),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dctx), child: Text('إلغاء', style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+              TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
               TextButton(
                 onPressed: saving ? null : () async {
                   if (next.text.length < 8) { setD(() => err = 'كلمة المرور الجديدة قصيرة (8 أحرف على الأقل)'); return; }
