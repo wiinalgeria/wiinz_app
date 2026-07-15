@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/models.dart';
+import 'i18n.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -31,6 +32,7 @@ class ApiClient {
   Map<String, String> get _h => {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
+        'X-Lang': currentLang, // so the server returns ads/popup/notifications in the user's language
       };
 
   Uri _u(String p) => Uri.parse('$baseUrl$p');
