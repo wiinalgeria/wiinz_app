@@ -77,13 +77,20 @@ Widget storeLogo(String logo, double size, {String fallbackIcon = 'storefront'})
 /// avatar looks identical everywhere (home bar, headers, settings, edit sheet).
 Widget avatarCircle(String avatar, double size, {Border? border}) {
   final img = dataUriImage(avatar);
+  // ClipOval guarantees a true circular crop of the photo (a plain Container clip
+  // can leave the image looking square-cut on some devices).
+  final inner = img != null
+      ? Image(image: img, width: size, height: size, fit: BoxFit.cover)
+      : Container(
+          width: size, height: size,
+          decoration: const BoxDecoration(gradient: C.avatarGrad),
+          alignment: Alignment.center,
+          child: mi('person', size: size * 0.55, color: Colors.white),
+        );
   return Container(
     width: size, height: size,
-    decoration: BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle, border: border),
-    clipBehavior: Clip.antiAlias,
-    child: img != null
-        ? Image(image: img, fit: BoxFit.cover, width: size, height: size)
-        : mi('person', size: size * 0.55, color: Colors.white),
+    decoration: BoxDecoration(shape: BoxShape.circle, border: border),
+    child: ClipOval(child: inner),
   );
 }
 
