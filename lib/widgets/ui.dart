@@ -165,6 +165,8 @@ const Map<String, IconData> _icons = {
   'card_giftcard': Symbols.card_giftcard,
   'park': Symbols.park,
   'water_drop': Symbols.water_drop,
+  'water_bottle': Symbols.water_bottle,
+  'timer': Symbols.timer,
   'military_tech': Symbols.military_tech,
   'workspace_premium': Symbols.workspace_premium,
   'eco': Symbols.eco,

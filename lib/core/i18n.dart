@@ -298,6 +298,21 @@ final Map<String, String> _fr = {
 
   // language
   'تغيير اللغة': 'Changer la langue', 'اللغة': 'Langue',
+
+  // deposit limits + scanner guide
+  'الحد الأقصى {n} قارورة في الإيداع الواحد': 'Maximum {n} bouteilles par dépôt',
+  'انتظر قبل الإيداع التالي': 'Attendez avant le prochain dépôt',
+  'يمكنك إيداع قارورات جديدة بعد': 'Vous pourrez déposer de nouvelles bouteilles dans',
+  'يمكنك الإيداع الآن': 'Vous pouvez déposer maintenant',
+  'انتهى وقت الانتظار، يمكنك مسح رمز QR وإيداع قارورات جديدة':
+      'Le temps d\'attente est écoulé : scannez un code QR pour déposer de nouvelles bouteilles',
+  'إيداع الآن': 'Déposer maintenant',
+  'دقيقة': 'min', 'ثانية': 'sec',
+  'كيف تودع قاروراتك؟': 'Comment déposer vos bouteilles ?',
+  'اجمع القارورات الفارغة': 'Collectez vos bouteilles vides',
+  'أودعها في أقرب نقطة جمع إليك': 'Déposez-les au point de collecte le plus proche',
+  'امسح رمز QR الخاص بنقطة الجمع واكسب نقاطك': 'Scannez le code QR du point de collecte et gagnez vos points',
+  'فهمت، لنبدأ': 'J\'ai compris, commençons',
 };
 
 // ===========================================================================
@@ -522,4 +537,19 @@ final Map<String, String> _en = {
   'حمّل التطبيق الآن وابدأ الربح معنا.': 'Download the app now and start earning with us.',
 
   'تغيير اللغة': 'Change language', 'اللغة': 'Language',
+
+  // deposit limits + scanner guide
+  'الحد الأقصى {n} قارورة في الإيداع الواحد': 'Maximum {n} bottles per deposit',
+  'انتظر قبل الإيداع التالي': 'Wait before your next deposit',
+  'يمكنك إيداع قارورات جديدة بعد': 'You can deposit new bottles in',
+  'يمكنك الإيداع الآن': 'You can deposit now',
+  'انتهى وقت الانتظار، يمكنك مسح رمز QR وإيداع قارورات جديدة':
+      'The wait is over — scan a QR code to deposit new bottles',
+  'إيداع الآن': 'Deposit now',
+  'دقيقة': 'min', 'ثانية': 'sec',
+  'كيف تودع قاروراتك؟': 'How to deposit your bottles',
+  'اجمع القارورات الفارغة': 'Collect your empty bottles',
+  'أودعها في أقرب نقطة جمع إليك': 'Drop them at your nearest collection point',
+  'امسح رمز QR الخاص بنقطة الجمع واكسب نقاطك': 'Scan the collection point QR code and earn your points',
+  'فهمت، لنبدأ': 'Got it, let\'s start',
 };

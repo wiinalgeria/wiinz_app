@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../core/i18n.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -45,12 +47,16 @@ Future<bool> showConfirm(BuildContext context, {required String title, required 
 }
 
 /// Bottle-count stepper shown after a valid scan. Returns the confirmed count, or null if cancelled.
-Future<int?> showBottleStepper(BuildContext context, {required String pointName, required int pointsPerBottle}) {
+/// [maxBottles] caps a single deposit; pass 0 when the admin has removed the limit.
+Future<int?> showBottleStepper(BuildContext context, {required String pointName, required int pointsPerBottle, int maxBottles = 0}) {
   int count = 1;
+  final capped = maxBottles > 0;
   return showDialog<int>(
     context: context, barrierColor: const Color(0xB80C140E), barrierDismissible: false,
     builder: (_) => Directionality(textDirection: appDirection, child: StatefulBuilder(
-      builder: (context, setLocal) => Dialog(
+      builder: (context, setLocal) {
+        final atMax = capped && count >= maxBottles;
+        return Dialog(
         backgroundColor: C.sand, insetPadding: const EdgeInsets.all(28),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         child: Padding(
@@ -64,14 +70,24 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
             const SizedBox(height: 20),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               _stepBtn('remove', () { if (count > 1) setLocal(() => count--); }, enabled: count > 1),
+              // bottle icon next to the count, so the number is unambiguous
               Container(
-                width: 96, alignment: Alignment.center,
-                child: Text('$count', style: cairo(46, w: FontWeight.w900, color: C.forest)),
+                width: 116, alignment: Alignment.center,
+                child: Row(mainAxisSize: MainAxisSize.min, textDirection: TextDirection.ltr, children: [
+                  mi('water_bottle', size: 30, color: C.greenMid),
+                  const SizedBox(width: 6),
+                  Text('$count', style: cairo(46, w: FontWeight.w900, color: C.forest)),
+                ]),
               ),
-              _stepBtn('add', () => setLocal(() => count++)),
+              _stepBtn('add', () { if (!atMax) setLocal(() => count++); }, enabled: !atMax),
             ]),
             const SizedBox(height: 8),
             Text('= ${count * pointsPerBottle} Wz', style: cairo(16, w: FontWeight.w800, color: C.goldText)),
+            if (atMax) ...[
+              const SizedBox(height: 8),
+              Text(trf('الحد الأقصى {n} قارورة في الإيداع الواحد', {'n': '$maxBottles'}),
+                textAlign: TextAlign.center, style: noto(12, color: C.goldText)),
+            ],
             const SizedBox(height: 22),
             Row(children: [
               Expanded(child: Pressable(
@@ -85,6 +101,148 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
             ]),
           ]),
         ),
+      );
+      },
+    )),
+  );
+}
+
+/// Deposit cooldown. Shown when a user tries to deposit again before the wait
+/// set in the dashboard has elapsed. Ticks down live and, once it reaches zero,
+/// swaps to a "you can deposit now" state — so a user who re-scans always sees
+/// whether the wait is over or not. Returns true if they chose to deposit now.
+Future<bool> showDepositCooldown(BuildContext context, {required int seconds}) async {
+  final res = await showDialog<bool>(
+    context: context, barrierColor: const Color(0xB80C140E),
+    builder: (_) => _CooldownDialog(seconds: seconds),
+  );
+  return res ?? false;
+}
+
+class _CooldownDialog extends StatefulWidget {
+  final int seconds;
+  const _CooldownDialog({required this.seconds});
+  @override
+  State<_CooldownDialog> createState() => _CooldownDialogState();
+}
+
+class _CooldownDialogState extends State<_CooldownDialog> {
+  late int _left = widget.seconds;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return t.cancel();
+      setState(() => _left--);
+      if (_left <= 0) t.cancel();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // m:ss once we're over a minute, plain seconds below that.
+  String get _clock {
+    final s = _left < 0 ? 0 : _left;
+    return s >= 60 ? '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}' : '$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final done = _left <= 0;
+    return Directionality(
+      textDirection: appDirection,
+      child: Dialog(
+        backgroundColor: C.sand, insetPadding: const EdgeInsets.all(28),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 72, height: 72,
+              decoration: BoxDecoration(color: done ? C.tint1 : const Color(0xFFFFF6E6), shape: BoxShape.circle),
+              child: mi(done ? 'check_circle' : 'timer', size: 38, color: done ? C.greenMid : C.gold, fill: done),
+            ),
+            const SizedBox(height: 16),
+            Text(done ? tr('يمكنك الإيداع الآن') : tr('انتظر قبل الإيداع التالي'),
+              style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
+            const SizedBox(height: 6),
+            Text(done ? tr('انتهى وقت الانتظار، يمكنك مسح رمز QR وإيداع قارورات جديدة')
+                      : tr('يمكنك إيداع قارورات جديدة بعد'),
+              style: noto(13.5, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
+            if (!done) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF6E6), borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFF3E1BC)),
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, textDirection: TextDirection.ltr, children: [
+                  Text(_clock, style: cairo(40, w: FontWeight.w900, color: C.gold)),
+                  const SizedBox(width: 8),
+                  Text(_left >= 60 ? tr('دقيقة') : tr('ثانية'), style: cairo(15, w: FontWeight.w800, color: C.goldText)),
+                ]),
+              ),
+            ],
+            const SizedBox(height: 22),
+            done
+              ? GradientButton(label: tr('إيداع الآن'), height: 54, onTap: () => Navigator.pop(context, true))
+              : Pressable(
+                  onTap: () => Navigator.pop(context, false),
+                  child: Container(
+                    height: 54, width: double.infinity, alignment: Alignment.center,
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
+                    child: Text(tr('حسناً'), style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))),
+                  ),
+                ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+/// The 3-step "how depositing works" popup shown when the user opens the scanner.
+Future<void> showScanIntro(BuildContext context) {
+  Widget step(int n, String icon, String title) => Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: Row(children: [
+      Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(13)),
+        child: mi(icon, size: 21, color: C.greenMid),
+      ),
+      const SizedBox(width: 12),
+      Expanded(child: Text(tr(title), style: noto(13.5, color: C.textSecondary, height: 1.45))),
+      const SizedBox(width: 8),
+      Text('$n', style: cairo(19, w: FontWeight.w900, color: C.tint4)),
+    ]),
+  );
+  return showDialog<void>(
+    context: context, barrierColor: const Color(0xB80C140E),
+    builder: (_) => Directionality(textDirection: appDirection, child: Dialog(
+      backgroundColor: C.sand, insetPadding: const EdgeInsets.all(28),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 72, height: 72, decoration: BoxDecoration(color: C.tint1, shape: BoxShape.circle),
+            child: mi('water_bottle', size: 38, color: C.greenMid)),
+          const SizedBox(height: 16),
+          Text(tr('كيف تودع قاروراتك؟'), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
+          const SizedBox(height: 18),
+          step(1, 'water_bottle', 'اجمع القارورات الفارغة'),
+          step(2, 'location_on', 'أودعها في أقرب نقطة جمع إليك'),
+          step(3, 'qr_code_scanner', 'امسح رمز QR الخاص بنقطة الجمع واكسب نقاطك'),
+          const SizedBox(height: 8),
+          GradientButton(label: tr('فهمت، لنبدأ'), height: 54, onTap: () => Navigator.pop(context)),
+        ]),
       ),
     )),
   );

@@ -24,11 +24,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
   bool _busy = false;
   bool _handling = false; // guards against double-detection while a deposit is in progress
   bool _denied = false;
+  bool _intro = true; // ignore scans until the 3-step guide is dismissed
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // The 3-step guide, shown over the camera as soon as the scanner opens.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await showScanIntro(context);
+      if (mounted) setState(() => _intro = false);
+    });
   }
 
   void _onQRViewCreated(QRViewController controller) {
@@ -68,7 +75,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
 
   // validate the code → ask for bottle count → confirm → award → success.
   Future<void> _submit(String code) async {
-    if (_busy || _handling || code.trim().isEmpty) return;
+    if (_intro || _busy || _handling || code.trim().isEmpty) return;
     _handling = true;
     setState(() => _busy = true);
     await _qr?.pauseCamera();
@@ -76,7 +83,17 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
     try {
       final v = await api.validateScan(code.trim());
       if (!mounted) return;
-      final bottles = await showBottleStepper(context, pointName: v['pointName'], pointsPerBottle: v['pointsPerBottle']);
+      // Still cooling down from the last deposit → show the countdown instead of
+      // the stepper, so a user who re-scans sees exactly how long is left. They
+      // can go straight through once it hits zero.
+      final left = (v['cooldownLeft'] as num?)?.toInt() ?? 0;
+      if (left > 0) {
+        final proceed = await showDepositCooldown(context, seconds: left);
+        if (!proceed || !mounted) return;
+      }
+      final bottles = await showBottleStepper(context,
+          pointName: v['pointName'], pointsPerBottle: v['pointsPerBottle'],
+          maxBottles: (v['maxBottles'] as num?)?.toInt() ?? 0);
       if (bottles == null || bottles <= 0) return; // cancelled
       final res = await api.scan(code.trim(), bottles: bottles);
       ref.read(sessionProvider.notifier).setPoints(res['newBalance']);
@@ -85,7 +102,16 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
       if (mounted) await _showRating(code.trim());
       if (mounted) context.go('/home');
     } on ApiException catch (e) {
-      if (mounted) showToast(context, e.message);
+      if (!mounted) return;
+      // The server is the authority on the limits, so honour its rejection even
+      // if the app's copy of them was stale (or the UI was bypassed).
+      if (e.code == 'cooldown') {
+        await showDepositCooldown(context, seconds: e.intField('retryAfter') ?? 0);
+      } else if (e.code == 'too_many_bottles') {
+        showToast(context, trf('الحد الأقصى {n} قارورة في الإيداع الواحد', {'n': '${e.intField('maxBottles') ?? 0}'}));
+      } else {
+        showToast(context, e.message);
+      }
     } catch (_) {
       if (mounted) showToast(context, tr('حدث خطأ، حاول مجدداً'));
     } finally {

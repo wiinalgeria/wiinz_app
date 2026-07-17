@@ -11,7 +11,17 @@ class ApiException implements Exception {
   // True when the failure is a connectivity/timeout problem (not a server 4xx/5xx
   // with a real body). Callers use this to avoid destructive actions like logout.
   final bool network;
-  ApiException(this.message, {this.code, this.network = false});
+  // The decoded error body, so callers can read structured fields the server
+  // sent alongside the message (e.g. `retryAfter` on a deposit cooldown).
+  final Map<String, dynamic> data;
+  ApiException(this.message, {this.code, this.network = false, this.data = const {}});
+
+  /// An int field from the error body, or null when absent/not a number.
+  int? intField(String key) {
+    final v = data[key];
+    return v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
+  }
+
   @override
   String toString() => message;
 }
@@ -49,7 +59,8 @@ class ApiClient {
     final body = r.body.isNotEmpty ? jsonDecode(r.body) as Map<String, dynamic> : <String, dynamic>{};
     if (r.statusCode >= 400) {
       throw ApiException(body['message'] ?? body['error'] ?? 'حدث خطأ، حاول مجدداً',
-          code: body['error'] is String ? body['error'] as String : null);
+          code: body['error'] is String ? body['error'] as String : null,
+          data: body);
     }
     return body;
   }
