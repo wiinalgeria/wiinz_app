@@ -352,7 +352,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               ),
               const SizedBox(height: 18),
               _editField('الاسم الكامل', name, 'person'),
-              _editField('رقم الهاتف', phone, 'phone', ltr: true),
+              // Phone is shown but not user-editable (it's the login identifier);
+              // an admin changes it from the dashboard if needed.
+              _editField('رقم الهاتف', phone, 'phone', ltr: true, readOnly: true, note: 'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.'),
               _editField('العنوان', address, 'location_on'),
               Row(children: [
                 // Changing the wilaya resets the commune to that wilaya's first,
@@ -372,7 +374,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                   child: Text(tr('إلغاء'), style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459))))),
                 const SizedBox(width: 10),
                 Expanded(child: GradientButton(label: tr('حفظ التغييرات'), height: 54, onTap: () async {
-                  await ref.read(sessionProvider.notifier).saveProfile({'name': name.text.trim(), 'phone': phone.text.trim(), 'address': address.text.trim(), 'wilaya': wilaya, 'commune': commune});
+                  // phone is intentionally omitted — it's read-only for the user
+                  await ref.read(sessionProvider.notifier).saveProfile({'name': name.text.trim(), 'address': address.text.trim(), 'wilaya': wilaya, 'commune': commune});
                   if (context.mounted) { Navigator.pop(context); showToast(context, tr('تم حفظ التغييرات ✓')); }
                 })),
               ]),
@@ -402,15 +405,21 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     ]));
   }
 
-  Widget _editField(String label, TextEditingController c, String icon, {bool ltr = false}) {
+  Widget _editField(String label, TextEditingController c, String icon, {bool ltr = false, bool readOnly = false, String? note}) {
     return Padding(padding: const EdgeInsets.only(bottom: 14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(tr(label), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
       const SizedBox(height: 8),
       Container(height: 56, padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
-        child: Row(children: [mi(icon, size: 22, color: C.green), const SizedBox(width: 10),
-          Expanded(child: TextField(controller: c, textDirection: ltr ? TextDirection.ltr : null, textAlign: TextAlign.right,
-            decoration: const InputDecoration(border: InputBorder.none, isDense: true), style: noto(16, color: C.ink)))])),
+        // A read-only field (e.g. phone) looks muted so it clearly can't be edited.
+        decoration: BoxDecoration(color: readOnly ? const Color(0xFFF1EEE6) : Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
+        child: Row(children: [mi(icon, size: 22, color: readOnly ? C.textTertiary : C.green), const SizedBox(width: 10),
+          Expanded(child: TextField(controller: c, readOnly: readOnly, enableInteractiveSelection: !readOnly,
+            textDirection: ltr ? TextDirection.ltr : null, textAlign: TextAlign.right,
+            decoration: const InputDecoration(border: InputBorder.none, isDense: true),
+            style: noto(16, color: readOnly ? C.textSecondary : C.ink))),
+          if (readOnly) mi('lock', size: 18, color: C.textTertiary),
+        ])),
+      if (note != null) Padding(padding: const EdgeInsets.only(top: 6, right: 4), child: Text(tr(note), style: noto(11.5, color: C.textTertiary))),
     ]));
   }
 
