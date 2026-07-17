@@ -16,6 +16,7 @@ import '../../widgets/change_password.dart';
 import '../../widgets/bottom_nav.dart';
 import '../../widgets/language_selector.dart';
 import '../../widgets/tutorial.dart';
+import '../../widgets/daily_bonus.dart';
 
 class MoreScreen extends ConsumerStatefulWidget {
   const MoreScreen({super.key});
@@ -128,6 +129,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(20, 8, 20, 20), children: [
             _profileHeader(user),
             const SizedBox(height: 12),
+            // Daily bonus: claim button when ready, countdown to reset otherwise.
+            // Renders nothing when the admin has switched the feature off.
+            const DailyBonusCard(),
             _watchCard(user),
             const SizedBox(height: 22),
             _inviteCard(user),

@@ -345,6 +345,18 @@ final Map<String, String> _fr = {
   'امسح رمز QR الخاص بنقطة الجمع لتكسب نقاط Wz، واستبدلها بهدايا ومكافآت.':
       'Scannez le code QR du point de collecte pour gagner des points Wz, puis échangez-les contre des cadeaux et récompenses.',
 
+  // daily bonus
+  'المكافأة اليومية': 'Bonus quotidien',
+  'مكافأتك اليومية': 'Votre bonus quotidien',
+  'استلم نقاطك المجانية لهذا اليوم': 'Récupérez vos points gratuits du jour',
+  'استلم المكافأة': 'Récupérer le bonus',
+  'استلم': 'Récupérer',
+  'تم استلام مكافأتك!': 'Bonus récupéré !',
+  'عُد غداً لمكافأة جديدة 🎁': 'Revenez demain pour un nouveau bonus 🎁',
+  'استلم {n} Wz مجاناً اليوم': 'Récupérez {n} Wz gratuits aujourd\'hui',
+  'المكافأة القادمة بعد {t}': 'Prochain bonus dans {t}',
+  'مكافأتك اليومية بانتظارك 🎁': 'Votre bonus quotidien vous attend 🎁',
+
   'كيف تودع قاروراتك؟': 'Comment déposer vos bouteilles ?',
   'اجمع القارورات الفارغة': 'Collectez vos bouteilles vides',
   'أودعها في أقرب نقطة جمع إليك': 'Déposez-les au point de collecte le plus proche',
@@ -605,6 +617,18 @@ final Map<String, String> _en = {
   'امسح واكسب النقاط': 'Scan and earn points',
   'امسح رمز QR الخاص بنقطة الجمع لتكسب نقاط Wz، واستبدلها بهدايا ومكافآت.':
       'Scan the collection point QR code to earn Wz points, then redeem them for gifts and rewards.',
+
+  // daily bonus
+  'المكافأة اليومية': 'Daily bonus',
+  'مكافأتك اليومية': 'Your daily bonus',
+  'استلم نقاطك المجانية لهذا اليوم': 'Claim your free points for today',
+  'استلم المكافأة': 'Claim bonus',
+  'استلم': 'Claim',
+  'تم استلام مكافأتك!': 'Bonus claimed!',
+  'عُد غداً لمكافأة جديدة 🎁': 'Come back tomorrow for a new bonus 🎁',
+  'استلم {n} Wz مجاناً اليوم': 'Claim {n} Wz free today',
+  'المكافأة القادمة بعد {t}': 'Next bonus in {t}',
+  'مكافأتك اليومية بانتظارك 🎁': 'Your daily bonus is waiting 🎁',
 
   'كيف تودع قاروراتك؟': 'How to deposit your bottles',
   'اجمع القارورات الفارغة': 'Collect your empty bottles',

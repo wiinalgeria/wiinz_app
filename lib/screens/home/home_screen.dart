@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/session.dart';
 import '../../core/notifications.dart';
 import '../../core/local_notify.dart';
+import '../../widgets/daily_bonus.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
@@ -51,6 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _showTempPwPrompt();
       }
       if (showPromo && mounted) await _maybeShowPromo(); // promotional popup on app entry
+      if (mounted) await _maybeShowDailyBonus(); // daily login bonus, if one is ready
       await _ensureNotifPermission(); // ask for notifications on entry; nudge if disabled
       await _ensureLocationPermission(); // ask for location once on entry (not if already granted)
     });
@@ -95,6 +97,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+  }
+
+  // Show the daily-bonus claim popup on entry when one is ready. A local
+  // reminder notification is also fired so the user sees it even if they skip.
+  Future<void> _maybeShowDailyBonus() async {
+    final s = await ref.read(apiClientProvider).dailyBonus();
+    if (s['enabled'] != true || s['available'] != true || !mounted) return;
+    final points = (s['points'] as num?)?.toInt() ?? 0;
+    if (points <= 0) return;
+    showLocalNotification(
+      tr('مكافأتك اليومية بانتظارك 🎁'),
+      trf('استلم {n} Wz مجاناً اليوم', {'n': '$points'}),
+    );
+    await showDailyBonusDialog(context, ref, points: points);
   }
 
   Future<void> _maybeShowPromo() async {

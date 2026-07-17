@@ -186,6 +186,12 @@ class ApiClient {
     return (b['notifications'] as List).map((e) => AppNotification.fromJson(e)).toList();
   }
 
+  // daily login bonus
+  Future<Map<String, dynamic>> dailyBonus() async {
+    try { return await _get('/daily-bonus'); } catch (_) { return {'enabled': false, 'available': false, 'points': 0, 'secondsLeft': 0}; }
+  }
+  Future<Map<String, dynamic>> claimDailyBonus() => _post('/daily-bonus/claim');
+
   // earn / spend
   Future<Map<String, dynamic>> scan(String code, {int bottles = 0}) => _post('/scan', {'code': code, 'bottles': bottles});
   Future<Map<String, dynamic>> watchVideo() => _post('/watch-video');
