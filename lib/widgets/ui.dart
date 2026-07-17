@@ -57,13 +57,12 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-/// Renders a store/point logo from a base64 data-URI, or a fallback storefront icon.
+/// Renders a store/point logo from a base64 data-URI OR an http(s) URL (once
+/// images are offloaded to external storage), or a fallback storefront icon.
 Widget storeLogo(String logo, double size, {String fallbackIcon = 'storefront'}) {
-  if (logo.isNotEmpty && logo.startsWith('data:')) {
-    try {
-      final bytes = base64Decode(logo.substring(logo.indexOf(',') + 1));
-      return ClipRRect(borderRadius: BorderRadius.circular(size * 0.28), child: Image.memory(bytes, width: size, height: size, fit: BoxFit.cover));
-    } catch (_) {}
+  final img = imageProviderFor(logo);
+  if (img != null) {
+    return ClipRRect(borderRadius: BorderRadius.circular(size * 0.28), child: Image(image: img, width: size, height: size, fit: BoxFit.cover));
   }
   return Container(
     width: size, height: size,
@@ -94,15 +93,24 @@ Widget avatarCircle(String avatar, double size, {Border? border}) {
   );
 }
 
-/// Decode a base64 data-URI into a MemoryImage, or null if it isn't one.
-MemoryImage? dataUriImage(String s) {
-  if (s.isNotEmpty && s.startsWith('data:')) {
+/// An ImageProvider for a stored image string, or null if it's empty/unusable.
+/// Handles both base64 `data:` URIs (how images were stored originally) and
+/// `http(s)` URLs (once images are offloaded to external storage like
+/// Cloudinary), so both work during and after the migration.
+ImageProvider? imageProviderFor(String s) {
+  if (s.isEmpty) return null;
+  if (s.startsWith('data:')) {
     try {
       return MemoryImage(base64Decode(s.substring(s.indexOf(',') + 1)));
     } catch (_) {}
+  } else if (s.startsWith('http://') || s.startsWith('https://')) {
+    return NetworkImage(s);
   }
   return null;
 }
+
+/// Back-compat alias — now returns a provider for data URIs *or* URLs.
+ImageProvider? dataUriImage(String s) => imageProviderFor(s);
 
 /// Map the design's Material-Symbol ligature names to IconData (rounded style).
 const Map<String, IconData> _icons = {
