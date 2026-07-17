@@ -367,8 +367,11 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
         Container(width: 26, height: 26, alignment: Alignment.center, decoration: BoxDecoration(color: top3 ? medals[l.rank - 1] : C.divider, shape: BoxShape.circle),
           child: Text('${l.rank}', style: cairo(13, w: FontWeight.w800, color: top3 ? Colors.white : C.textSecondary))),
         const SizedBox(width: 11),
-        Container(width: 36, height: 36, alignment: Alignment.center, decoration: BoxDecoration(color: l.isMe ? C.green : const Color(0xFFF0E9DA), shape: BoxShape.circle),
-          child: Text(l.initial, style: cairo(14, w: FontWeight.w800, color: l.isMe ? Colors.white : C.textSecondary))),
+        // profile picture when set, otherwise the initial on a coloured disc
+        l.avatar.isNotEmpty
+          ? avatarCircle(l.avatar, 36, border: Border.all(color: l.isMe ? C.green : const Color(0xFFE6DFCF), width: 1.5))
+          : Container(width: 36, height: 36, alignment: Alignment.center, decoration: BoxDecoration(color: l.isMe ? C.green : const Color(0xFFF0E9DA), shape: BoxShape.circle),
+              child: Text(l.initial, style: cairo(14, w: FontWeight.w800, color: l.isMe ? Colors.white : C.textSecondary))),
         const SizedBox(width: 11),
         Expanded(child: Row(children: [
           Flexible(child: Text(l.name, style: cairo(14, w: l.isMe ? FontWeight.w800 : FontWeight.w700, color: l.isMe ? C.forest : C.ink), overflow: TextOverflow.ellipsis)),

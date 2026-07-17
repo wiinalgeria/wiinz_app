@@ -46,7 +46,7 @@ class MyGift {
 }
 
 class CollectionPoint {
-  final String id, name, area, address, phone, hours, accepts, code, logo;
+  final String id, name, area, address, phone, hours, accepts, code, logo, details;
   final double rating, lat, lng;
   final bool open;
   double? distanceM; // filled client-side when user location is known
@@ -54,15 +54,18 @@ class CollectionPoint {
   CollectionPoint({
     required this.id, required this.name, required this.area, required this.address,
     required this.phone, required this.hours, required this.accepts, required this.code,
-    required this.rating, required this.lat, required this.lng, required this.open, this.distanceM, this.logo = '',
+    required this.rating, required this.lat, required this.lng, required this.open, this.distanceM, this.logo = '', this.details = '',
   });
 
   factory CollectionPoint.fromJson(Map<String, dynamic> j) => CollectionPoint(
         id: j['id'] ?? '', name: j['name'] ?? '', area: j['area'] ?? '', address: j['address'] ?? '',
         phone: j['phone'] ?? '', hours: j['hours'] ?? '', accepts: j['accepts'] ?? '', code: j['code'] ?? '',
         rating: _dbl(j['rating']), lat: _dbl(j['lat']), lng: _dbl(j['lng']), open: j['open'] == true,
-        logo: j['logo'] ?? '',
+        logo: j['logo'] ?? '', details: j['details'] ?? '',
       );
+
+  bool get hasLocation => lat != 0 || lng != 0;
+  String get directionsUrl => 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
 
   String get distanceLabel {
     if (distanceM == null) return '';
@@ -170,13 +173,13 @@ class HistoryItem {
 }
 
 class LeaderRow {
-  final String id, initial, name, prize;
+  final String id, initial, name, prize, avatar;
   final int score, rank;
   final bool isMe;
-  LeaderRow({required this.id, required this.initial, required this.name, required this.score, required this.rank, required this.isMe, this.prize = ''});
+  LeaderRow({required this.id, required this.initial, required this.name, required this.score, required this.rank, required this.isMe, this.prize = '', this.avatar = ''});
   factory LeaderRow.fromJson(Map<String, dynamic> j) => LeaderRow(
         id: '${j['id']}', initial: j['initial'] ?? '', name: j['name'] ?? '', score: _int(j['score']),
-        rank: _int(j['rank']), isMe: j['isMe'] == true, prize: j['prize'] ?? '');
+        rank: _int(j['rank']), isMe: j['isMe'] == true, prize: j['prize'] ?? '', avatar: j['avatar'] ?? '');
 }
 
 class AppConfig {
