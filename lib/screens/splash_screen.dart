@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/i18n.dart';
 import '../core/session.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
@@ -83,7 +84,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('ابدأ الآن', style: cairo(18, w: FontWeight.w800, color: const Color(0xFF2f7d22))),
+                        Text(tr('ابدأ الآن'), style: cairo(18, w: FontWeight.w800, color: const Color(0xFF2f7d22))),
                         const SizedBox(width: 8),
                         Transform.flip(flipX: true, child: mi('arrow_forward', size: 22, color: const Color(0xFF2f7d22))),
                       ],

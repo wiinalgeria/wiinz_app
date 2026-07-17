@@ -14,6 +14,10 @@ class PlainHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Screens build this as `const PlainHeader(...)`, so a parent rebuild reuses
+    // the identical canonicalized instance and Flutter skips the subtree. Watch
+    // the locale here or the title keeps the old language after a switch.
+    ref.watch(localeProvider);
     final avatar = ref.watch(sessionProvider).user?.avatar ?? '';
     return Container(
       height: 60,

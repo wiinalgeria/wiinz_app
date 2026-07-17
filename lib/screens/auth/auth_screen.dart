@@ -307,7 +307,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const SizedBox(height: 6),
                   Image.asset('assets/images/wiin-logo-white.png', width: 158),
                   const SizedBox(height: 14),
-                  Text(tr('اجمع القارورات وحافظ على بيئتك'), style: noto(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92))),
+                  // The FR/EN slogans are far longer than the Arabic and wrap to
+                  // two lines, so they need to stay centred under the logo rather
+                  // than align to the text-direction start.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(tr('اجمع القارورات وحافظ على بيئتك'),
+                      textAlign: TextAlign.center,
+                      style: noto(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92), height: 1.5)),
+                  ),
                 ],
               ),
             ),
@@ -316,9 +324,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(signup ? 'أنشئ حسابك' : 'مرحباً بعودتك', style: cairo(23, w: FontWeight.w800, color: C.forest)),
+                  Text(tr(signup ? 'أنشئ حسابك' : 'مرحباً بعودتك'), style: cairo(23, w: FontWeight.w800, color: C.forest)),
                   const SizedBox(height: 4),
-                  Text(signup ? 'ابدأ رحلتك في إعادة التدوير' : 'سجّل الدخول لمتابعة كسب النقاط', style: noto(14, color: C.textSecondary)),
+                  Text(tr(signup ? 'ابدأ رحلتك في إعادة التدوير' : 'سجّل الدخول لمتابعة كسب النقاط'), style: noto(14, color: C.textSecondary)),
                   const SizedBox(height: 24),
 
                   if (signup) ...[

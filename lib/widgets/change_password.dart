@@ -66,33 +66,37 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
           child: AlertDialog(
             backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            // Without this the three fields overflow once the keyboard opens and
+            // the action row gets squeezed into the content — which is what made
+            // the cancel/save buttons glitch while typing the first password.
+            scrollable: true,
             title: Text(tr('تغيير كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              pwField(current, 'كلمة المرور الحالية', showCur, () => setD(() => showCur = !showCur)),
-              pwField(next, 'كلمة المرور الجديدة', showNew, () => setD(() => showNew = !showNew)),
-              pwField(confirm, 'تأكيد كلمة المرور الجديدة', showConf, () => setD(() => showConf = !showConf)),
+              pwField(current, tr('كلمة المرور الحالية'), showCur, () => setD(() => showCur = !showCur)),
+              pwField(next, tr('كلمة المرور الجديدة'), showNew, () => setD(() => showNew = !showNew)),
+              pwField(confirm, tr('تأكيد كلمة المرور الجديدة'), showConf, () => setD(() => showConf = !showConf)),
               if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: noto(12.5, color: C.danger))),
             ]),
             actions: [
               TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
               TextButton(
                 onPressed: saving ? null : () async {
-                  if (next.text.length < 8) { setD(() => err = 'كلمة المرور الجديدة قصيرة (8 أحرف على الأقل)'); return; }
-                  if (next.text != confirm.text) { setD(() => err = 'كلمتا المرور غير متطابقتين'); return; }
+                  if (next.text.length < 8) { setD(() => err = tr('كلمة المرور الجديدة قصيرة (8 أحرف على الأقل)')); return; }
+                  if (next.text != confirm.text) { setD(() => err = tr('كلمتا المرور غير متطابقتين')); return; }
                   setD(() { saving = true; err = null; });
                   try {
                     await ref.read(apiClientProvider).changePassword(current.text, next.text);
                     await ref.read(sessionProvider.notifier).refreshMe(); // clears the tempPassword flag
                     if (!dctx.mounted) return;
                     Navigator.pop(dctx);
-                    if (context.mounted) showToast(context, 'تم تغيير كلمة المرور ✓');
+                    if (context.mounted) showToast(context, tr('تم تغيير كلمة المرور ✓'));
                   } on ApiException catch (e) {
                     setD(() { saving = false; err = e.message; });
                   } catch (_) {
-                    setD(() { saving = false; err = 'حدث خطأ، حاول مجدداً'; });
+                    setD(() { saving = false; err = tr('حدث خطأ، حاول مجدداً'); });
                   }
                 },
-                child: Text(saving ? '...' : 'حفظ', style: cairo(14, w: FontWeight.w800, color: C.green)),
+                child: Text(saving ? '...' : tr('حفظ'), style: cairo(14, w: FontWeight.w800, color: C.green)),
               ),
             ],
           ),

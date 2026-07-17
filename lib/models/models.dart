@@ -1,3 +1,5 @@
+import '../core/i18n.dart' show timeAgo;
+
 int _int(dynamic v) => v is int ? v : (v is num ? v.toInt() : int.tryParse('$v') ?? 0);
 double _dbl(dynamic v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
 
@@ -118,11 +120,36 @@ class HeroGift {
 
 class AppNotification {
   final String id, icon, bg, color, title, body, time;
-  AppNotification({required this.id, required this.icon, required this.bg, required this.color, required this.title, required this.body, required this.time});
+  /// Real send time. Null on notifications that predate the server sending it —
+  /// those fall back to the legacy [time] label.
+  final DateTime? at;
+  /// 'targeted' when the admin aimed this at a subset/one user, else 'all'.
+  final String audience;
+  /// Whether the admin chose to reveal [audience] to the user.
+  final bool showAudience;
+  final String ctaText, ctaUrl;
+
+  AppNotification({
+    required this.id, required this.icon, required this.bg, required this.color,
+    required this.title, required this.body, required this.time,
+    this.at, this.audience = 'all', this.showAudience = false,
+    this.ctaText = '', this.ctaUrl = '',
+  });
+
   factory AppNotification.fromJson(Map<String, dynamic> j) => AppNotification(
         id: j['id'] ?? '', icon: j['icon'] ?? 'notifications', bg: j['bg'] ?? '#E6F4EC', color: j['color'] ?? '#34801f',
         title: j['title'] ?? '', body: j['body'] ?? '', time: j['time'] ?? '',
+        at: j['at'] == null ? null : DateTime.tryParse('${j['at']}')?.toLocal(),
+        audience: j['audience'] ?? 'all',
+        showAudience: j['showAudience'] == true,
+        ctaText: j['ctaText'] ?? '', ctaUrl: j['ctaUrl'] ?? '',
       );
+
+  bool get targeted => audience == 'targeted';
+  bool get hasCta => ctaText.trim().isNotEmpty && ctaUrl.trim().isNotEmpty;
+
+  /// Localized "when", from the real timestamp when we have one.
+  String get whenLabel => at != null ? timeAgo(at!) : time;
 }
 
 class Referral {

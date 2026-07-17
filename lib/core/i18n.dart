@@ -40,6 +40,21 @@ String trf(String ar, Map<String, String> args) {
   return s;
 }
 
+/// Relative "when" label for a past timestamp, in the current language.
+/// Clock skew (a timestamp slightly in the future) reads as "now" rather than
+/// a negative age.
+String timeAgo(DateTime at) {
+  final d = DateTime.now().difference(at);
+  if (d.inSeconds < 45) return tr('الآن');
+  if (d.inMinutes < 60) return trf('قبل {n} دقيقة', {'n': '${d.inMinutes}'});
+  if (d.inHours < 24) return trf('قبل {n} ساعة', {'n': '${d.inHours}'});
+  if (d.inDays == 1) return tr('أمس');
+  if (d.inDays < 7) return trf('قبل {n} أيام', {'n': '${d.inDays}'});
+  if (d.inDays < 30) return trf('قبل {n} أسابيع', {'n': '${d.inDays ~/ 7}'});
+  if (d.inDays < 365) return trf('قبل {n} أشهر', {'n': '${d.inDays ~/ 30}'});
+  return trf('قبل {n} سنة', {'n': '${d.inDays ~/ 365}'});
+}
+
 class LocaleNotifier extends Notifier<String> {
   @override
   String build() => _lang;
@@ -308,6 +323,28 @@ final Map<String, String> _fr = {
       'Le temps d\'attente est écoulé : scannez un code QR pour déposer de nouvelles bouteilles',
   'إيداع الآن': 'Déposer maintenant',
   'دقيقة': 'min', 'ثانية': 'sec',
+  // notifications
+  'قبل {n} دقيقة': 'il y a {n} min', 'قبل {n} ساعة': 'il y a {n} h',
+  'قبل {n} أيام': 'il y a {n} jours', 'قبل {n} أسابيع': 'il y a {n} sem.',
+  'قبل {n} أشهر': 'il y a {n} mois', 'قبل {n} سنة': 'il y a {n} an(s)',
+  'رسالة موجّهة إليك': 'Message qui vous est adressé',
+  'إشعار عام': 'Notification générale',
+  'إغلاق': 'Fermer',
+
+  // tutorial / settings
+  'كيفية استخدام التطبيق': 'Comment utiliser l\'application',
+  'الخطوة {n} من {t}': 'Étape {n} sur {t}',
+  'ابدأ': 'Commencer',
+  'اجمع القارورات': 'Collectez les bouteilles',
+  'اجمع القارورات البلاستيكية الفارغة في المنزل بدل رميها.':
+      'Rassemblez vos bouteilles en plastique vides à la maison au lieu de les jeter.',
+  'أودعها في نقطة الجمع': 'Déposez-les au point de collecte',
+  'اعثر على أقرب نقطة جمع على الخريطة وأودع قاروراتك هناك.':
+      'Trouvez le point de collecte le plus proche sur la carte et déposez-y vos bouteilles.',
+  'امسح واكسب النقاط': 'Scannez et gagnez des points',
+  'امسح رمز QR الخاص بنقطة الجمع لتكسب نقاط Wz، واستبدلها بهدايا ومكافآت.':
+      'Scannez le code QR du point de collecte pour gagner des points Wz, puis échangez-les contre des cadeaux et récompenses.',
+
   'كيف تودع قاروراتك؟': 'Comment déposer vos bouteilles ?',
   'اجمع القارورات الفارغة': 'Collectez vos bouteilles vides',
   'أودعها في أقرب نقطة جمع إليك': 'Déposez-les au point de collecte le plus proche',
@@ -547,6 +584,28 @@ final Map<String, String> _en = {
       'The wait is over — scan a QR code to deposit new bottles',
   'إيداع الآن': 'Deposit now',
   'دقيقة': 'min', 'ثانية': 'sec',
+  // notifications
+  'قبل {n} دقيقة': '{n} min ago', 'قبل {n} ساعة': '{n} h ago',
+  'قبل {n} أيام': '{n} days ago', 'قبل {n} أسابيع': '{n} weeks ago',
+  'قبل {n} أشهر': '{n} months ago', 'قبل {n} سنة': '{n} year(s) ago',
+  'رسالة موجّهة إليك': 'Sent to you personally',
+  'إشعار عام': 'General notification',
+  'إغلاق': 'Close',
+
+  // tutorial / settings
+  'كيفية استخدام التطبيق': 'How to use the app',
+  'الخطوة {n} من {t}': 'Step {n} of {t}',
+  'ابدأ': 'Get started',
+  'اجمع القارورات': 'Collect bottles',
+  'اجمع القارورات البلاستيكية الفارغة في المنزل بدل رميها.':
+      'Gather your empty plastic bottles at home instead of throwing them away.',
+  'أودعها في نقطة الجمع': 'Drop them at a collection point',
+  'اعثر على أقرب نقطة جمع على الخريطة وأودع قاروراتك هناك.':
+      'Find the nearest collection point on the map and drop your bottles there.',
+  'امسح واكسب النقاط': 'Scan and earn points',
+  'امسح رمز QR الخاص بنقطة الجمع لتكسب نقاط Wz، واستبدلها بهدايا ومكافآت.':
+      'Scan the collection point QR code to earn Wz points, then redeem them for gifts and rewards.',
+
   'كيف تودع قاروراتك؟': 'How to deposit your bottles',
   'اجمع القارورات الفارغة': 'Collect your empty bottles',
   'أودعها في أقرب نقطة جمع إليك': 'Drop them at your nearest collection point',

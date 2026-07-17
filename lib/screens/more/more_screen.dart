@@ -15,6 +15,7 @@ import '../../widgets/ui.dart';
 import '../../widgets/change_password.dart';
 import '../../widgets/bottom_nav.dart';
 import '../../widgets/language_selector.dart';
+import '../../widgets/tutorial.dart';
 
 class MoreScreen extends ConsumerStatefulWidget {
   const MoreScreen({super.key});
@@ -148,6 +149,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             Container(
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: C.cardBorder)),
               child: Column(children: [
+                _settingRow('كيفية استخدام التطبيق', 'school', () => showAppTutorial(context)),
                 _settingRow('تغيير كلمة المرور', 'lock', _changePassword),
                 _settingRow('المساعدة والدعم', 'help', _openSupport),
                 _settingRow('تغيير اللغة', 'language', () => showLanguageSheet(context, ref), trailingText: langNames[currentLang]),
@@ -181,7 +183,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(user.name, style: cairo(19, w: FontWeight.w800, color: C.forest)),
-            Row(children: [mi('phone', size: 15, color: const Color(0xFF6B7F73)), const SizedBox(width: 5), Text(user.phone.isEmpty ? '—' : user.phone, style: noto(13, color: const Color(0xFF6B7F73)), textDirection: TextDirection.ltr)]),
+            const SizedBox(height: 4),
+            // Phone intentionally not shown here (kept out of the settings screen);
+            // it stays editable inside "تعديل الملف الشخصي".
             Row(children: [mi('location_on', size: 15, color: const Color(0xFF6B7F73)), const SizedBox(width: 5), Flexible(child: Text(user.address.isEmpty ? user.commune : user.address, style: noto(13, color: const Color(0xFF6B7F73)), overflow: TextOverflow.ellipsis))]),
           ])),
         ]),

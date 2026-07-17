@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/session.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
@@ -12,74 +13,188 @@ Widget _grabber() => Container(width: 44, height: 5, margin: const EdgeInsets.on
 
 void showNotificationsSheet(BuildContext context, WidgetRef ref) {
   final opener = context; // survives after the sheet is popped (for opening dialogs)
-  final navInset = MediaQuery.of(context).padding.bottom;
-  final maxH = MediaQuery.of(context).size.height * 0.78;
   showModalBottomSheet(
     context: context, backgroundColor: C.sand, isScrollControlled: true,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-    builder: (_) => Directionality(textDirection: appDirection, child: ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxH),
-      child: Padding(
-      padding: EdgeInsets.fromLTRB(22, 20, 22, 20 + navInset),
-      child: FutureBuilder<List<AppNotification>>(
-        future: ref.read(apiClientProvider).notifications(),
-        builder: (context, snap) {
-          final items = snap.data ?? [];
-          final tempPw = ref.read(sessionProvider).user?.tempPassword == true;
-          return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Center(child: _grabber()),
-            Text(tr('الإشعارات'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
-            const SizedBox(height: 8),
-            if (tempPw)
-              Container(
-                margin: const EdgeInsets.only(bottom: 6, top: 4),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: const Color(0xFFFFF7E8), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF0D9A8))),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFFCEBCB), borderRadius: BorderRadius.circular(12)), child: mi('lock_reset', size: 22, color: const Color(0xFFB7791F))),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(tr('كلمة مرور مؤقتة'), style: cairo(14, w: FontWeight.w800, color: C.forest)),
-                      Text(tr('تم تعيين كلمة مرور مؤقتة لحسابك. غيّرها الآن.'), style: noto(12, color: C.textSecondary)),
-                    ])),
-                  ]),
-                  const SizedBox(height: 10),
-                  Pressable(
-                    onTap: () { Navigator.pop(context); showChangePasswordDialog(opener, ref, confirmFirst: false); },
-                    child: Container(height: 44, alignment: Alignment.center,
-                      decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(12)),
-                      child: Text(tr('تغيير كلمة المرور'), style: cairo(14, w: FontWeight.w800, color: Colors.white))),
-                  ),
-                ]),
-              ),
-            if (snap.connectionState == ConnectionState.waiting)
-              const Padding(padding: EdgeInsets.all(30), child: Center(child: CircularProgressIndicator()))
-            else if (items.isEmpty && !tempPw)
-              Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد إشعارات'), style: noto(13, color: C.textTertiary))))
-            else
-              Flexible(child: ListView(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                children: items.map((n) => Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFF0E9DA)))),
-                  child: Row(children: [
-                    Container(width: 40, height: 40, decoration: BoxDecoration(color: hexColor(n.bg, fallback: C.tint2), borderRadius: BorderRadius.circular(12)),
-                      child: mi(n.icon, size: 22, color: hexColor(n.color, fallback: C.greenMid))),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(n.title, style: cairo(14, w: FontWeight.w700, color: C.ink)),
-                      Text(n.body, style: noto(12, color: C.textSecondary)),
-                    ])),
-                    Text(n.time, style: noto(11, color: C.textTertiary)),
-                  ]),
-                )).toList(),
-              )),
-          ]);
-        },
+    builder: (_) => _NotificationsSheet(opener: opener),
+  );
+}
+
+/// Small pill telling the user whether a notification was aimed at them
+/// specifically or broadcast to everyone. Only rendered when the admin ticked
+/// "show the audience" on the notification.
+Widget _audienceChip(AppNotification n) {
+  final targeted = n.targeted;
+  final fg = targeted ? C.goldText : const Color(0xFF5A6470);
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+    decoration: BoxDecoration(
+      color: targeted ? const Color(0xFFFCEBCB) : const Color(0xFFEDF2F7),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(color: targeted ? const Color(0xFFF3E1BC) : const Color(0xFFDCE3EA)),
+    ),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      mi(targeted ? 'person' : 'campaign', size: 12, color: fg),
+      const SizedBox(width: 4),
+      Text(targeted ? tr('رسالة موجّهة إليك') : tr('إشعار عام'), style: cairo(10.5, w: FontWeight.w800, color: fg)),
+    ]),
+  );
+}
+
+/// Full-message popup, opened by tapping a notification row. The list truncates
+/// long bodies, so this is where the user reads the whole thing — and where the
+/// optional CTA button lives.
+Future<void> showNotificationDetail(BuildContext context, AppNotification n) {
+  return showDialog<void>(
+    context: context, barrierColor: const Color(0xB80C140E),
+    builder: (dctx) => Directionality(textDirection: appDirection, child: Dialog(
+      backgroundColor: C.sand, insetPadding: const EdgeInsets.all(24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(dctx).size.height * 0.78),
+        child: SingleChildScrollView(child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 20),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 66, height: 66,
+              decoration: BoxDecoration(color: hexColor(n.bg, fallback: C.tint2), shape: BoxShape.circle),
+              child: mi(n.icon, size: 32, color: hexColor(n.color, fallback: C.greenMid))),
+            const SizedBox(height: 14),
+            Text(n.title, style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
+            const SizedBox(height: 6),
+            Text(n.whenLabel, style: noto(11.5, color: C.textTertiary)),
+            if (n.showAudience) ...[const SizedBox(height: 10), _audienceChip(n)],
+            const SizedBox(height: 14),
+            Text(n.body, style: noto(14, color: C.textSecondary, height: 1.6), textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            if (n.hasCta) ...[
+              GradientButton(label: n.ctaText, height: 52, onTap: () async {
+                final uri = Uri.tryParse(n.ctaUrl.trim());
+                if (uri != null) {
+                  try { await launchUrl(uri, mode: LaunchMode.externalApplication); } catch (_) {}
+                }
+              }),
+              const SizedBox(height: 10),
+            ],
+            Pressable(
+              onTap: () => Navigator.pop(dctx),
+              child: Container(height: 50, width: double.infinity, alignment: Alignment.center,
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: C.inputBorder, width: 1.5)),
+                child: Text(tr('إغلاق'), style: cairo(15, w: FontWeight.w700, color: const Color(0xFF6B6459)))),
+            ),
+          ]),
+        )),
       ),
-    ))),
+    )),
+  );
+}
+
+class _NotificationsSheet extends ConsumerStatefulWidget {
+  final BuildContext opener;
+  const _NotificationsSheet({required this.opener});
+  @override
+  ConsumerState<_NotificationsSheet> createState() => _NotificationsSheetState();
+}
+
+class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
+  List<AppNotification> items = [];
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      items = await ref.read(apiClientProvider).notifications();
+    } catch (_) {}
+    if (mounted) setState(() => loading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(localeProvider);
+    final tempPw = ref.watch(sessionProvider).user?.tempPassword == true;
+    return Directionality(
+      textDirection: appDirection,
+      // A draggable sheet (rather than a fixed-height box) so a long list
+      // scrolls properly and can be flicked away.
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.78, maxChildSize: 0.94, minChildSize: 0.4, expand: false,
+        builder: (context, scroll) => loading
+          ? const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+          : ListView(
+              controller: scroll,
+              padding: EdgeInsets.fromLTRB(22, 20, 22, 24 + MediaQuery.of(context).padding.bottom),
+              children: [
+                Center(child: _grabber()),
+                Center(child: Text(tr('الإشعارات'), style: cairo(18, w: FontWeight.w800, color: C.forest))),
+                const SizedBox(height: 8),
+                if (tempPw) _tempPasswordBanner(),
+                if (items.isEmpty && !tempPw)
+                  Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد إشعارات'), style: noto(13, color: C.textTertiary))))
+                else
+                  ...items.map(_row),
+              ],
+            ),
+      ),
+    );
+  }
+
+  Widget _tempPasswordBanner() => Container(
+    margin: const EdgeInsets.only(bottom: 6, top: 4),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(color: const Color(0xFFFFF7E8), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF0D9A8))),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFFCEBCB), borderRadius: BorderRadius.circular(12)), child: mi('lock_reset', size: 22, color: const Color(0xFFB7791F))),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(tr('كلمة مرور مؤقتة'), style: cairo(14, w: FontWeight.w800, color: C.forest)),
+          Text(tr('تم تعيين كلمة مرور مؤقتة لحسابك. غيّرها الآن.'), style: noto(12, color: C.textSecondary)),
+        ])),
+      ]),
+      const SizedBox(height: 10),
+      Pressable(
+        onTap: () { Navigator.pop(context); showChangePasswordDialog(widget.opener, ref, confirmFirst: false); },
+        child: Container(height: 44, alignment: Alignment.center,
+          decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(12)),
+          child: Text(tr('تغيير كلمة المرور'), style: cairo(14, w: FontWeight.w800, color: Colors.white))),
+      ),
+    ]),
+  );
+
+  Widget _row(AppNotification n) => Pressable(
+    onTap: () => showNotificationDetail(context, n),
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFF0E9DA)))),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(width: 40, height: 40, decoration: BoxDecoration(color: hexColor(n.bg, fallback: C.tint2), borderRadius: BorderRadius.circular(12)),
+          child: mi(n.icon, size: 22, color: hexColor(n.color, fallback: C.greenMid))),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(n.title, style: cairo(14, w: FontWeight.w700, color: C.ink)),
+          if (n.body.isNotEmpty)
+            Text(n.body, style: noto(12, color: C.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
+          if (n.showAudience || n.hasCta) ...[
+            const SizedBox(height: 6),
+            Row(children: [
+              if (n.showAudience) _audienceChip(n),
+              if (n.showAudience && n.hasCta) const SizedBox(width: 6),
+              if (n.hasCta) mi('open_in_new', size: 13, color: C.greenMid),
+            ]),
+          ],
+        ])),
+        const SizedBox(width: 8),
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text(n.whenLabel, style: noto(11, color: C.textTertiary)),
+          const SizedBox(height: 8),
+          mi(isRtl ? 'chevron_left' : 'chevron_right', size: 18, color: C.textTertiary),
+        ]),
+      ]),
+    ),
   );
 }
 

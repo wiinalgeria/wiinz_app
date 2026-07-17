@@ -211,7 +211,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Container(height: 52, alignment: Alignment.center,
                       decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(15),
                         boxShadow: [BoxShadow(color: const Color(0xFF3D7C32).withValues(alpha: 0.45), blurRadius: 14, offset: const Offset(0, 6))]),
-                      child: Text(page < slides.length - 1 ? 'التالي' : 'ابدأ الآن', style: cairo(15.5, w: FontWeight.w800, color: Colors.white))),
+                      child: Text(tr(page < slides.length - 1 ? 'التالي' : 'ابدأ الآن'), style: cairo(15.5, w: FontWeight.w800, color: Colors.white))),
                   )),
                   // back button (hidden on the first slide) — appears on the LEFT
                   if (page > 0) const SizedBox(width: 10),
@@ -695,16 +695,17 @@ class _PromoDialogState extends State<_PromoDialog> {
               child: Container(width: 34, height: 34, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), shape: BoxShape.circle),
                 child: mi('close', size: 20, color: Colors.white)),
             )),
-            // slide dots
+            // Slide dots. They follow the app language: in FR/EN the row runs
+            // left→right so the active dot advances the same way the user swipes;
+            // in Arabic it runs right→left to match the RTL swipe. (Was locked to
+            // LTR, which disagreed with the swipe direction in Arabic.)
             if (_slides.length > 1)
-              Positioned(bottom: 12, left: 0, right: 0, child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(_slides.length, (i) => AnimatedContainer(
+              Positioned(bottom: 12, left: 0, right: 0, child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(_slides.length, (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   width: _index == i ? 20 : 7, height: 7,
                   decoration: BoxDecoration(color: _index == i ? C.green : Colors.white.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(4)),
-                ))),
+                )),
               )),
           ]),
         ),

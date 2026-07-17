@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import '../core/i18n.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
 import 'ui.dart';
 
 /// Floating pill bottom nav with a center scan reticle.
 /// [current] is one of: home, map, perks, gifts (null = none highlighted).
-class WiinzBottomNav extends StatelessWidget {
+class WiinzBottomNav extends ConsumerWidget {
   final String? current;
   const WiinzBottomNav({super.key, this.current});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Screens build this as `const WiinzBottomNav(...)`, so a parent rebuild
+    // reuses the identical canonicalized instance and Flutter skips the subtree.
+    // Watch the locale here or the labels keep the old language after a switch.
+    ref.watch(localeProvider);
     // Extra bottom padding keeps the pill clear of the Android gesture/nav bar.
     final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
