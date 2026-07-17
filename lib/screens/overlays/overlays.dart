@@ -7,6 +7,7 @@ import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
 import '../../widgets/change_password.dart';
+import '../../widgets/user_profile.dart';
 
 Widget _grabber() => Container(width: 44, height: 5, margin: const EdgeInsets.only(bottom: 16),
     decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3)));
@@ -359,7 +360,11 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
   Widget _leaderRow(LeaderRow l) {
     const medals = [Color(0xFFC9A227), Color(0xFFAEB7C2), Color(0xFFB08D57)];
     final top3 = l.rank <= 3;
-    return Container(
+    return Pressable(
+      pressedScale: 0.99,
+      // Tap any row to open that user's public profile.
+      onTap: () => showUserProfileSheet(context, ref, l.id),
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
       margin: const EdgeInsets.only(bottom: 2),
       decoration: BoxDecoration(color: l.isMe ? C.tint1 : Colors.transparent, borderRadius: BorderRadius.circular(12), border: Border.all(color: l.isMe ? C.green : Colors.transparent, width: 1.5)),
@@ -387,7 +392,9 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
         ])),
         const SizedBox(width: 8),
         Text('${l.score} Wz', style: cairo(14, w: FontWeight.w800, color: C.goldText)),
+        const SizedBox(width: 2),
+        mi(isRtl ? 'chevron_left' : 'chevron_right', size: 16, color: C.textTertiary),
       ]),
-    );
+    ));
   }
 }

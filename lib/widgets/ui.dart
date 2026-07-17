@@ -178,6 +178,8 @@ const Map<String, IconData> _icons = {
   'water_bottle': Symbols.water_bottle,
   'timer': Symbols.timer,
   'school': Symbols.school,
+  'toll': Symbols.toll,
+  'emoji_events': Symbols.emoji_events,
   'military_tech': Symbols.military_tech,
   'workspace_premium': Symbols.workspace_premium,
   'eco': Symbols.eco,

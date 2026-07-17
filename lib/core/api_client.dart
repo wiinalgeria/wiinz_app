@@ -213,6 +213,12 @@ class ApiClient {
 
   Future<Map<String, dynamic>> leaderboard() => _get('/leaderboard');
 
+  // Public profile of another user (tapped from the leaderboard).
+  Future<Map<String, dynamic>> userProfile(String id) async {
+    final b = await _get('/users/$id/profile');
+    return b['profile'] as Map<String, dynamic>;
+  }
+
   Future<List<Referral>> referrals() async {
     final b = await _get('/referrals');
     return (b['referrals'] as List).map((e) => Referral.fromJson(e)).toList();
