@@ -698,11 +698,19 @@ class _PromoDialogState extends State<_PromoDialog> {
         child: SizedBox(
           height: h,
           child: Stack(children: [
-            PageView.builder(
-              controller: _ctrl,
-              itemCount: _slides.length,
-              onPageChanged: (i) { setState(() => _index = i); _schedule(); },
-              itemBuilder: (_, i) => _slideView(_slides[i]),
+            // The popup always advances LEFT → RIGHT, in every language
+            // (including Arabic): the PageView is pinned to LTR so an RTL app
+            // direction can't flip the swipe. Slide CONTENT is put back into
+            // the app's direction inside the builder so Arabic text still
+            // reads right-to-left.
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: PageView.builder(
+                controller: _ctrl,
+                itemCount: _slides.length,
+                onPageChanged: (i) { setState(() => _index = i); _schedule(); },
+                itemBuilder: (_, i) => Directionality(textDirection: appDirection, child: _slideView(_slides[i])),
+              ),
             ),
             // close button
             Positioned(top: 8, left: 8, child: Pressable(
@@ -711,17 +719,17 @@ class _PromoDialogState extends State<_PromoDialog> {
               child: Container(width: 34, height: 34, decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.45), shape: BoxShape.circle),
                 child: mi('close', size: 20, color: Colors.white)),
             )),
-            // Slide dots. They follow the app language: in FR/EN the row runs
-            // left→right so the active dot advances the same way the user swipes;
-            // in Arabic it runs right→left to match the RTL swipe. (Was locked to
-            // LTR, which disagreed with the swipe direction in Arabic.)
+            // Dots are pinned to LTR too, so the active dot always advances in
+            // the same direction as the swipe — in Arabic as well.
             if (_slides.length > 1)
-              Positioned(bottom: 12, left: 0, right: 0, child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(_slides.length, (i) => AnimatedContainer(
+              Positioned(bottom: 12, left: 0, right: 0, child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(_slides.length, (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   width: _index == i ? 20 : 7, height: 7,
                   decoration: BoxDecoration(color: _index == i ? C.green : Colors.white.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(4)),
-                )),
+                ))),
               )),
           ]),
         ),

@@ -357,6 +357,12 @@ final Map<String, String> _fr = {
   'المكافأة القادمة بعد {t}': 'Prochain bonus dans {t}',
   'مكافأتك اليومية بانتظارك 🎁': 'Votre bonus quotidien vous attend 🎁',
 
+  // auth screen — account switch prompts (the verbs already exist above)
+  'لديك حساب بالفعل؟': 'Vous avez déjà un compte ?',
+  'ليس لديك حساب؟': 'Pas encore de compte ?',
+  // profile — phone is read-only
+  'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.': 'Le numéro de téléphone ne peut pas être modifié. Contactez le support.',
+
   // user profile + achievements
   'تعذّر تحميل الملف الشخصي': 'Impossible de charger le profil',
   'المركز {n} من {m}': 'Rang {n} sur {m}',
@@ -657,6 +663,12 @@ final Map<String, String> _en = {
   'استلم {n} Wz مجاناً اليوم': 'Claim {n} Wz free today',
   'المكافأة القادمة بعد {t}': 'Next bonus in {t}',
   'مكافأتك اليومية بانتظارك 🎁': 'Your daily bonus is waiting 🎁',
+
+  // auth screen — account switch prompts (the verbs already exist above)
+  'لديك حساب بالفعل؟': 'Already have an account?',
+  'ليس لديك حساب؟': 'Don\'t have an account?',
+  // profile — phone is read-only
+  'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.': 'Your phone number can\'t be changed. Contact support to update it.',
 
   // user profile + achievements
   'تعذّر تحميل الملف الشخصي': 'Couldn\'t load profile',

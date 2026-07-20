@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n.dart';
+import '../../core/place_names.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -378,7 +379,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
 
                   GradientButton(
-                    label: signup ? 'إنشاء الحساب' : 'تسجيل الدخول',
+                    label: tr(signup ? 'إنشاء الحساب' : 'تسجيل الدخول'),
                     leading: loading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : Transform.flip(flipX: true, child: mi('arrow_forward', color: Colors.white, size: 22)),
@@ -418,11 +419,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: const Color(0xFF3c8a2b), width: 1.6),
                       ),
-                      child: Text.rich(TextSpan(
-                        text: signup ? 'لديك حساب بالفعل؟ ' : 'ليس لديك حساب؟ ',
-                        style: noto(15, w: FontWeight.w600, color: const Color(0xFF4A463E)),
-                        children: [TextSpan(text: signup ? 'سجّل الدخول' : 'أنشئ حساباً', style: cairo(17, w: FontWeight.w800, color: const Color(0xFF3c8a2b)))],
-                      )),
+                      child: Text.rich(
+                        TextSpan(
+                          text: '${tr(signup ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟')} ',
+                          style: noto(15, w: FontWeight.w600, color: const Color(0xFF4A463E)),
+                          children: [TextSpan(text: tr(signup ? 'سجّل الدخول' : 'أنشئ حساباً'), style: cairo(17, w: FontWeight.w800, color: const Color(0xFF3c8a2b)))],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
                 ],
@@ -496,7 +500,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
               value: safeValue, isExpanded: true, icon: mi('expand_more', size: 20, color: C.textTertiary),
               menuMaxHeight: 320, // short, scrollable popup instead of a full-height list
-              items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
+              // wilaya/commune: value stays the Arabic key, label is transliterated in FR/EN
+              items: items.map((e) => DropdownMenuItem(value: e, child: Text(placeName(e), style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
               onChanged: (v) { if (v != null) onChanged(v); },
             ))),
           ]),

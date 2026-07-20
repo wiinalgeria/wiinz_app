@@ -7,6 +7,7 @@ import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
 import '../../widgets/change_password.dart';
+import '../../widgets/daily_bonus.dart';
 import '../../widgets/user_profile.dart';
 
 Widget _grabber() => Container(width: 44, height: 5, margin: const EdgeInsets.only(bottom: 16),
@@ -303,6 +304,9 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                   const SizedBox(width: 10),
                   _quick('${stats?['totalRedeemed'] ?? 0}', 'استبدال', C.greenMid),
                 ]),
+                const SizedBox(height: 18),
+                // Daily bonus countdown / claim button, same card as Settings.
+                const DailyBonusCard(),
                 const SizedBox(height: 22),
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Row(children: [mi('leaderboard', size: 20, color: C.greenMid), const SizedBox(width: 6), Text(trf('لوحة الصدارة · {zone}', {'zone': '$zone'}), style: cairo(15, w: FontWeight.w800, color: C.forest))]),

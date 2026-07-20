@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../core/i18n.dart';
+import '../../core/place_names.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -53,29 +54,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   // "coming soon" (see _watchCard); restore it from git history when it ships.
   Future<void> _changePassword() => showChangePasswordDialog(context, ref);
 
-  // Let the user set/replace their profile picture — from the camera or gallery.
+  // Set/replace the profile picture — gallery only (camera capture removed).
   Future<void> _pickAvatar() async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context, backgroundColor: C.sand,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Directionality(textDirection: appDirection, child: SafeArea(child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
-          const SizedBox(height: 16),
-          Text(tr('صورة الملف الشخصي'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
-          const SizedBox(height: 16),
-          Row(children: [
-            Expanded(child: _sourceBtn('التقاط صورة', 'photo_camera', () => Navigator.pop(context, ImageSource.camera))),
-            const SizedBox(width: 12),
-            Expanded(child: _sourceBtn('من المعرض', 'photo_library', () => Navigator.pop(context, ImageSource.gallery))),
-          ]),
-        ]),
-      ))),
-    );
-    if (source == null) return;
     try {
-      final x = await ImagePicker().pickImage(source: source, maxWidth: 512, maxHeight: 512, imageQuality: 70);
+      final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512, imageQuality: 70);
       if (x == null) return;
       final bytes = await x.readAsBytes();
       if (bytes.length > 500000) { if (mounted) showToast(context, tr('الصورة كبيرة جداً، اختر صورة أصغر')); return; }
@@ -87,18 +69,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     }
   }
 
-  Widget _sourceBtn(String label, String icon, VoidCallback onTap) => Pressable(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder)),
-      child: Column(children: [
-        Container(width: 48, height: 48, decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(14)), child: mi(icon, size: 26, color: C.greenMid)),
-        const SizedBox(height: 8),
-        Text(tr(label), style: cairo(14, w: FontWeight.w700, color: C.ink)),
-      ]),
-    ),
-  );
 
   Widget _avatar(WiinzUser user, double size) => avatarCircle(user.avatar, size);
 
@@ -190,7 +160,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             const SizedBox(height: 4),
             // Phone intentionally not shown here (kept out of the settings screen);
             // it stays editable inside "تعديل الملف الشخصي".
-            Row(children: [mi('location_on', size: 15, color: const Color(0xFF6B7F73)), const SizedBox(width: 5), Flexible(child: Text(user.address.isEmpty ? user.commune : user.address, style: noto(13, color: const Color(0xFF6B7F73)), overflow: TextOverflow.ellipsis))]),
+            Row(children: [mi('location_on', size: 15, color: const Color(0xFF6B7F73)), const SizedBox(width: 5), Flexible(child: Text(user.address.isEmpty ? placeName(user.commune) : user.address, style: noto(13, color: const Color(0xFF6B7F73)), overflow: TextOverflow.ellipsis))]),
           ])),
         ]),
         const SizedBox(height: 14),
@@ -398,7 +368,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
             value: safe, isExpanded: true, icon: mi('expand_more', size: 20, color: C.textTertiary),
             menuMaxHeight: 320, // keep the popup compact + scrollable, not full-screen
-            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
+            // value stays the Arabic key; only the label is transliterated
+            items: items.map((e) => DropdownMenuItem(value: e, child: Text(placeName(e), style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
             onChanged: (v) { if (v != null) onChanged(v); },
           ))),
         ])),

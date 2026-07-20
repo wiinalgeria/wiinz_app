@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/session.dart';
 import '../core/i18n.dart';
+import '../core/place_names.dart';
 import '../theme/app_theme.dart';
 import 'ui.dart';
 
@@ -92,7 +93,10 @@ class _UserProfileSheetState extends ConsumerState<_UserProfileSheet> {
     final tier = '${p!['tier'] ?? ''}';
     final rank = (p!['rank'] as num?)?.toInt() ?? 0;
     final total = (p!['totalInWilaya'] as num?)?.toInt() ?? 0;
-    final region = [p!['wilaya'], p!['commune']].where((e) => '$e'.isNotEmpty).join(' · ');
+    final region = [p!['wilaya'], p!['commune']]
+        .map((e) => placeName('$e'))
+        .where((e) => e.isNotEmpty)
+        .join(' · ');
     final joined = DateTime.tryParse('${p!['joinedAt']}');
     return Container(
       padding: const EdgeInsets.all(20),

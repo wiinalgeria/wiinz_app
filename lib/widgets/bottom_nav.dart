@@ -65,7 +65,14 @@ class WiinzBottomNav extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(tr('امسح'), style: cairo(10.5, w: FontWeight.w800, color: C.greenMid)),
+                  // same one-line/scale-down treatment as the tabs
+                  SizedBox(
+                    width: 74,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(tr('امسح'), maxLines: 1, softWrap: false, style: cairo(10.5, w: FontWeight.w800, color: C.greenMid)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -85,14 +92,24 @@ class WiinzBottomNav extends ConsumerWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOut,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(color: active ? const Color(0xFFDDF0E5) : Colors.transparent, borderRadius: BorderRadius.circular(16)),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 mi(icon, size: 24, color: active ? C.forest : C.textTertiary, fill: active),
                 const SizedBox(height: 2),
-                Text(tr(label), style: cairo(10.5, w: active ? FontWeight.w800 : FontWeight.w600, color: active ? C.forest : C.textTertiary)),
+                // Longer labels (French, or Arabic at small display scales) used
+                // to wrap and break mid-word. Keep them on ONE line and shrink
+                // to fit instead of hyphenating.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    tr(label), maxLines: 1, softWrap: false, overflow: TextOverflow.visible,
+                    textAlign: TextAlign.center,
+                    style: cairo(10.5, w: active ? FontWeight.w800 : FontWeight.w600, color: active ? C.forest : C.textTertiary),
+                  ),
+                ),
               ],
             ),
           ),
