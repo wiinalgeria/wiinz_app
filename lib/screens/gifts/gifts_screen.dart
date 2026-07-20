@@ -10,10 +10,13 @@ import '../../widgets/headers.dart';
 import '../../widgets/bottom_nav.dart';
 import '../overlays/dialogs.dart';
 
-const _cats = [
-  ('الكل', 'apps'), ('مطاعم', 'restaurant'), ('رياضة', 'fitness_center'), ('عامة', 'public'),
-  ('مقاهي', 'local_cafe'), ('محلات', 'storefront'), ('منتجات', 'shopping_bag'), ('اخرى', 'more_horiz'),
-];
+// Icon per known category (keyed by the stable Arabic value). Categories the
+// admin adds later still work — they just fall back to a generic icon.
+const _catIcons = {
+  'مطاعم': 'restaurant', 'رياضة': 'fitness_center', 'عامة': 'public',
+  'مقاهي': 'local_cafe', 'محلات': 'storefront', 'منتجات': 'shopping_bag', 'اخرى': 'more_horiz',
+};
+const _kAll = '__all__'; // sentinel key for the "all" tab
 
 class GiftsScreen extends ConsumerStatefulWidget {
   const GiftsScreen({super.key});
@@ -25,7 +28,9 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
   List<Gift> _gifts = [];
   HeroGift? _hero;
   bool _loading = true;
-  String _cat = 'الكل';
+  // Selected category KEY (Arabic value, or _kAll). Labels come from the server.
+  String _cat = _kAll;
+  List<(String, String)> _cats = []; // (key, localized label)
   String? _busyId;
 
   @override
@@ -36,8 +41,12 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
 
   Future<void> _load() async {
     try {
-      final (gifts, hero) = await ref.read(apiClientProvider).gifts();
-      setState(() { _gifts = gifts; _hero = hero; _loading = false; });
+      final (gifts, hero, cats) = await ref.read(apiClientProvider).gifts();
+      setState(() {
+        _gifts = gifts; _hero = hero; _cats = cats; _loading = false;
+        // if the selected category disappeared from the dashboard, fall back to "all"
+        if (_cat != _kAll && !cats.any((c) => c.$1 == _cat)) _cat = _kAll;
+      });
     } catch (_) {
       setState(() => _loading = false);
     }
@@ -67,7 +76,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
   @override
   Widget build(BuildContext context) {
     ref.watch(localeProvider);
-    final filtered = _cat == 'الكل' ? _gifts : _gifts.where((g) => g.cat == _cat).toList();
+    final filtered = _cat == _kAll ? _gifts : _gifts.where((g) => g.cat == _cat).toList();
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -133,6 +142,11 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
   }
 
   Widget _catRow() {
+    // "All" first, then the admin-defined categories (already localized).
+    final tabs = <(String, String, String)>[
+      (_kAll, tr('الكل'), 'apps'),
+      ..._cats.map((c) => (c.$1, c.$2, _catIcons[c.$1] ?? 'category')),
+    ];
     // Extra height + Clip.none so the active chip's drop shadow renders fully
     // instead of being cut off by the horizontal list's edge.
     return SizedBox(
@@ -141,13 +155,13 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
         padding: const EdgeInsets.symmetric(vertical: 6),
-        itemCount: _cats.length,
+        itemCount: tabs.length,
         separatorBuilder: (context, i) => const SizedBox(width: 9),
         itemBuilder: (context, i) {
-          final (label, icon) = _cats[i];
-          final on = _cat == label;
+          final (key, label, icon) = tabs[i];
+          final on = _cat == key;
           return Pressable(
-            onTap: () => setState(() => _cat = label),
+            onTap: () => setState(() => _cat = key),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               decoration: BoxDecoration(color: on ? C.green : Colors.white, borderRadius: BorderRadius.circular(999),

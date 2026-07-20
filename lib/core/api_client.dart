@@ -120,11 +120,18 @@ class ApiClient {
     return (b['coupons'] as List).map((e) => Coupon.fromJson(e)).toList();
   }
 
-  Future<(List<Gift>, HeroGift?)> gifts() async {
+  /// Gifts + the hero gift + the admin-defined categories. A category is
+  /// `(key, label)`: the key is the stable Arabic value stored on a gift, the
+  /// label is already translated for the user's language by the server.
+  Future<(List<Gift>, HeroGift?, List<(String, String)>)> gifts() async {
     final b = await _get('/gifts');
     final gifts = (b['gifts'] as List).map((e) => Gift.fromJson(e)).toList();
     final hero = b['heroGift'] != null ? HeroGift.fromJson(b['heroGift']) : null;
-    return (gifts, hero);
+    final cats = ((b['categories'] as List?) ?? [])
+        .map((e) => ('${e['key'] ?? ''}', '${e['label'] ?? ''}'))
+        .where((c) => c.$1.isNotEmpty)
+        .toList();
+    return (gifts, hero, cats);
   }
 
   Future<(List<String>, Map<String, List<String>>)> locations() async {

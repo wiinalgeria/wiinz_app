@@ -503,6 +503,15 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
               Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(12)),
                 child: Column(children: [Text(p.distanceLabel, style: cairo(15, w: FontWeight.w800, color: C.greenBtnEnd)), Text(tr('من موقعك'), style: noto(10, color: const Color(0xFF6B7F73)))])),
           ]),
+          // full address (localized) — shown right under the name/area
+          if (p.address.trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              mi('location_on', size: 18, color: C.green),
+              const SizedBox(width: 8),
+              Expanded(child: Text(p.address, style: noto(13, color: C.textSecondary, height: 1.5))),
+            ]),
+          ],
           // admin-written details (localized), shown only when filled
           if (p.details.trim().isNotEmpty) ...[
             const SizedBox(height: 14),
