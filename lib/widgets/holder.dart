@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/api_client.dart';
 import '../core/i18n.dart';
 import '../core/session.dart';
 import '../theme/app_theme.dart';
@@ -32,40 +33,56 @@ class _HolderCardState extends ConsumerState<HolderCard> {
     if (mounted) setState(() => loading = false);
   }
 
-  Future<void> _recordEmptying() async {
-    final ctrl = TextEditingController();
+  // Propose new name/hours/phone for the point. This does NOT change the point
+  // right away — the server queues it as a support ticket an admin must
+  // approve, so a holder can't silently rewrite the public point info.
+  Future<void> _requestPointEdit(Map point) async {
+    final name = TextEditingController(text: '${point['name'] ?? ''}');
+    final hours = TextEditingController(text: '${point['hours'] ?? ''}');
+    final phone = TextEditingController(text: '${point['phone'] ?? ''}');
+    bool saving = false;
+    String? err;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (dctx) => Directionality(
+      builder: (dctx) => StatefulBuilder(builder: (dctx, setD) => Directionality(
         textDirection: appDirection,
         child: AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(tr('تفريغ الحاوية'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(tr('سجّل عملية تفريغ الحاوية الآن. يمكنك إضافة الوزن بالكيلوغرام (اختياري).'),
-                style: noto(13, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ctrl, keyboardType: TextInputType.number, textDirection: TextDirection.ltr,
-              decoration: InputDecoration(hintText: tr('الوزن (كغ)'), border: const OutlineInputBorder()),
-            ),
+          title: Text(tr('تعديل معلومات النقطة'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
+          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(tr('يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة.'),
+                style: noto(12.5, color: C.textSecondary, height: 1.5)),
+            const SizedBox(height: 14),
+            TextField(controller: name, decoration: InputDecoration(labelText: tr('اسم النقطة'), border: const OutlineInputBorder())),
+            const SizedBox(height: 10),
+            TextField(controller: hours, decoration: InputDecoration(labelText: tr('ساعات العمل'), border: const OutlineInputBorder())),
+            const SizedBox(height: 10),
+            TextField(controller: phone, keyboardType: TextInputType.phone, textDirection: TextDirection.ltr,
+                decoration: InputDecoration(labelText: tr('الهاتف'), border: const OutlineInputBorder())),
+            if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: noto(12, color: C.danger))),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
-            TextButton(onPressed: () => Navigator.pop(dctx, true), child: Text(tr('تسجيل'), style: cairo(14, w: FontWeight.w800, color: C.green))),
+            TextButton(
+              onPressed: saving ? null : () async {
+                setD(() { saving = true; err = null; });
+                try {
+                  await ref.read(apiClientProvider).holderPointEditRequest(name: name.text.trim(), hours: hours.text.trim(), phone: phone.text.trim());
+                  if (dctx.mounted) Navigator.pop(dctx, true);
+                } on ApiException catch (e) {
+                  setD(() { saving = false; err = e.message; });
+                } catch (_) {
+                  setD(() { saving = false; err = tr('حدث خطأ، حاول مجدداً'); });
+                }
+              },
+              child: Text(saving ? '...' : tr('إرسال الطلب'), style: cairo(14, w: FontWeight.w800, color: C.green)),
+            ),
           ],
         ),
-      ),
+      )),
     );
-    if (ok != true) return;
-    try {
-      await ref.read(apiClientProvider).holderEmptying(weightKg: double.tryParse(ctrl.text.trim()) ?? 0);
-      if (mounted) showToast(context, tr('تم تسجيل التفريغ ✓'));
-      await _load();
-    } catch (_) {
-      if (mounted) showToast(context, tr('حدث خطأ، حاول مجدداً'));
-    }
+    if (ok == true && mounted) showToast(context, tr('تم إرسال الطلب، سيُطبَّق بعد موافقة الإدارة ✓'));
   }
 
   @override
@@ -120,12 +137,12 @@ class _HolderCardState extends ConsumerState<HolderCard> {
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: Pressable(
-            onTap: _recordEmptying,
+            onTap: () => _requestPointEdit(point),
             child: Container(height: 46, alignment: Alignment.center,
               decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(13)),
               child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                mi('delete_sweep', size: 19, color: Colors.white), const SizedBox(width: 6),
-                Text(tr('تسجيل تفريغ الحاوية'), style: cairo(13, w: FontWeight.w800, color: Colors.white)),
+                mi('edit', size: 19, color: Colors.white), const SizedBox(width: 6),
+                Text(tr('تعديل معلومات النقطة'), style: cairo(13, w: FontWeight.w800, color: Colors.white)),
               ])),
           )),
           const SizedBox(width: 8),

@@ -398,7 +398,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Pressable(
               pressedScale: 0.88,
               onTap: () => context.go('/more'),
-              child: avatarCircle(user.avatar, 44, border: Border.all(color: Colors.white, width: 2)),
+              child: avatarCircle(user.avatar, 44, border: Border.all(color: Colors.white, width: 2), star: user.isHolder),
             ),
             const SizedBox(width: 10),
             Stack(children: [

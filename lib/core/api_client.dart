@@ -232,6 +232,11 @@ class ApiClient {
   Future<Map<String, dynamic>> holderEmptying({double weightKg = 0, String note = ''}) =>
       _post('/holder/emptying', {'weightKg': weightKg, 'note': note});
 
+  /// Holder proposes new name/hours/phone for their point. Doesn't apply
+  /// immediately — it's queued as a support ticket until an admin approves it.
+  Future<Map<String, dynamic>> holderPointEditRequest({required String name, required String hours, required String phone}) =>
+      _post('/holder/point-edit-request', {'name': name, 'hours': hours, 'phone': phone});
+
   /// Second leaderboard: collection points in the user's wilaya.
   Future<Map<String, dynamic>> pointsLeaderboard() => _get('/leaderboard/points');
 

@@ -92,12 +92,20 @@ Widget avatarCircle(String avatar, double size, {Border? border, bool star = fal
     decoration: BoxDecoration(shape: BoxShape.circle, border: border),
     child: ClipOval(child: inner),
   );
-  if (!star) return circle;
+  return starBadge(circle, size, show: star);
+}
+
+/// Wraps any avatar-sized circle (a photo, an initial-letter disc, …) with the
+/// small gold star that marks a collect-point holder. Shared so every place
+/// that shows a custom avatar fallback (e.g. the leaderboard's initial disc)
+/// gets the exact same badge as [avatarCircle] instead of a one-off copy.
+Widget starBadge(Widget child, double size, {bool show = true}) {
+  if (!show) return child;
   final badge = (size * 0.34).clamp(14.0, 26.0);
   return SizedBox(
     width: size, height: size,
     child: Stack(clipBehavior: Clip.none, children: [
-      circle,
+      child,
       Positioned(
         right: -1, top: -1,
         child: Container(

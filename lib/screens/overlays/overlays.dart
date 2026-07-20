@@ -7,6 +7,7 @@ import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/bottle_icon.dart';
 import '../../widgets/change_password.dart';
 import '../../widgets/achievements.dart';
 import '../../widgets/daily_bonus.dart';
@@ -229,6 +230,15 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
   List<HistoryItem> history = [];
   bool loading = true;
 
+  // Collect-point holders can switch this same sheet between the normal
+  // leaderboard and the points leaderboard (see requireHolder on the server).
+  // 'users' is the default so nothing changes for a normal account.
+  String _boardMode = 'users';
+  List<dynamic> _pointsBoard = [];
+  String _pointsZone = '';
+  bool _pointsLoading = false;
+  bool _pointsLoaded = false;
+
   @override
   void initState() {
     super.initState();
@@ -244,6 +254,22 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
       history = results[2] as List<HistoryItem>;
     } catch (_) {}
     if (mounted) setState(() => loading = false);
+  }
+
+  Future<void> _loadPointsBoard() async {
+    if (_pointsLoaded) return;
+    setState(() => _pointsLoading = true);
+    try {
+      final b = await ref.read(apiClientProvider).pointsLeaderboard();
+      _pointsBoard = (b['leaderboard'] as List?) ?? [];
+      _pointsZone = '${b['zone'] ?? ''}';
+    } catch (_) {}
+    if (mounted) setState(() { _pointsLoading = false; _pointsLoaded = true; });
+  }
+
+  void _switchBoard(String mode) {
+    setState(() => _boardMode = mode);
+    if (mode == 'points') _loadPointsBoard();
   }
 
   @override
@@ -332,26 +358,36 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                     ),
                   ),
                 ]),
+                // Collect-point holders get a second board — their point's
+                // standing against other points in the wilaya — right here
+                // next to the normal user leaderboard, not tucked away in Settings.
+                if (user.isHolder) ...[
+                  const SizedBox(height: 10),
+                  _boardToggle(),
+                ],
                 const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(gradient: const LinearGradient(colors: [C.tint1, C.tint3]), borderRadius: BorderRadius.circular(16), border: Border.all(color: C.tint4)),
-                  child: Row(children: [
-                    mi('military_tech', size: 22, color: C.greenMid),
-                    const SizedBox(width: 10),
-                    Expanded(child: Text.rich(TextSpan(text: tr('أنت في المركز '), style: cairo(13.5, w: FontWeight.w700, color: C.forest), children: [
-                      TextSpan(text: '#$myRank', style: cairo(13.5, w: FontWeight.w900, color: C.forest)),
-                      TextSpan(text: tr(' من $totalPlayers'), style: cairo(13.5, w: FontWeight.w700, color: C.forest)),
-                    ]))),
-                    Text(myRank > 1 ? trf('تحتاج {n} Wz للتقدم', {'n': '$ahead'}) : tr('في الصدارة! 🏆'), style: cairo(11.5, w: FontWeight.w700, color: C.greenBtnEnd)),
-                  ]),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder)),
-                  child: Column(children: leaders.map((l) => _leaderRow(l)).toList()),
-                ),
+                if (_boardMode == 'users') ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(gradient: const LinearGradient(colors: [C.tint1, C.tint3]), borderRadius: BorderRadius.circular(16), border: Border.all(color: C.tint4)),
+                    child: Row(children: [
+                      mi('military_tech', size: 22, color: C.greenMid),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text.rich(TextSpan(text: tr('أنت في المركز '), style: cairo(13.5, w: FontWeight.w700, color: C.forest), children: [
+                        TextSpan(text: '#$myRank', style: cairo(13.5, w: FontWeight.w900, color: C.forest)),
+                        TextSpan(text: tr(' من $totalPlayers'), style: cairo(13.5, w: FontWeight.w700, color: C.forest)),
+                      ]))),
+                      Text(myRank > 1 ? trf('تحتاج {n} Wz للتقدم', {'n': '$ahead'}) : tr('في الصدارة! 🏆'), style: cairo(11.5, w: FontWeight.w700, color: C.greenBtnEnd)),
+                    ]),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder)),
+                    child: Column(children: leaders.map((l) => _leaderRow(l)).toList()),
+                  ),
+                ] else
+                  _pointsBoardBody(),
                 const SizedBox(height: 20),
                 Text(tr('سجل النقاط'), style: cairo(15, w: FontWeight.w800, color: C.forest)),
                 const SizedBox(height: 8),
@@ -398,9 +434,9 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
         const SizedBox(width: 11),
         // profile picture when set, otherwise the initial on a coloured disc
         l.avatar.isNotEmpty
-          ? avatarCircle(l.avatar, 36, border: Border.all(color: l.isMe ? C.green : const Color(0xFFE6DFCF), width: 1.5))
-          : Container(width: 36, height: 36, alignment: Alignment.center, decoration: BoxDecoration(color: l.isMe ? C.green : const Color(0xFFF0E9DA), shape: BoxShape.circle),
-              child: Text(l.initial, style: cairo(14, w: FontWeight.w800, color: l.isMe ? Colors.white : C.textSecondary))),
+          ? avatarCircle(l.avatar, 36, border: Border.all(color: l.isMe ? C.green : const Color(0xFFE6DFCF), width: 1.5), star: l.isHolder)
+          : starBadge(Container(width: 36, height: 36, alignment: Alignment.center, decoration: BoxDecoration(color: l.isMe ? C.green : const Color(0xFFF0E9DA), shape: BoxShape.circle),
+              child: Text(l.initial, style: cairo(14, w: FontWeight.w800, color: l.isMe ? Colors.white : C.textSecondary))), 36, show: l.isHolder),
         const SizedBox(width: 11),
         Expanded(child: Row(children: [
           Flexible(child: Text(l.name, style: cairo(14, w: l.isMe ? FontWeight.w800 : FontWeight.w700, color: l.isMe ? C.forest : C.ink), overflow: TextOverflow.ellipsis)),
@@ -420,5 +456,70 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
         mi(isRtl ? 'chevron_left' : 'chevron_right', size: 16, color: C.textTertiary),
       ]),
     ));
+  }
+
+  // Segmented control switching this sheet between the normal user leaderboard
+  // and the points leaderboard. Holder-only — a normal account never sees it.
+  Widget _boardToggle() {
+    Widget seg(String mode, String label, String icon) {
+      final on = _boardMode == mode;
+      return Expanded(child: Pressable(
+        onTap: () => _switchBoard(mode),
+        child: Container(
+          height: 40, alignment: Alignment.center,
+          decoration: BoxDecoration(color: on ? C.green : Colors.transparent, borderRadius: BorderRadius.circular(12)),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+            mi(icon, size: 16, color: on ? Colors.white : C.textSecondary), const SizedBox(width: 6),
+            Text(tr(label), style: cairo(12.5, w: FontWeight.w700, color: on ? Colors.white : C.textSecondary)),
+          ]),
+        ),
+      ));
+    }
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(color: const Color(0xFFF1EEE6), borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [seg('users', 'المستخدمون', 'group'), seg('points', 'نقاط الجمع', 'recycling')]),
+    );
+  }
+
+  Widget _pointsBoardBody() {
+    if (_pointsLoading) return const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
+    if (_pointsBoard.isEmpty) {
+      return Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد بيانات بعد'), style: noto(13, color: C.textTertiary))));
+    }
+    const medals = [Color(0xFFC9A227), Color(0xFFAEB7C2), Color(0xFFB08D57)];
+    return Column(children: [
+      if (_pointsZone.isNotEmpty)
+        Padding(padding: const EdgeInsets.only(bottom: 8),
+          child: Text(trf('ترتيب نقاط الجمع · {zone} · حسب عدد القارورات المُجمَّعة', {'zone': _pointsZone}), style: noto(11.5, color: C.textTertiary))),
+      ..._pointsBoard.map((r) {
+        final mine = r['isMine'] == true;
+        final rank = (r['rank'] as num?)?.toInt() ?? 0;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            color: mine ? C.tint1 : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: mine ? C.green : C.cardBorder, width: mine ? 1.5 : 1),
+          ),
+          child: Row(children: [
+            Container(width: 26, height: 26, alignment: Alignment.center,
+              decoration: BoxDecoration(color: rank >= 1 && rank <= 3 ? medals[rank - 1] : C.divider, shape: BoxShape.circle),
+              child: Text('$rank', style: cairo(12.5, w: FontWeight.w800, color: rank >= 1 && rank <= 3 ? Colors.white : C.textSecondary))),
+            const SizedBox(width: 11),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('${r['name'] ?? ''}', style: cairo(14, w: mine ? FontWeight.w800 : FontWeight.w700, color: mine ? C.forest : C.ink), overflow: TextOverflow.ellipsis),
+              Text(trf('{d} إيداع · {u} مستخدم', {'d': '${r['deposits'] ?? 0}', 'u': '${r['users'] ?? 0}'}), style: noto(11, color: C.textTertiary)),
+            ])),
+            Row(children: [
+              const BottleIcon(size: 20, color: C.greenMid),
+              const SizedBox(width: 4),
+              Text('${r['bottles'] ?? 0}', style: cairo(15, w: FontWeight.w900, color: C.greenMid)),
+            ]),
+          ]),
+        );
+      }),
+    ]);
   }
 }

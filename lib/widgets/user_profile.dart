@@ -102,7 +102,7 @@ class _UserProfileSheetState extends ConsumerState<_UserProfileSheet> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(gradient: C.forestGrad, borderRadius: BorderRadius.circular(22)),
       child: Column(children: [
-        avatarCircle('${p!['avatar'] ?? ''}', 84, border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2)),
+        avatarCircle('${p!['avatar'] ?? ''}', 84, border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2), star: p!['isHolder'] == true),
         const SizedBox(height: 12),
         Text('${p!['name'] ?? ''}', style: cairo(20, w: FontWeight.w900, color: Colors.white), textAlign: TextAlign.center),
         if (region.isNotEmpty) ...[

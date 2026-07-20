@@ -197,11 +197,12 @@ class HistoryItem {
 class LeaderRow {
   final String id, initial, name, prize, avatar;
   final int score, rank;
-  final bool isMe;
-  LeaderRow({required this.id, required this.initial, required this.name, required this.score, required this.rank, required this.isMe, this.prize = '', this.avatar = ''});
+  final bool isMe, isHolder;
+  LeaderRow({required this.id, required this.initial, required this.name, required this.score, required this.rank, required this.isMe, this.prize = '', this.avatar = '', this.isHolder = false});
   factory LeaderRow.fromJson(Map<String, dynamic> j) => LeaderRow(
         id: '${j['id']}', initial: j['initial'] ?? '', name: j['name'] ?? '', score: _int(j['score']),
-        rank: _int(j['rank']), isMe: j['isMe'] == true, prize: j['prize'] ?? '', avatar: j['avatar'] ?? '');
+        rank: _int(j['rank']), isMe: j['isMe'] == true, prize: j['prize'] ?? '', avatar: j['avatar'] ?? '',
+        isHolder: j['isHolder'] == true);
 }
 
 class AppConfig {
