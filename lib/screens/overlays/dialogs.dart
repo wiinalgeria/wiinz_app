@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../models/models.dart' show Store;
+import '../../widgets/bottle_icon.dart';
 import '../../widgets/ui.dart';
 
 /// Generic confirm dialog. Returns true if confirmed.
@@ -210,13 +211,17 @@ class _CooldownDialogState extends State<_CooldownDialog> {
 
 /// The 3-step "how depositing works" popup shown when the user opens the scanner.
 Future<void> showScanIntro(BuildContext context) {
+  // `icon` is a Material Symbols name, or the sentinel 'bottle' for the WIIN
+  // bottle mark (drawn in code, not a glyph).
   Widget step(int n, String icon, String title) => Padding(
     padding: const EdgeInsets.only(bottom: 14),
     child: Row(children: [
       Container(
-        width: 40, height: 40,
+        width: 40, height: 40, alignment: Alignment.center,
         decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(13)),
-        child: mi(icon, size: 21, color: C.greenMid),
+        child: icon == 'bottle'
+            ? const BottleIcon(size: 24, color: C.greenMid)
+            : mi(icon, size: 21, color: C.greenMid),
       ),
       const SizedBox(width: 12),
       Expanded(child: Text(tr(title), style: noto(13.5, color: C.textSecondary, height: 1.45))),
@@ -232,12 +237,13 @@ Future<void> showScanIntro(BuildContext context) {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 72, height: 72, decoration: BoxDecoration(color: C.tint1, shape: BoxShape.circle),
-            child: mi('water_bottle', size: 38, color: C.greenMid)),
+          Container(width: 72, height: 72, alignment: Alignment.center,
+            decoration: BoxDecoration(color: C.tint1, shape: BoxShape.circle),
+            child: const BottleIcon(size: 42, color: C.greenMid, strokeScale: 1.05)),
           const SizedBox(height: 16),
           Text(tr('كيف تودع قاروراتك؟'), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
           const SizedBox(height: 18),
-          step(1, 'water_bottle', 'اجمع القارورات الفارغة'),
+          step(1, 'bottle', 'اجمع القارورات الفارغة'),
           step(2, 'location_on', 'أودعها في أقرب نقطة جمع إليك'),
           step(3, 'qr_code_scanner', 'امسح رمز QR الخاص بنقطة الجمع واكسب نقاطك'),
           const SizedBox(height: 8),

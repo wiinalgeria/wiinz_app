@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/i18n.dart';
 import '../theme/app_theme.dart';
+import 'bottle_icon.dart';
 import 'ui.dart';
 
 /// A three-screen "how the app works" walkthrough, opened from Settings. Each
@@ -13,7 +14,7 @@ class _Step {
 }
 
 const _steps = <_Step>[
-  _Step('water_bottle', 'اجمع القارورات',
+  _Step('bottle', 'اجمع القارورات',
       'اجمع القارورات البلاستيكية الفارغة في المنزل بدل رميها.'),
   _Step('location_on', 'أودعها في نقطة الجمع',
       'اعثر على أقرب نقطة جمع على الخريطة وأودع قاروراتك هناك.'),
@@ -93,7 +94,9 @@ class _TutorialViewState extends State<_TutorialView> {
                       Container(
                         width: 132, height: 132,
                         decoration: BoxDecoration(color: C.green.withValues(alpha: 0.16), shape: BoxShape.circle),
-                        child: mi(s.icon, size: 62, color: const Color(0xFF7BD86A)),
+                        child: s.icon == 'bottle'
+                            ? const BottleIcon(size: 72, color: Color(0xFF7BD86A), strokeScale: 0.9)
+                            : mi(s.icon, size: 62, color: const Color(0xFF7BD86A)),
                       ),
                       const SizedBox(height: 12),
                       // step number chip

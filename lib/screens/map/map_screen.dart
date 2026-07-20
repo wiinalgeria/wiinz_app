@@ -7,13 +7,13 @@ import '../../core/i18n.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/session.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
-import '../../widgets/bottle_icon.dart';
 import '../../widgets/headers.dart';
 import '../../widgets/bottom_nav.dart';
 
@@ -241,8 +241,9 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
     if (p != null) _showPinSheet(p);
   }
 
-  // Draw a green map-pin with a white disc and the WIIN bottle mark, as a PNG
-  // for MapLibre.
+  // Draw a green map-pin with a white disc and the recycle glyph, as a PNG for
+  // MapLibre. (Collection points keep the recycling symbol — the bottle mark is
+  // used for bottle/deposit contexts, not for the points themselves.)
   Future<Uint8List> _markerBytes() async {
     const size = 130;
     const green = Color(0xFF34801f);
@@ -260,9 +261,12 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
       ..close();
     canvas.drawPath(tail, paint);
     canvas.drawCircle(Offset(cx, cy), r * 0.64, Paint()..color = Colors.white..isAntiAlias = true);
-    // bottle mark centred in the white disc (1:2 ratio, sized to fit)
-    final bh = r * 1.05, bw = bh / 2;
-    paintBottle(canvas, Rect.fromLTWH(cx - bw / 2, cy - bh / 2, bw, bh), green, strokeScale: 1.15);
+    final tp = TextPainter(textDirection: TextDirection.ltr);
+    const icon = Symbols.recycling;
+    tp.text = TextSpan(text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(fontSize: r * 0.9, fontFamily: icon.fontFamily, package: icon.fontPackage, color: green));
+    tp.layout();
+    tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
     final img = await recorder.endRecording().toImage(size, size);
     final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
     return bytes!.buffer.asUint8List();
@@ -450,7 +454,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
             : Container(
                 width: 52, height: 52, alignment: Alignment.center,
                 decoration: BoxDecoration(gradient: C.avatarGrad, borderRadius: BorderRadius.circular(15)),
-                child: const BottleIcon(size: 34, color: Colors.white, strokeScale: 1.1),
+                child: mi('recycling', size: 26, color: Colors.white),
               ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -499,7 +503,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
               : Container(
                   width: 56, height: 56, alignment: Alignment.center,
                   decoration: BoxDecoration(gradient: C.avatarGrad, borderRadius: BorderRadius.circular(16)),
-                  child: const BottleIcon(size: 38, color: Colors.white, strokeScale: 1.1),
+                  child: mi('recycling', size: 28, color: Colors.white),
                 ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
