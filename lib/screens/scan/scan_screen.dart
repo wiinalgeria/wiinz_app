@@ -24,6 +24,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
   bool _busy = false;
   bool _handling = false; // guards against double-detection while a deposit is in progress
   bool _denied = false;
+  // Collect-point holders can scan in two modes: credit ANOTHER user's deposit
+  // at their point, or deposit their own bottles like a normal user.
+  bool _creditMode = true;
   bool _intro = true; // ignore scans until the 3-step guide is dismissed
 
   @override
@@ -73,9 +76,46 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
     super.dispose();
   }
 
+  // A holder scanning in "credit" mode is reading a USER's QR to award that
+  // user a deposit at the holder's own point — the opposite direction to a
+  // normal scan, so it takes its own flow.
+  Future<void> _creditUser(String userQr) async {
+    if (_busy || _handling || userQr.trim().isEmpty) return;
+    _handling = true;
+    setState(() => _busy = true);
+    await _qr?.pauseCamera();
+    final api = ref.read(apiClientProvider);
+    final point = ref.read(sessionProvider).user?.holderPoint;
+    try {
+      if (!mounted) return;
+      final bottles = await showBottleStepper(context,
+          pointName: point?.name ?? '', pointsPerBottle: 0,
+          maxBottles: 0, title: 'كم عدد القارورات التي أودعها؟');
+      if (bottles == null || bottles <= 0) return;
+      final res = await api.holderCredit(userQr.trim(), bottles);
+      if (!mounted) return;
+      showToast(context, trf('تمت إضافة {n} Wz إلى {name}', {'n': '${res['pointsAwarded']}', 'name': '${res['userName']}'}));
+    } on ApiException catch (e) {
+      if (mounted) showToast(context, e.message);
+    } catch (_) {
+      if (mounted) showToast(context, tr('حدث خطأ، حاول مجدداً'));
+    } finally {
+      _handling = false;
+      if (mounted) {
+        setState(() => _busy = false);
+        _qr?.resumeCamera();
+      }
+    }
+  }
+
   // validate the code → ask for bottle count → confirm → award → success.
   Future<void> _submit(String code) async {
     if (_intro || _busy || _handling || code.trim().isEmpty) return;
+    // Holder in credit mode: the scanned code is a USER, not a point.
+    final me = ref.read(sessionProvider).user;
+    if (me != null && me.isHolder && me.holderPoint != null && _creditMode) {
+      return _creditUser(code);
+    }
     _handling = true;
     setState(() => _busy = true);
     await _qr?.pauseCamera();
@@ -169,9 +209,30 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
     );
   }
 
+  Widget _modeBtn(String label, String icon, bool on, VoidCallback onTap) => Pressable(
+    onTap: onTap,
+    child: Container(
+      height: 46, alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: on ? C.greenButton : null,
+        color: on ? null : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: on ? Colors.transparent : C.cardBorder, width: 1.5),
+      ),
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        mi(icon, size: 18, color: on ? Colors.white : C.textSecondary),
+        const SizedBox(width: 6),
+        Flexible(child: Text(tr(label), maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: cairo(12.5, w: FontWeight.w800, color: on ? Colors.white : C.textSecondary))),
+      ]),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     ref.watch(localeProvider);
+    final me = ref.watch(sessionProvider).user;
+    final holder = (me != null && me.isHolder) ? me.holderPoint : null;
     return Scaffold(
       backgroundColor: const Color(0xFF0C0F0C),
       resizeToAvoidBottomInset: true,
@@ -240,6 +301,23 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
             child: SafeArea(top: false, child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
               const SizedBox(height: 14),
+              // Holders choose what they're scanning: another user's code (to
+              // credit that user at their point) or a point's code (to deposit
+              // their own bottles like any user).
+              if (holder != null) ...[
+                Row(children: [
+                  Expanded(child: _modeBtn('امسح كنقطة جمع', 'store', _creditMode, () => setState(() => _creditMode = true))),
+                  const SizedBox(width: 8),
+                  Expanded(child: _modeBtn('أودع كمستخدم', 'person', !_creditMode, () => setState(() => _creditMode = false))),
+                ]),
+                const SizedBox(height: 8),
+                Text(
+                  _creditMode
+                    ? trf('امسح رمز المستخدم لإضافة إيداعه في {name}', {'name': holder.name})
+                    : tr('امسح رمز نقطة الجمع لإيداع قواريرك أنت'),
+                  textAlign: TextAlign.center, style: noto(11.5, color: C.textTertiary)),
+                const SizedBox(height: 12),
+              ],
               Text(tr('لا تعرف أين توجد نقاط الجمع؟'), style: noto(12.5, color: C.textTertiary)),
               const SizedBox(height: 10),
               Pressable(onTap: () => context.go('/map'), child: Container(

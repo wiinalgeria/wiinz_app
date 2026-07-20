@@ -241,7 +241,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
     if (p != null) _showPinSheet(p);
   }
 
-  // Draw a green map-pin with a white disc and the WIINZ bottle mark, as a PNG
+  // Draw a green map-pin with a white disc and the WIIN bottle mark, as a PNG
   // for MapLibre.
   Future<Uint8List> _markerBytes() async {
     const size = 130;

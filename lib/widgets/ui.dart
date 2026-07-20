@@ -74,7 +74,8 @@ Widget storeLogo(String logo, double size, {String fallbackIcon = 'storefront'})
 /// The user's profile picture as a circle — their uploaded photo when they have
 /// one, otherwise the green gradient + person icon. Single source of truth so the
 /// avatar looks identical everywhere (home bar, headers, settings, edit sheet).
-Widget avatarCircle(String avatar, double size, {Border? border}) {
+/// [star] marks a collect-point holder — a small gold star sits on the circle.
+Widget avatarCircle(String avatar, double size, {Border? border, bool star = false}) {
   final img = dataUriImage(avatar);
   // ClipOval guarantees a true circular crop of the photo (a plain Container clip
   // can leave the image looking square-cut on some devices).
@@ -86,10 +87,29 @@ Widget avatarCircle(String avatar, double size, {Border? border}) {
           alignment: Alignment.center,
           child: mi('person', size: size * 0.55, color: Colors.white),
         );
-  return Container(
+  final circle = Container(
     width: size, height: size,
     decoration: BoxDecoration(shape: BoxShape.circle, border: border),
     child: ClipOval(child: inner),
+  );
+  if (!star) return circle;
+  final badge = (size * 0.34).clamp(14.0, 26.0);
+  return SizedBox(
+    width: size, height: size,
+    child: Stack(clipBehavior: Clip.none, children: [
+      circle,
+      Positioned(
+        right: -1, top: -1,
+        child: Container(
+          width: badge, height: badge, alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: C.gold, shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: badge * 0.11),
+          ),
+          child: mi('star', size: badge * 0.62, color: Colors.white, fill: true),
+        ),
+      ),
+    ]),
   );
 }
 

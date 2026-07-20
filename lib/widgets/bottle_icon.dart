@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// The WIINZ plastic-bottle mark, drawn in code (no asset) so it scales cleanly
+/// The WIIN plastic-bottle mark, drawn in code (no asset) so it scales cleanly
 /// and can be tinted anywhere — map pins, cards, empty states.
 ///
 /// Shape: screw cap, short neck, sloping shoulders, straight body with a label

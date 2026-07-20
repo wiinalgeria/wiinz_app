@@ -48,7 +48,7 @@ Future<bool> showConfirm(BuildContext context, {required String title, required 
 
 /// Bottle-count stepper shown after a valid scan. Returns the confirmed count, or null if cancelled.
 /// [maxBottles] caps a single deposit; pass 0 when the admin has removed the limit.
-Future<int?> showBottleStepper(BuildContext context, {required String pointName, required int pointsPerBottle, int maxBottles = 0}) {
+Future<int?> showBottleStepper(BuildContext context, {required String pointName, required int pointsPerBottle, int maxBottles = 0, String title = 'كم عدد القارورات التي جمعتها؟'}) {
   int count = 1;
   final capped = maxBottles > 0;
   return showDialog<int>(
@@ -64,7 +64,7 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 72, height: 72, decoration: BoxDecoration(color: C.tint1, shape: BoxShape.circle), child: mi('recycling', size: 38, color: C.greenMid)),
             const SizedBox(height: 16),
-            Text(tr('كم عدد القارورات التي جمعتها؟'), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
+            Text(tr(title), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
             const SizedBox(height: 4),
             Text(pointName, style: noto(13, color: C.textSecondary)),
             const SizedBox(height: 20),
@@ -82,7 +82,7 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
               _stepBtn('add', () { if (!atMax) setLocal(() => count++); }, enabled: !atMax),
             ]),
             const SizedBox(height: 8),
-            Text('= ${count * pointsPerBottle} Wz', style: cairo(16, w: FontWeight.w800, color: C.goldText)),
+            Text(pointsPerBottle > 0 ? '= ${count * pointsPerBottle} Wz' : '', style: cairo(16, w: FontWeight.w800, color: C.goldText)),
             if (atMax) ...[
               const SizedBox(height: 8),
               Text(trf('الحد الأقصى {n} قارورة في الإيداع الواحد', {'n': '$maxBottles'}),

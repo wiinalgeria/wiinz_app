@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Design tokens taken directly from the WIINZ redesign handoff.
+/// Design tokens taken directly from the WIIN redesign handoff.
 class C {
   // brand greens
   static const green = Color(0xFF49A839);

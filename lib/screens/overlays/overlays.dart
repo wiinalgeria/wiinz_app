@@ -6,7 +6,9 @@ import '../../core/session.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/change_password.dart';
+import '../../widgets/achievements.dart';
 import '../../widgets/daily_bonus.dart';
 import '../../widgets/user_profile.dart';
 
@@ -70,6 +72,13 @@ Future<void> showNotificationDetail(BuildContext context, AppNotification n) {
             const SizedBox(height: 20),
             if (n.hasCta) ...[
               GradientButton(label: n.ctaText, height: 52, onTap: () async {
+                // An in-app screen target wins over an external link, so
+                // "new gift available" lands the user on the Gifts tab.
+                if (n.opensScreen) {
+                  Navigator.pop(dctx);
+                  if (dctx.mounted) dctx.go('/${n.ctaScreen.trim()}');
+                  return;
+                }
                 final uri = Uri.tryParse(n.ctaUrl.trim());
                 if (uri != null) {
                   try { await launchUrl(uri, mode: LaunchMode.externalApplication); } catch (_) {}
@@ -310,7 +319,18 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                 const SizedBox(height: 22),
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Row(children: [mi('leaderboard', size: 20, color: C.greenMid), const SizedBox(width: 6), Text(trf('لوحة الصدارة · {zone}', {'zone': '$zone'}), style: cairo(15, w: FontWeight.w800, color: C.forest))]),
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF1EEE6), borderRadius: BorderRadius.circular(999)), child: Text(tr('هذا الأسبوع'), style: noto(11, color: C.textSecondary))),
+                  // opens the admin-defined achievements (unlock + claim bonus)
+                  Pressable(
+                    onTap: () => showAchievementsSheet(context, ref),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                      decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(999)),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        mi('military_tech', size: 15, color: Colors.white), const SizedBox(width: 4),
+                        Text(tr('الإنجازات'), style: cairo(11.5, w: FontWeight.w800, color: Colors.white)),
+                      ]),
+                    ),
+                  ),
                 ]),
                 const SizedBox(height: 10),
                 Container(

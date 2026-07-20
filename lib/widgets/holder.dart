@@ -1,0 +1,243 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/i18n.dart';
+import '../core/session.dart';
+import '../theme/app_theme.dart';
+import 'bottle_icon.dart';
+import 'ui.dart';
+
+/// Settings card for a collect-point holder: their point, how much came in
+/// today/this week/this month, and the container-emptying log. Renders nothing
+/// for normal users.
+class HolderCard extends ConsumerStatefulWidget {
+  const HolderCard({super.key});
+  @override
+  ConsumerState<HolderCard> createState() => _HolderCardState();
+}
+
+class _HolderCardState extends ConsumerState<HolderCard> {
+  Map<String, dynamic>? s;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final u = ref.read(sessionProvider).user;
+    if (u == null || !u.isHolder) { if (mounted) setState(() => loading = false); return; }
+    try { s = await ref.read(apiClientProvider).holderStats(); } catch (_) {}
+    if (mounted) setState(() => loading = false);
+  }
+
+  Future<void> _recordEmptying() async {
+    final ctrl = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => Directionality(
+        textDirection: appDirection,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(tr('تفريغ الحاوية'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text(tr('سجّل عملية تفريغ الحاوية الآن. يمكنك إضافة الوزن بالكيلوغرام (اختياري).'),
+                style: noto(13, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl, keyboardType: TextInputType.number, textDirection: TextDirection.ltr,
+              decoration: InputDecoration(hintText: tr('الوزن (كغ)'), border: const OutlineInputBorder()),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+            TextButton(onPressed: () => Navigator.pop(dctx, true), child: Text(tr('تسجيل'), style: cairo(14, w: FontWeight.w800, color: C.green))),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(apiClientProvider).holderEmptying(weightKg: double.tryParse(ctrl.text.trim()) ?? 0);
+      if (mounted) showToast(context, tr('تم تسجيل التفريغ ✓'));
+      await _load();
+    } catch (_) {
+      if (mounted) showToast(context, tr('حدث خطأ، حاول مجدداً'));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(localeProvider);
+    final u = ref.watch(sessionProvider).user;
+    if (u == null || !u.isHolder) return const SizedBox.shrink();
+    if (loading) return const SizedBox.shrink();
+    final point = (s?['point'] as Map?) ?? {};
+    final today = (s?['today'] as Map?) ?? {};
+    final week = (s?['week'] as Map?) ?? {};
+    final month = (s?['month'] as Map?) ?? {};
+    final last = s?['lastEmptying'] as Map?;
+
+    Widget cell(String v, String label) => Expanded(child: Column(children: [
+      Text(v, style: cairo(18, w: FontWeight.w900, color: C.forest)),
+      Text(tr(label), style: noto(10.5, color: C.textSecondary), textAlign: TextAlign.center),
+    ]));
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFFFFF6E6), Color(0xFFFDF3DE)]),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF3E1BC)),
+      ),
+      child: Column(children: [
+        Row(children: [
+          Container(width: 44, height: 44, alignment: Alignment.center,
+            decoration: BoxDecoration(color: C.gold.withValues(alpha: 0.22), shape: BoxShape.circle),
+            child: mi('star', size: 24, color: C.goldText, fill: true)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(tr('نقطة الجمع الخاصة بك'), style: noto(11.5, color: C.textSecondary)),
+            Text('${point['name'] ?? ''}', style: cairo(15.5, w: FontWeight.w800, color: C.forest)),
+            Text('${point['code'] ?? ''}', style: noto(11, color: C.textTertiary), textDirection: TextDirection.ltr),
+          ])),
+          const BottleIcon(size: 34, color: C.goldText),
+        ]),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.75), borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            cell('${today['bottles'] ?? 0}', 'قارورة اليوم'),
+            cell('${today['deposits'] ?? 0}', 'إيداع اليوم'),
+            cell('${week['bottles'] ?? 0}', 'قارورة هذا الأسبوع'),
+            cell('${month['bottles'] ?? 0}', 'قارورة هذا الشهر'),
+          ]),
+        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(child: Pressable(
+            onTap: _recordEmptying,
+            child: Container(height: 46, alignment: Alignment.center,
+              decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(13)),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                mi('delete_sweep', size: 19, color: Colors.white), const SizedBox(width: 6),
+                Text(tr('تسجيل تفريغ الحاوية'), style: cairo(13, w: FontWeight.w800, color: Colors.white)),
+              ])),
+          )),
+          const SizedBox(width: 8),
+          Pressable(
+            onTap: () => showPointsLeaderboardSheet(context, ref),
+            child: Container(height: 46, padding: const EdgeInsets.symmetric(horizontal: 14), alignment: Alignment.center,
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13), border: Border.all(color: C.cardBorder)),
+              child: mi('leaderboard', size: 20, color: C.greenMid)),
+          ),
+        ]),
+        if (last != null) ...[
+          const SizedBox(height: 8),
+          Text(trf('آخر تفريغ: {t}', {'t': timeAgo(DateTime.tryParse('${last['at']}')?.toLocal() ?? DateTime.now())}),
+              style: noto(11, color: C.textTertiary)),
+        ],
+      ]),
+    );
+  }
+}
+
+/// Second leaderboard: how the collection points in this wilaya compare.
+void showPointsLeaderboardSheet(BuildContext context, WidgetRef ref) {
+  showModalBottomSheet(
+    context: context, backgroundColor: C.sand, isScrollControlled: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+    builder: (_) => const _PointsBoardSheet(),
+  );
+}
+
+class _PointsBoardSheet extends ConsumerStatefulWidget {
+  const _PointsBoardSheet();
+  @override
+  ConsumerState<_PointsBoardSheet> createState() => _PointsBoardSheetState();
+}
+
+class _PointsBoardSheetState extends ConsumerState<_PointsBoardSheet> {
+  List rows = [];
+  String zone = '';
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final b = await ref.read(apiClientProvider).pointsLeaderboard();
+      rows = (b['leaderboard'] as List?) ?? [];
+      zone = '${b['zone'] ?? ''}';
+    } catch (_) {}
+    if (mounted) setState(() => loading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(localeProvider);
+    return Directionality(
+      textDirection: appDirection,
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.8, maxChildSize: 0.94, minChildSize: 0.4, expand: false,
+        builder: (context, scroll) => loading
+            ? const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+            : ListView(
+                controller: scroll,
+                padding: EdgeInsets.fromLTRB(20, 18, 20, 24 + MediaQuery.of(context).padding.bottom),
+                children: [
+                  Center(child: Container(width: 44, height: 5, margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3)))),
+                  Center(child: Text(trf('ترتيب نقاط الجمع · {zone}', {'zone': zone}),
+                      style: cairo(17, w: FontWeight.w800, color: C.forest))),
+                  const SizedBox(height: 4),
+                  Center(child: Text(tr('حسب عدد القارورات المُجمَّعة'), style: noto(11.5, color: C.textTertiary))),
+                  const SizedBox(height: 14),
+                  if (rows.isEmpty)
+                    Padding(padding: const EdgeInsets.all(30),
+                        child: Center(child: Text(tr('لا توجد بيانات بعد'), style: noto(13, color: C.textTertiary))))
+                  else
+                    ...rows.map((r) {
+                      final mine = r['isMine'] == true;
+                      final rank = (r['rank'] as num?)?.toInt() ?? 0;
+                      const medals = [Color(0xFFC9A227), Color(0xFFAEB7C2), Color(0xFFB08D57)];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                        decoration: BoxDecoration(
+                          color: mine ? C.tint1 : Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: mine ? C.green : C.cardBorder, width: mine ? 1.5 : 1),
+                        ),
+                        child: Row(children: [
+                          Container(width: 26, height: 26, alignment: Alignment.center,
+                            decoration: BoxDecoration(color: rank <= 3 ? medals[rank - 1] : C.divider, shape: BoxShape.circle),
+                            child: Text('$rank', style: cairo(12.5, w: FontWeight.w800, color: rank <= 3 ? Colors.white : C.textSecondary))),
+                          const SizedBox(width: 11),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('${r['name'] ?? ''}', style: cairo(14, w: mine ? FontWeight.w800 : FontWeight.w700, color: mine ? C.forest : C.ink), overflow: TextOverflow.ellipsis),
+                            Text(trf('{d} إيداع · {u} مستخدم', {'d': '${r['deposits'] ?? 0}', 'u': '${r['users'] ?? 0}'}),
+                                style: noto(11, color: C.textTertiary)),
+                          ])),
+                          Row(children: [
+                            const BottleIcon(size: 20, color: C.greenMid),
+                            const SizedBox(width: 4),
+                            Text('${r['bottles'] ?? 0}', style: cairo(15, w: FontWeight.w900, color: C.greenMid)),
+                          ]),
+                        ]),
+                      );
+                    }),
+                ],
+              ),
+      ),
+    );
+  }
+}

@@ -8,12 +8,17 @@ class WiinzUser {
   final int points;
   final int videosLeft;
   final bool tempPassword;
+  /// Collect-point holder ("star" member): runs a collection point, so they
+  /// carry a SECOND QR (the point's) and can credit other users' deposits.
+  final bool isHolder;
+  final HolderPoint? holderPoint;
 
   WiinzUser({
     required this.id, required this.name, required this.email, required this.phone,
     required this.wilaya, required this.commune, required this.address, required this.gender,
     required this.tier, required this.qrCode, required this.inviteCode, required this.cardCode,
     required this.points, required this.videosLeft, this.tempPassword = false, this.avatar = '',
+    this.isHolder = false, this.holderPoint,
   });
 
   factory WiinzUser.fromJson(Map<String, dynamic> j) => WiinzUser(
@@ -23,6 +28,8 @@ class WiinzUser {
         qrCode: j['qrCode'] ?? j['cardCode'] ?? '', inviteCode: j['inviteCode'] ?? '', cardCode: j['cardCode'] ?? '',
         points: _int(j['points']), videosLeft: _int(j['videosLeft']), tempPassword: j['tempPassword'] == true,
         avatar: j['avatar'] ?? '',
+        isHolder: j['isHolder'] == true,
+        holderPoint: j['holderPoint'] == null ? null : HolderPoint.fromJson(j['holderPoint']),
       );
 
   WiinzUser copyWith({int? points, int? videosLeft, String? name, String? phone, String? address, String? commune, String? wilaya, String? tier, bool? tempPassword, String? avatar}) => WiinzUser(
@@ -30,7 +37,17 @@ class WiinzUser {
         wilaya: wilaya ?? this.wilaya, commune: commune ?? this.commune, address: address ?? this.address,
         gender: gender, tier: tier ?? this.tier, qrCode: qrCode, inviteCode: inviteCode, cardCode: cardCode,
         points: points ?? this.points, videosLeft: videosLeft ?? this.videosLeft, tempPassword: tempPassword ?? this.tempPassword,
-        avatar: avatar ?? this.avatar,
+        avatar: avatar ?? this.avatar, isHolder: isHolder, holderPoint: holderPoint,
+      );
+}
+
+/// The collection point a holder runs (their second QR code).
+class HolderPoint {
+  final String id, code, name, wilaya, address, hours;
+  HolderPoint({required this.id, required this.code, required this.name, this.wilaya = '', this.address = '', this.hours = ''});
+  factory HolderPoint.fromJson(Map<String, dynamic> j) => HolderPoint(
+        id: j['id'] ?? '', code: j['code'] ?? '', name: j['name'] ?? '',
+        wilaya: j['wilaya'] ?? '', address: j['address'] ?? '', hours: j['hours'] ?? '',
       );
 }
 
@@ -131,12 +148,15 @@ class AppNotification {
   /// Whether the admin chose to reveal [audience] to the user.
   final bool showAudience;
   final String ctaText, ctaUrl;
+  /// In-app screen the button opens ('gifts', 'map', …). Takes precedence over
+  /// [ctaUrl] so "new gift available" can jump straight to the Gifts tab.
+  final String ctaScreen;
 
   AppNotification({
     required this.id, required this.icon, required this.bg, required this.color,
     required this.title, required this.body, required this.time,
     this.at, this.audience = 'all', this.showAudience = false,
-    this.ctaText = '', this.ctaUrl = '',
+    this.ctaText = '', this.ctaUrl = '', this.ctaScreen = '',
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> j) => AppNotification(
@@ -145,11 +165,13 @@ class AppNotification {
         at: j['at'] == null ? null : DateTime.tryParse('${j['at']}')?.toLocal(),
         audience: j['audience'] ?? 'all',
         showAudience: j['showAudience'] == true,
-        ctaText: j['ctaText'] ?? '', ctaUrl: j['ctaUrl'] ?? '',
+        ctaText: j['ctaText'] ?? '', ctaUrl: j['ctaUrl'] ?? '', ctaScreen: j['ctaScreen'] ?? '',
       );
 
   bool get targeted => audience == 'targeted';
-  bool get hasCta => ctaText.trim().isNotEmpty && ctaUrl.trim().isNotEmpty;
+  bool get hasCta => ctaText.trim().isNotEmpty && (ctaUrl.trim().isNotEmpty || ctaScreen.trim().isNotEmpty);
+  /// Internal navigation wins over an external link when both are set.
+  bool get opensScreen => ctaScreen.trim().isNotEmpty;
 
   /// Localized "when", from the real timestamp when we have one.
   String get whenLabel => at != null ? timeAgo(at!) : time;

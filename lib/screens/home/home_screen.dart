@@ -516,24 +516,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _cardBack(WiinzUser user) {
+    // A collect-point holder carries TWO codes: their personal one and their
+    // point's. Show both side by side so they can present either.
+    final hp = user.holderPoint;
+    Widget qr(String data, String label, String caption) => Column(mainAxisSize: MainAxisSize.min, children: [
+      Container(
+        width: hp != null ? 104 : 150, height: hp != null ? 104 : 150,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        child: QrImageView(data: data, padding: EdgeInsets.zero),
+      ),
+      const SizedBox(height: 5),
+      Text(label, style: cairo(10.5, w: FontWeight.w800, color: Colors.white)),
+      Text(caption, style: noto(9, color: Colors.white.withValues(alpha: 0.6)), textDirection: TextDirection.ltr),
+    ]);
+
     return Container(
       height: 206,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(gradient: C.forestGrad, borderRadius: BorderRadius.circular(26),
         boxShadow: [BoxShadow(color: C.forest.withValues(alpha: 0.45), blurRadius: 36, spreadRadius: -6, offset: const Offset(0, 18))]),
-      child: Row(children: [
-        Container(width: 150, height: 150, padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-          child: QrImageView(data: user.qrCode, padding: EdgeInsets.zero)),
-        const SizedBox(width: 18),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text('WIINZ', style: cairo(18, w: FontWeight.w800, color: Colors.white, spacing: 1)),
-          const SizedBox(height: 12),
-          Text(tr('الكود الشخصي'), style: noto(12, color: Colors.white.withValues(alpha: 0.6))),
-          Text(user.name, style: cairo(17, w: FontWeight.w700, color: Colors.white)),
-          const SizedBox(height: 14),
-          Text(tr('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك'), style: noto(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.right),
-        ])),
-      ]),
+      child: hp == null
+        ? Row(children: [
+            qr(user.qrCode, tr('الكود الشخصي'), user.qrCode),
+            const SizedBox(width: 18),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('WIIN', style: cairo(18, w: FontWeight.w800, color: Colors.white, spacing: 1)),
+              const SizedBox(height: 12),
+              Text(user.name, style: cairo(17, w: FontWeight.w700, color: Colors.white)),
+              const SizedBox(height: 14),
+              Text(tr('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك'), style: noto(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.right),
+            ])),
+          ])
+        : Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            qr(user.qrCode, tr('رمزك الشخصي'), user.qrCode),
+            qr(hp.code, tr('رمز نقطتك'), hp.code),
+          ]),
     );
   }
 
@@ -549,7 +567,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Row(children: [
-              Text('WIINZ', style: cairo(19, w: FontWeight.w800, color: Colors.white, spacing: 2)),
+              Text('WIIN', style: cairo(19, w: FontWeight.w800, color: Colors.white, spacing: 2)),
               const SizedBox(width: 8),
               Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.28), borderRadius: BorderRadius.circular(999)),
                 child: Text(tr(badge), style: cairo(14, w: FontWeight.w800, color: Colors.white))),
@@ -589,7 +607,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_adsLoaded && _ads.isEmpty) return const [];
     final ads = _ads.isNotEmpty
         ? _ads
-        : [AdBanner(id: '_', title: tr('إنترنت أسرع مع شريكنا'), subtitle: tr('عرض حصري لمستخدمي WIINZ'))]; // pre-load placeholder
+        : [AdBanner(id: '_', title: tr('إنترنت أسرع مع شريكنا'), subtitle: tr('عرض حصري لمستخدمي WIIN'))]; // pre-load placeholder
     final widgets = <Widget>[];
     for (var i = 0; i < ads.length; i++) {
       widgets.add(_adBanner(ads[i]));

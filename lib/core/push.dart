@@ -12,7 +12,7 @@ import 'local_notify.dart';
 /// - **App in foreground**: Android suppresses the system notification, so we
 ///   re-raise it ourselves through flutter_local_notifications.
 ///
-/// The device token is registered with the WIINZ backend after login, and cleared
+/// The device token is registered with the WIIN backend after login, and cleared
 /// on logout, so a signed-out phone stops receiving that user's notifications.
 
 /// Notification channel used for both FCM and local notifications. It must match
@@ -20,8 +20,8 @@ import 'local_notify.dart';
 /// or Android will drop the notification into a nameless low-priority channel.
 const _channel = AndroidNotificationChannel(
   'wiinz_general',
-  'إشعارات WIINZ',
-  description: 'إشعارات تطبيق WIINZ',
+  'إشعارات WIIN',
+  description: 'إشعارات تطبيق WIIN',
   importance: Importance.max,
 );
 
@@ -52,7 +52,7 @@ Future<void> initPush() async {
     FirebaseMessaging.onMessage.listen((m) {
       final n = m.notification;
       if (n == null) return;
-      showLocalNotification(n.title ?? 'WIINZ', n.body ?? '');
+      showLocalNotification(n.title ?? 'WIIN', n.body ?? '');
     });
   } catch (e) {
     // No Firebase config / offline → app still works, just without push.

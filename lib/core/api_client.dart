@@ -220,6 +220,30 @@ class ApiClient {
 
   Future<Map<String, dynamic>> leaderboard() => _get('/leaderboard');
 
+  // ---- collect-point holder ----
+  /// Stats for the holder's own point (today / week / month + emptyings).
+  Future<Map<String, dynamic>> holderStats() => _get('/holder/stats');
+
+  /// Holder credits a normal user's deposit at their point (scanning the user's QR).
+  Future<Map<String, dynamic>> holderCredit(String userQr, int bottles) =>
+      _post('/holder/credit', {'userQr': userQr, 'bottles': bottles});
+
+  /// Holder records emptying the container.
+  Future<Map<String, dynamic>> holderEmptying({double weightKg = 0, String note = ''}) =>
+      _post('/holder/emptying', {'weightKg': weightKg, 'note': note});
+
+  /// Second leaderboard: collection points in the user's wilaya.
+  Future<Map<String, dynamic>> pointsLeaderboard() => _get('/leaderboard/points');
+
+  /// Admin-defined achievements with this user's progress + claim state.
+  Future<List<Map<String, dynamic>>> achievements() async {
+    final b = await _get('/achievements');
+    return ((b['achievements'] as List?) ?? []).cast<Map<String, dynamic>>();
+  }
+
+  /// Claim an unlocked achievement's bonus. Returns the new balance.
+  Future<Map<String, dynamic>> claimAchievement(String id) => _post('/achievements/$id/claim', {});
+
   // Public profile of another user (tapped from the leaderboard).
   Future<Map<String, dynamic>> userProfile(String id) async {
     final b = await _get('/users/$id/profile');

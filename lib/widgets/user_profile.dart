@@ -18,7 +18,7 @@ const _achievementDefs = <String, (String, String, String)>{
   'tier_silver': ('workspace_premium', 'المستوى الفضي', 'وصلت إلى المستوى الفضي'),
   'tier_gold': ('military_tech', 'المستوى الذهبي', 'وصلت إلى المستوى الذهبي'),
   'refer_1': ('group', 'صديق البيئة', 'دعوت صديقاً واحداً'),
-  'refer_5': ('group', 'سفير WIINZ', 'دعوت 5 أصدقاء'),
+  'refer_5': ('group', 'سفير WIIN', 'دعوت 5 أصدقاء'),
   'top3': ('emoji_events', 'في القمة', 'ضمن أفضل 3 في ولايتك'),
 };
 

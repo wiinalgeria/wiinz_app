@@ -43,8 +43,8 @@ Future<void> openNotificationSettings() async {
 Future<void> showLocalNotification(String title, String body) async {
   const details = NotificationDetails(
     android: AndroidNotificationDetails(
-      'wiinz_general', 'إشعارات WIINZ',
-      channelDescription: 'إشعارات تطبيق WIINZ',
+      'wiinz_general', 'إشعارات WIIN',
+      channelDescription: 'إشعارات تطبيق WIIN',
       importance: Importance.max, priority: Priority.high,
     ),
   );

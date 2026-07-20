@@ -39,7 +39,7 @@ class WelcomeScreen extends ConsumerWidget {
                 const Spacer(flex: 3),
                 Image.asset('assets/images/wiin-logo-white.png', width: 190),
                 const SizedBox(height: 22),
-                Text(tr('مرحباً بك في WIINZ'), textAlign: TextAlign.center,
+                Text(tr('مرحباً بك في WIIN'), textAlign: TextAlign.center,
                     style: cairo(26, w: FontWeight.w800, color: Colors.white)),
                 const SizedBox(height: 12),
                 Text(tr('اجمع القارورات وحافظ على بيئتك'),

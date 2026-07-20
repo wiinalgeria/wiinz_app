@@ -64,7 +64,7 @@ class WiinzApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(localeProvider); // rebuild the app when language changes
     return MaterialApp.router(
-      title: 'WIINZ',
+      title: 'WIIN',
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       locale: Locale(lang),

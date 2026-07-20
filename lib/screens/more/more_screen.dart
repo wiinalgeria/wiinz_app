@@ -18,6 +18,7 @@ import '../../widgets/bottom_nav.dart';
 import '../../widgets/language_selector.dart';
 import '../../widgets/tutorial.dart';
 import '../../widgets/daily_bonus.dart';
+import '../../widgets/holder.dart';
 
 class MoreScreen extends ConsumerStatefulWidget {
   const MoreScreen({super.key});
@@ -70,13 +71,13 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   }
 
 
-  Widget _avatar(WiinzUser user, double size) => avatarCircle(user.avatar, size);
+  Widget _avatar(WiinzUser user, double size) => avatarCircle(user.avatar, size, star: user.isHolder);
 
   void _shareInvite(WiinzUser user) {
-    final msg = '${tr('انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁')}\n'
+    final msg = '${tr('انضم إلى تطبيق WIIN ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁')}\n'
         '${tr('استخدم رمز دعوتي عند التسجيل:')} ${user.inviteCode}\n'
         '${tr('حمّل التطبيق الآن وابدأ الربح معنا.')}';
-    SharePlus.instance.share(ShareParams(text: msg, subject: tr('انضم إلى WIINZ')));
+    SharePlus.instance.share(ShareParams(text: msg, subject: tr('انضم إلى WIIN')));
   }
 
   @override
@@ -102,6 +103,8 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             // Daily bonus: claim button when ready, countdown to reset otherwise.
             // Renders nothing when the admin has switched the feature off.
             const DailyBonusCard(),
+            // Collect-point holders get their point's stats + emptying log here.
+            const HolderCard(),
             _watchCard(user),
             const SizedBox(height: 22),
             _inviteCard(user),
@@ -135,7 +138,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               child: Container(height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF3D9D5), width: 1.5)),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('logout', size: 22, color: C.danger), const SizedBox(width: 8), Text(tr('تسجيل الخروج'), style: cairo(15, w: FontWeight.w700, color: C.danger))]))),
             const SizedBox(height: 22),
-            Center(child: Text(tr('WIINZ · الإصدار 2.0'), style: noto(12, color: C.textTertiary))),
+            Center(child: Text(tr('WIIN · الإصدار 2.0'), style: noto(12, color: C.textTertiary))),
           ])),
           const WiinzBottomNav(current: null),
         ]),
@@ -413,7 +416,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               const SizedBox(height: 16),
               Row(children: [mi('support_agent', size: 24, color: C.green), const SizedBox(width: 8), Text(tr('المساعدة والدعم'), style: cairo(19, w: FontWeight.w800, color: C.forest))]),
               const SizedBox(height: 4),
-              Text(tr('صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIINZ.'), style: noto(13, color: C.textSecondary)),
+              Text(tr('صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIIN.'), style: noto(13, color: C.textSecondary)),
               const SizedBox(height: 18),
               _editField('عنوان المشكلة / الاقتراح', subject, 'help'),
               Text(tr('التفاصيل'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
@@ -486,7 +489,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             social(FontAwesomeIcons.tiktok, C.ink, 'https://www.tiktok.com/@wiinalgeria0'),
           ]),
           const SizedBox(height: 20),
-          Text(tr('WIINZ · الإصدار 2.0'), style: noto(12, color: C.textTertiary)),
+          Text(tr('WIIN · الإصدار 2.0'), style: noto(12, color: C.textTertiary)),
         ]),
       )),
     );

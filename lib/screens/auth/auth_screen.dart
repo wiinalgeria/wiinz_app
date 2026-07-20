@@ -202,7 +202,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text(tr('استعادة كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(tr('أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIINZ لإعادة تعيين كلمة مرورك.'),
+              Text(tr('أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIIN لإعادة تعيين كلمة مرورك.'),
                   style: noto(13, color: C.textSecondary, height: 1.5)),
               const SizedBox(height: 14),
               Container(

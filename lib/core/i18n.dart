@@ -77,7 +77,7 @@ final localeProvider = NotifierProvider<LocaleNotifier, String>(LocaleNotifier.n
 // ===========================================================================
 final Map<String, String> _fr = {
   // auth / welcome
-  'مرحباً بك في WIINZ': 'Bienvenue sur WIINZ',
+  'مرحباً بك في WIIN': 'Bienvenue sur WIIN',
   'اجمع القارورات وحافظ على بيئتك': 'Collectez les bouteilles et préservez votre environnement',
   'إنشاء حساب': 'Créer un compte',
   'تسجيل الدخول': 'Se connecter',
@@ -118,8 +118,8 @@ final Map<String, String> _fr = {
   '✓ كلمة مرور جيدة': '✓ Bon mot de passe',
   'كلمتا المرور غير متطابقتين': 'Les mots de passe ne correspondent pas',
   'استعادة كلمة المرور': 'Réinitialiser le mot de passe',
-  'أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIINZ لإعادة تعيين كلمة مرورك.':
-      'Saisissez votre téléphone ou e-mail. L\'équipe WIINZ vous contactera pour réinitialiser votre mot de passe.',
+  'أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIIN لإعادة تعيين كلمة مرورك.':
+      'Saisissez votre téléphone ou e-mail. L\'équipe WIIN vous contactera pour réinitialiser votre mot de passe.',
   'الهاتف أو البريد': 'Téléphone ou e-mail',
   'إرسال الطلب': 'Envoyer la demande',
   'تم إرسال طلبك ✓ سيتواصل معك الفريق قريباً': 'Demande envoyée ✓ L\'équipe vous contactera bientôt',
@@ -143,7 +143,7 @@ final Map<String, String> _fr = {
   'اكتشف نقاط الجمع القريبة': 'Trouver les points de collecte proches',
   'إعلان': 'Publicité',
   'إنترنت أسرع مع شريكنا': 'Internet plus rapide avec notre partenaire',
-  'عرض حصري لمستخدمي WIINZ': 'Offre exclusive pour les utilisateurs WIINZ',
+  'عرض حصري لمستخدمي WIIN': 'Offre exclusive pour les utilisateurs WIIN',
   'اكتشف المزيد': 'En savoir plus',
   'الكود الشخصي': 'Code personnel',
   'اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك': 'Montrez ce code à l\'agent du point de collecte pour créditer vos points',
@@ -266,7 +266,7 @@ final Map<String, String> _fr = {
   'المساعدة والدعم': 'Aide et support',
   'عن التطبيق': 'À propos',
   'تسجيل الخروج': 'Se déconnecter',
-  'صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIINZ.': 'Décrivez votre problème ou suggestion, l\'équipe WIINZ vous répondra.',
+  'صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIIN.': 'Décrivez votre problème ou suggestion, l\'équipe WIIN vous répondra.',
   'عنوان المشكلة / الاقتراح': 'Objet du problème / suggestion',
   'التفاصيل': 'Détails', 'اكتب التفاصيل هنا…': 'Écrivez les détails ici…',
   'أدخل عنوان المشكلة': 'Saisissez l\'objet du problème',
@@ -275,7 +275,7 @@ final Map<String, String> _fr = {
   'تعذّر الإرسال، حاول مجدداً': 'Échec de l\'envoi, réessayez',
   'شركة ناشئة في تسيير النفايات وإعادة التدوير': 'Startup de gestion des déchets et du recyclage',
   'طُوّر ونُشر بواسطة WIIN ALGERIA': 'Développé et publié par WIIN ALGERIA',
-  'انضم إلى WIINZ': 'Rejoignez WIINZ',
+  'انضم إلى WIIN': 'Rejoignez WIIN',
 
   // change password
   'كلمة المرور الحالية': 'Mot de passe actuel',
@@ -306,8 +306,8 @@ final Map<String, String> _fr = {
   'المستوى: ': 'Niveau : ',
   'باقٍ {n} Wz': 'Reste {n} Wz',
 
-  'انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁':
-      'Rejoignez WIINZ ♻️ et commencez à collecter des bouteilles, gagner des points et remporter des cadeaux ! 🎁',
+  'انضم إلى تطبيق WIIN ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁':
+      'Rejoignez WIIN ♻️ et commencez à collecter des bouteilles, gagner des points et remporter des cadeaux ! 🎁',
   'استخدم رمز دعوتي عند التسجيل:': 'Utilisez mon code de parrainage à l\'inscription :',
   'حمّل التطبيق الآن وابدأ الربح معنا.': 'Téléchargez l\'application et commencez à gagner avec nous.',
 
@@ -386,7 +386,7 @@ final Map<String, String> _fr = {
   'وصلت إلى المستوى الذهبي': 'Vous avez atteint le niveau or',
   'صديق البيئة': 'Ami de l\'environnement',
   'دعوت صديقاً واحداً': 'Vous avez parrainé un ami',
-  'سفير WIINZ': 'Ambassadeur WIINZ',
+  'سفير WIIN': 'Ambassadeur WIIN',
   'دعوت 5 أصدقاء': 'Vous avez parrainé 5 amis',
   'في القمة': 'Au sommet',
   'ضمن أفضل 3 في ولايتك': 'Dans le top 3 de votre wilaya',
@@ -402,7 +402,7 @@ final Map<String, String> _fr = {
 // English
 // ===========================================================================
 final Map<String, String> _en = {
-  'مرحباً بك في WIINZ': 'Welcome to WIINZ',
+  'مرحباً بك في WIIN': 'Welcome to WIIN',
   'اجمع القارورات وحافظ على بيئتك': 'Collect bottles and protect your environment',
   'إنشاء حساب': 'Create account',
   'تسجيل الدخول': 'Log in',
@@ -439,8 +439,8 @@ final Map<String, String> _en = {
   '✓ كلمة مرور جيدة': '✓ Good password',
   'كلمتا المرور غير متطابقتين': 'Passwords do not match',
   'استعادة كلمة المرور': 'Reset password',
-  'أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIINZ لإعادة تعيين كلمة مرورك.':
-      'Enter your phone or email. The WIINZ team will contact you to reset your password.',
+  'أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIIN لإعادة تعيين كلمة مرورك.':
+      'Enter your phone or email. The WIIN team will contact you to reset your password.',
   'الهاتف أو البريد': 'Phone or email',
   'إرسال الطلب': 'Send request',
   'تم إرسال طلبك ✓ سيتواصل معك الفريق قريباً': 'Request sent ✓ The team will contact you soon',
@@ -461,7 +461,7 @@ final Map<String, String> _en = {
   'اكتشف نقاط الجمع القريبة': 'Discover nearby collection points',
   'إعلان': 'Ad',
   'إنترنت أسرع مع شريكنا': 'Faster internet with our partner',
-  'عرض حصري لمستخدمي WIINZ': 'Exclusive offer for WIINZ users',
+  'عرض حصري لمستخدمي WIIN': 'Exclusive offer for WIIN users',
   'اكتشف المزيد': 'Learn more',
   'الكود الشخصي': 'Personal code',
   'اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك': 'Show this code to the collection agent to credit your points',
@@ -577,7 +577,7 @@ final Map<String, String> _en = {
   'المساعدة والدعم': 'Help & support',
   'عن التطبيق': 'About',
   'تسجيل الخروج': 'Log out',
-  'صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIINZ.': 'Describe your issue or suggestion and the WIINZ team will reply.',
+  'صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIIN.': 'Describe your issue or suggestion and the WIIN team will reply.',
   'عنوان المشكلة / الاقتراح': 'Issue / suggestion subject',
   'التفاصيل': 'Details', 'اكتب التفاصيل هنا…': 'Write the details here…',
   'أدخل عنوان المشكلة': 'Enter the issue subject',
@@ -586,7 +586,7 @@ final Map<String, String> _en = {
   'تعذّر الإرسال، حاول مجدداً': 'Sending failed, try again',
   'شركة ناشئة في تسيير النفايات وإعادة التدوير': 'A startup in waste management and recycling',
   'طُوّر ونُشر بواسطة WIIN ALGERIA': 'Developed and published by WIIN ALGERIA',
-  'انضم إلى WIINZ': 'Join WIINZ',
+  'انضم إلى WIIN': 'Join WIIN',
 
   'كلمة المرور الحالية': 'Current password',
   'كلمة المرور الجديدة': 'New password',
@@ -614,8 +614,8 @@ final Map<String, String> _en = {
   'المستوى: ': 'Level: ',
   'باقٍ {n} Wz': 'Left {n} Wz',
 
-  'انضم إلى تطبيق WIINZ ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁':
-      'Join WIINZ ♻️ and start collecting bottles, earning points and winning gifts! 🎁',
+  'انضم إلى تطبيق WIIN ♻️ وابدأ بجمع القارورات وكسب النقاط والفوز بالهدايا! 🎁':
+      'Join WIIN ♻️ and start collecting bottles, earning points and winning gifts! 🎁',
   'استخدم رمز دعوتي عند التسجيل:': 'Use my invite code when you sign up:',
   'حمّل التطبيق الآن وابدأ الربح معنا.': 'Download the app now and start earning with us.',
 
@@ -693,7 +693,7 @@ final Map<String, String> _en = {
   'وصلت إلى المستوى الذهبي': 'Reached the gold tier',
   'صديق البيئة': 'Eco friend',
   'دعوت صديقاً واحداً': 'Referred one friend',
-  'سفير WIINZ': 'WIINZ ambassador',
+  'سفير WIIN': 'WIIN ambassador',
   'دعوت 5 أصدقاء': 'Referred 5 friends',
   'في القمة': 'At the top',
   'ضمن أفضل 3 في ولايتك': 'Top 3 in your wilaya',
