@@ -101,11 +101,13 @@ class WiinzBottomNav extends ConsumerWidget {
                 const SizedBox(height: 2),
                 // Longer labels (French, or Arabic at small display scales) used
                 // to wrap and break mid-word. Keep them on ONE line and shrink
-                // to fit instead of hyphenating.
+                // to fit instead of hyphenating. trNav (not tr) supplies the
+                // short form for tabs whose translation would otherwise be
+                // scaled down and end up visibly smaller than its neighbours.
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    tr(label), maxLines: 1, softWrap: false, overflow: TextOverflow.visible,
+                    trNav(label), maxLines: 1, softWrap: false, overflow: TextOverflow.visible,
                     textAlign: TextAlign.center,
                     style: cairo(10.5, w: active ? FontWeight.w800 : FontWeight.w600, color: active ? C.forest : C.textTertiary),
                   ),

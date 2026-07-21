@@ -375,7 +375,10 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                       const SizedBox(width: 10),
                       Expanded(child: Text.rich(TextSpan(text: tr('أنت في المركز '), style: cairo(13.5, w: FontWeight.w700, color: C.forest), children: [
                         TextSpan(text: '#$myRank', style: cairo(13.5, w: FontWeight.w900, color: C.forest)),
-                        TextSpan(text: tr(' من $totalPlayers'), style: cairo(13.5, w: FontWeight.w700, color: C.forest)),
+                        // trf, not tr: the count must be a placeholder. Building
+                        // the key by interpolation (' من $totalPlayers') made it
+                        // unmatchable, so this half always fell back to Arabic.
+                        TextSpan(text: trf(' من {n}', {'n': '$totalPlayers'}), style: cairo(13.5, w: FontWeight.w700, color: C.forest)),
                       ]))),
                       Text(myRank > 1 ? trf('تحتاج {n} Wz للتقدم', {'n': '$ahead'}) : tr('في الصدارة! 🏆'), style: cairo(11.5, w: FontWeight.w700, color: C.greenBtnEnd)),
                     ]),
@@ -414,7 +417,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
   Widget _quick(String v, String l, Color color) => Expanded(child: Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder)),
-    child: Column(children: [Text(v, style: cairo(22, w: FontWeight.w900, color: color)), const SizedBox(height: 2), Text(l, style: noto(11, color: C.textSecondary), textAlign: TextAlign.center)]),
+    child: Column(children: [Text(v, style: cairo(22, w: FontWeight.w900, color: color)), const SizedBox(height: 2), Text(tr(l), style: noto(11, color: C.textSecondary), textAlign: TextAlign.center)]),
   ));
 
   Widget _leaderRow(LeaderRow l) {

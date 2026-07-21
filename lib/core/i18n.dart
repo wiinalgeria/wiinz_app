@@ -32,6 +32,20 @@ String tr(String ar) {
   return m[ar] ?? ar;
 }
 
+/// Short labels for the bottom navigation bar only.
+///
+/// A tab is a fixed, narrow slot sized around the Arabic word. Some
+/// translations are much longer than their source ("مكافأتي" → "Récompenses"),
+/// and shrinking that one tab's text to fit would leave it visibly smaller than
+/// "Carte", "Accueil" and "Cadeaux" beside it. So the nav gets its own short
+/// form and every other screen keeps the full word.
+const _navShort = {
+  'مكافأتي': {'fr': 'Récomp', 'en': 'Rewards'},
+};
+
+/// Translate for a bottom-nav tab: the short form when one exists, else `tr`.
+String trNav(String ar) => _navShort[ar]?[_lang] ?? tr(ar);
+
 /// Translate a template with `{name}` placeholders, e.g.
 /// `trf('باقٍ {n} Wz', {'n': '$left'})`.
 String trf(String ar, Map<String, String> args) {
@@ -139,7 +153,8 @@ final Map<String, String> _fr = {
   'ستتوفر قريباً': 'Bientôt disponible',
   'اضغط على البطاقة لعرض رمز QR · اسحب للبطاقات الأخرى': 'Touchez la carte pour le QR · glissez pour les autres',
   'اضغط للعودة إلى الرصيد': 'Touchez pour revenir au solde',
-  'مسح رمز QR لكسب النقاط': 'Scanner un QR pour gagner des points',
+  // Shortened on purpose — the full phrase overran the home CTA rectangle.
+  'مسح رمز QR لكسب النقاط': 'Scanner QR & gagner des points',
   'اكتشف نقاط الجمع القريبة': 'Trouver les points de collecte proches',
   'إعلان': 'Publicité',
   'إنترنت أسرع مع شريكنا': 'Internet plus rapide avec notre partenaire',
@@ -297,6 +312,7 @@ final Map<String, String> _fr = {
   'البطاقة الفضية': 'Carte Argent', 'البطاقة الذهبية': 'Carte Or',
   'باقٍ ': 'Reste ', ' للوصول إلى ': ' pour atteindre ',
   'أنت في المركز ': 'Vous êtes classé ', 'رصيدك الآن ': 'Votre solde : ',
+  ' من {n}': ' sur {n}',
   'المستوى: {name}': 'Niveau : {name}',
   'تحتاج {n} Wz للتقدم': 'Il vous faut {n} Wz pour progresser',
   'رصيدك الآن {n} Wz': 'Votre solde est de {n} Wz',
@@ -367,8 +383,12 @@ final Map<String, String> _fr = {
   'تعديل معلومات النقطة': 'Modifier les infos du point',
   'يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.': 'La modification est envoyée à l\'administration et ne s\'applique qu\'après approbation. L\'emplacement sur la carte ne peut pas être modifié.',
   'اسم النقطة': 'Nom du point',
-  'المنطقة': 'Zone',
+  // البلدية is already defined once above (the signup form) — same word, same
+  // translation; the dictionary is one flat map, so it must not be repeated.
   'الهاتف': 'Téléphone',
+  'قاعة رياضية، مؤسسة، ..الخ': 'Salle de sport, établissement, etc.',
+  // kept: older APKs / other screens may still reference these literals
+  'المنطقة': 'Zone',
   'تفاصيل إضافية': 'Détails supplémentaires',
   'من': 'De',
   'إلى': 'À',
@@ -378,7 +398,7 @@ final Map<String, String> _fr = {
   'تأكيد الإرسال': 'Confirmer l\'envoi',
   'الإبلاغ عن امتلاء الحاوية': 'Signaler le conteneur plein',
   'سيصل التنبيه إلى الإدارة وإلى موظف الميدان لتفريغ الحاوية. هل تؤكد؟': 'L\'alerte sera envoyée à l\'administration et à l\'agent de terrain pour vider le conteneur. Confirmer ?',
-  'نعم، الحاوية ممتلئة': 'Oui, le conteneur est plein',
+  'نعم الحاوية ممتلئة': 'Oui, le conteneur est plein',
   'تم إرسال تنبيه الامتلاء ✓': 'Alerte de conteneur plein envoyée ✓',
   // map: point types
   'نقطة جمع خاصة': 'Point de collecte privé',
@@ -422,6 +442,34 @@ final Map<String, String> _fr = {
   'أودعها في أقرب نقطة جمع إليك': 'Déposez-les au point de collecte le plus proche',
   'امسح رمز QR الخاص بنقطة الجمع واكسب نقاطك': 'Scannez le code QR du point de collecte et gagnez vos points',
   'فهمت، لنبدأ': 'J\'ai compris, commençons',
+
+  // ---- 2026-07-21 batch: strings that were still falling back to Arabic ----
+  // holder card / point leaderboard
+  'المستخدمون': 'Utilisateurs',
+  'رمزك الشخصي': 'Votre code personnel',
+  'رمز نقطتك': 'Le code de votre point',
+  'نقطة الجمع الخاصة بك': 'Votre point de collecte',
+  'ترتيب نقاط الجمع · {zone}': 'Classement des points · {zone}',
+  'ترتيب نقاط الجمع · {zone} · حسب عدد القارورات المُجمَّعة': 'Classement des points · {zone} · par bouteilles collectées',
+  'حسب عدد القارورات المُجمَّعة': 'Par nombre de bouteilles collectées',
+  '{d} إيداع · {u} مستخدم': '{d} dépôts · {u} utilisateurs',
+  'آخر تفريغ: {t}': 'Dernier vidage : {t}',
+  'تم إرسال الطلب، سيُطبَّق بعد موافقة الإدارة ✓': 'Demande envoyée, elle sera appliquée après validation ✓',
+  // holder scan modes
+  'امسح رمز المستخدم لإضافة إيداعه في {name}': 'Scannez le code de l\'utilisateur pour enregistrer son dépôt à {name}',
+  'امسح رمز نقطة الجمع لإيداع قاروراتك أنت': 'Scannez le code du point pour déposer vos propres bouteilles',
+  'كم عدد القارورات التي أودعها؟': 'Combien de bouteilles a-t-il déposées ?',
+  'تمت إضافة {n} Wz إلى {name}': '{n} Wz ajoutés à {name}',
+  // daily bonus + rewards
+  'استلم {n} Wz': 'Recevez {n} Wz',
+  '+{n} Wz — تمت إضافة المكافأة': '+{n} Wz — bonus ajouté',
+  'تم الاستلام': 'Reçu',
+  'تم الاستلام بنجاح!': 'Bien reçu !',
+  // progress + empty states
+  '{have} / {need} قارورة': '{have} / {need} bouteilles',
+  'لا توجد إنجازات بعد': 'Aucun succès pour le moment',
+  'لا توجد بيانات بعد': 'Aucune donnée pour le moment',
+  'WIIN · الإصدار 2.0': 'WIIN · Version 2.0',
 };
 
 // ===========================================================================
@@ -631,6 +679,7 @@ final Map<String, String> _en = {
   'البطاقة الفضية': 'Silver Card', 'البطاقة الذهبية': 'Gold Card',
   'باقٍ ': 'Left ', ' للوصول إلى ': ' to reach ',
   'أنت في المركز ': 'You are ranked ', 'رصيدك الآن ': 'Your balance: ',
+  ' من {n}': ' of {n}',
   'المستوى: {name}': 'Level: {name}',
   'تحتاج {n} Wz للتقدم': 'You need {n} Wz to move up',
   'رصيدك الآن {n} Wz': 'Your balance is {n} Wz',
@@ -700,8 +749,12 @@ final Map<String, String> _en = {
   'تعديل معلومات النقطة': 'Edit point info',
   'يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.': 'The change is sent to the admin and only applies after approval. The map location can\'t be changed.',
   'اسم النقطة': 'Point name',
-  'المنطقة': 'Area',
+  // البلدية is already defined once above (the signup form) — same word, same
+  // translation; the dictionary is one flat map, so it must not be repeated.
   'الهاتف': 'Phone',
+  'قاعة رياضية، مؤسسة، ..الخ': 'Gym, institution, etc.',
+  // kept: older APKs / other screens may still reference these literals
+  'المنطقة': 'Area',
   'تفاصيل إضافية': 'Extra details',
   'من': 'From',
   'إلى': 'To',
@@ -711,7 +764,7 @@ final Map<String, String> _en = {
   'تأكيد الإرسال': 'Confirm send',
   'الإبلاغ عن امتلاء الحاوية': 'Report container full',
   'سيصل التنبيه إلى الإدارة وإلى موظف الميدان لتفريغ الحاوية. هل تؤكد؟': 'The alert goes to the admin and the field agent to empty the container. Confirm?',
-  'نعم، الحاوية ممتلئة': 'Yes, the container is full',
+  'نعم الحاوية ممتلئة': 'Yes, the container is full',
   'تم إرسال تنبيه الامتلاء ✓': 'Full-container alert sent ✓',
   // map: point types
   'نقطة جمع خاصة': 'Private collection point',
@@ -755,4 +808,32 @@ final Map<String, String> _en = {
   'أودعها في أقرب نقطة جمع إليك': 'Drop them at your nearest collection point',
   'امسح رمز QR الخاص بنقطة الجمع واكسب نقاطك': 'Scan the collection point QR code and earn your points',
   'فهمت، لنبدأ': 'Got it, let\'s start',
+
+  // ---- 2026-07-21 batch: strings that were still falling back to Arabic ----
+  // holder card / point leaderboard
+  'المستخدمون': 'Users',
+  'رمزك الشخصي': 'Your personal code',
+  'رمز نقطتك': 'Your point\'s code',
+  'نقطة الجمع الخاصة بك': 'Your collection point',
+  'ترتيب نقاط الجمع · {zone}': 'Collection points ranking · {zone}',
+  'ترتيب نقاط الجمع · {zone} · حسب عدد القارورات المُجمَّعة': 'Collection points ranking · {zone} · by bottles collected',
+  'حسب عدد القارورات المُجمَّعة': 'By bottles collected',
+  '{d} إيداع · {u} مستخدم': '{d} deposits · {u} users',
+  'آخر تفريغ: {t}': 'Last emptied: {t}',
+  'تم إرسال الطلب، سيُطبَّق بعد موافقة الإدارة ✓': 'Request sent — it will apply once an admin approves it ✓',
+  // holder scan modes
+  'امسح رمز المستخدم لإضافة إيداعه في {name}': 'Scan the user\'s code to record their deposit at {name}',
+  'امسح رمز نقطة الجمع لإيداع قاروراتك أنت': 'Scan the point\'s code to deposit your own bottles',
+  'كم عدد القارورات التي أودعها؟': 'How many bottles did they deposit?',
+  'تمت إضافة {n} Wz إلى {name}': '{n} Wz added to {name}',
+  // daily bonus + rewards
+  'استلم {n} Wz': 'Claim {n} Wz',
+  '+{n} Wz — تمت إضافة المكافأة': '+{n} Wz — bonus added',
+  'تم الاستلام': 'Claimed',
+  'تم الاستلام بنجاح!': 'Successfully claimed!',
+  // progress + empty states
+  '{have} / {need} قارورة': '{have} / {need} bottles',
+  'لا توجد إنجازات بعد': 'No achievements yet',
+  'لا توجد بيانات بعد': 'No data yet',
+  'WIIN · الإصدار 2.0': 'WIIN · Version 2.0',
 };

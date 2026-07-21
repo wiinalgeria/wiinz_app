@@ -20,13 +20,19 @@ String bonusClock(int seconds) {
 /// (as a success state) right after claiming. Returns true if the user claimed.
 Future<bool> showDailyBonusDialog(BuildContext context, WidgetRef ref, {required int points}) async {
   bool claimed = false;
+  // These MUST live outside the StatefulBuilder's builder. They used to be
+  // declared inside it, so every setD() rebuild reset them to false: the first
+  // tap set busy=true, the rebuild immediately cleared it, and the success
+  // state could never render either — the dialog just sat there looking
+  // untouched, which is why claiming appeared to need a second tap. (The first
+  // tap did reach the server; the second then failed as "already claimed".)
+  bool busy = false, done = false;
+  int newBalance = 0;
   await showDialog<void>(
     context: context,
     barrierColor: const Color(0xB80C140E),
     builder: (dctx) => StatefulBuilder(
       builder: (dctx, setD) {
-        bool busy = false, done = false;
-        int newBalance = 0;
         return _BonusDialogBody(
           points: points,
           onClaim: () async {

@@ -77,7 +77,7 @@ class _HolderCardState extends ConsumerState<HolderCard> {
                 style: noto(12.5, color: C.textSecondary, height: 1.5)),
             const SizedBox(height: 14),
             field(name, 'اسم النقطة'),
-            field(area, 'المنطقة'),
+            field(area, 'البلدية'),
             field(address, 'العنوان'),
             HoursWheelField(
               label: tr('ساعات العمل'),
@@ -89,7 +89,7 @@ class _HolderCardState extends ConsumerState<HolderCard> {
             ),
             const SizedBox(height: 10),
             field(phone, 'الهاتف', phoneField: true),
-            field(details, 'تفاصيل إضافية', max: 3),
+            field(details, 'قاعة رياضية، مؤسسة، ..الخ', max: 3),
             if (err != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(err!, style: noto(12, color: C.danger))),
           ]))),
           actions: [
@@ -153,9 +153,29 @@ class _HolderCardState extends ConsumerState<HolderCard> {
             Text(tr('سيصل التنبيه إلى الإدارة وإلى موظف الميدان لتفريغ الحاوية. هل تؤكد؟'),
                 style: noto(13, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
           ]),
+          // The confirmation is a solid GREEN button, not a text link: it is the
+          // action the holder came here to take, so it should read as the
+          // affirmative primary control rather than a warning-coloured one.
+          actionsAlignment: MainAxisAlignment.center,
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
-            TextButton(onPressed: () => Navigator.pop(dctx, true), child: Text(tr('نعم، الحاوية ممتلئة'), style: cairo(14, w: FontWeight.w800, color: const Color(0xFFC24A18)))),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: GradientButton(
+                    label: tr('نعم الحاوية ممتلئة'),
+                    height: 50,
+                    onTap: () => Navigator.pop(dctx, true),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => Navigator.pop(dctx, false),
+                  child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary)),
+                ),
+              ]),
+            ),
           ],
         ),
       ),

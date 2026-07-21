@@ -90,7 +90,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
       if (!mounted) return;
       final bottles = await showBottleStepper(context,
           pointName: point?.name ?? '', pointsPerBottle: 0,
-          maxBottles: 0, title: 'كم عدد القارورات التي أودعها؟');
+          maxBottles: 0, title: tr('كم عدد القارورات التي أودعها؟'));
       if (bottles == null || bottles <= 0) return;
       final res = await api.holderCredit(userQr.trim(), bottles);
       if (!mounted) return;

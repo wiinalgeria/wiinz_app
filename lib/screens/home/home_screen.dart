@@ -340,7 +340,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       mi('touch_app', size: 16, color: C.textTertiary),
                       const SizedBox(width: 6),
                       Flexible(child: Text(
-                        _flipped ? 'اضغط للعودة إلى الرصيد' : 'اضغط على البطاقة لعرض رمز QR · اسحب للبطاقات الأخرى',
+                        tr(_flipped ? 'اضغط للعودة إلى الرصيد' : 'اضغط على البطاقة لعرض رمز QR · اسحب للبطاقات الأخرى'),
                         style: noto(11.5, color: C.textTertiary), overflow: TextOverflow.ellipsis)),
                     ])),
                     const SizedBox(height: 14),
@@ -350,11 +350,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Container(
                         height: 70,
                         decoration: BoxDecoration(gradient: C.greenButton, borderRadius: BorderRadius.circular(20), boxShadow: C.greenBtnShadow),
+                        // The label sat unconstrained in a centred Row, so a
+                        // translation longer than the Arabic source ran past the
+                        // rectangle's edge (visible in French). Flexible +
+                        // scaleDown keeps ANY language inside the button.
                         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                           Container(width: 44, height: 44, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14)),
                             child: mi('qr_code_scanner', color: Colors.white, size: 26)),
                           const SizedBox(width: 12),
-                          Text(tr('مسح رمز QR لكسب النقاط'), style: cairo(18, w: FontWeight.w700, color: Colors.white)),
+                          Flexible(child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(tr('مسح رمز QR لكسب النقاط'), maxLines: 1, softWrap: false,
+                              style: cairo(18, w: FontWeight.w700, color: Colors.white)),
+                          )),
+                          const SizedBox(width: 12),
                         ]),
                       ),
                     ),
@@ -577,7 +586,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ]),
           const SizedBox(height: 10),
           mi(icon, size: 34, color: Colors.white.withValues(alpha: 0.9)),
-          Text(title, style: cairo(18, w: FontWeight.w800, color: Colors.white)),
+          Text(tr(title), style: cairo(18, w: FontWeight.w800, color: Colors.white)),
           const SizedBox(height: 2),
           Text(tr('ستتوفر قريباً'), style: cairo(16, w: FontWeight.w800, color: Colors.white)),
           const Spacer(),
