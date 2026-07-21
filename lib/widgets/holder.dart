@@ -38,6 +38,17 @@ class _HolderCardState extends ConsumerState<HolderCard> {
   // NOT change the point right away — the server queues it as a support ticket
   // an admin must approve, so a holder can't silently rewrite public point info.
   Future<void> _requestPointEdit(Map point) async {
+    // Always open the form on the point's CURRENT stored values. `point` came
+    // from the stats call made when this card was first built, so anything an
+    // admin changed in the dashboard since then (or a previously approved edit)
+    // would otherwise show stale — and re-saving would propose reverting it.
+    // A failed refresh just falls back to what we already have.
+    try {
+      final fresh = await ref.read(apiClientProvider).holderStats();
+      final p = fresh['point'];
+      if (p is Map) { point = p; if (mounted) setState(() => s = fresh); }
+    } catch (_) {}
+    if (!mounted) return;
     final name = TextEditingController(text: '${point['name'] ?? ''}');
     final area = TextEditingController(text: '${point['area'] ?? ''}');
     final address = TextEditingController(text: '${point['address'] ?? ''}');
@@ -327,7 +338,8 @@ class HoursWheelField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Text(label, style: cairo(13, w: FontWeight.w700, color: C.forest)),
+        Flexible(child: Text(label, style: cairo(13, w: FontWeight.w700, color: C.forest),
+            maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis)),
         const Spacer(),
         if (from != null || to != null)
           Pressable(onTap: onClear, child: Padding(padding: const EdgeInsets.all(4),
@@ -360,10 +372,19 @@ class HoursWheelField extends StatelessWidget {
           child: Row(children: [
             mi('schedule', size: 19, color: C.green),
             const SizedBox(width: 8),
+            // Both lines are pinned to ONE line and shrink to fit. In a narrow
+            // slot (two side by side on a small phone, or a longer translated
+            // caption) they used to wrap, which broke "08:00" across lines and
+            // read as a hyphenated time.
             Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(cap, style: noto(10.5, color: C.textTertiary)),
-              Text(v == null ? '--:--' : _hhmm(v), style: cairo(15, w: FontWeight.w800, color: v == null ? C.textTertiary : C.ink),
-                  textDirection: TextDirection.ltr),
+              Text(cap, style: noto(10.5, color: C.textTertiary), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(v == null ? '--:--' : _hhmm(v), maxLines: 1, softWrap: false,
+                    style: cairo(15, w: FontWeight.w800, color: v == null ? C.textTertiary : C.ink),
+                    textDirection: TextDirection.ltr),
+              ),
             ])),
             mi('expand_more', size: 20, color: C.textTertiary),
           ]),
