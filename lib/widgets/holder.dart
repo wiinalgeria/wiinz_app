@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
 import '../core/i18n.dart';
@@ -33,15 +34,32 @@ class _HolderCardState extends ConsumerState<HolderCard> {
     if (mounted) setState(() => loading = false);
   }
 
-  // Propose new name/hours/phone for the point. This does NOT change the point
-  // right away — the server queues it as a support ticket an admin must
-  // approve, so a holder can't silently rewrite the public point info.
+  // Propose new info for the point (everything except its location). This does
+  // NOT change the point right away — the server queues it as a support ticket
+  // an admin must approve, so a holder can't silently rewrite public point info.
   Future<void> _requestPointEdit(Map point) async {
     final name = TextEditingController(text: '${point['name'] ?? ''}');
+    final area = TextEditingController(text: '${point['area'] ?? ''}');
+    final address = TextEditingController(text: '${point['address'] ?? ''}');
+    final accepts = TextEditingController(text: '${point['accepts'] ?? ''}');
     final hours = TextEditingController(text: '${point['hours'] ?? ''}');
     final phone = TextEditingController(text: '${point['phone'] ?? ''}');
+    final details = TextEditingController(text: '${point['details'] ?? ''}');
     bool saving = false;
     String? err;
+
+    InputDecoration dec(String l) => InputDecoration(labelText: tr(l), border: const OutlineInputBorder(), isDense: true);
+    Widget field(TextEditingController c, String l, {int max = 1, bool phoneField = false}) => Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextField(
+        controller: c, maxLines: max,
+        keyboardType: phoneField ? TextInputType.phone : TextInputType.text,
+        textDirection: phoneField ? TextDirection.ltr : null,
+        inputFormatters: phoneField ? [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)] : null,
+        decoration: dec(l),
+      ),
+    );
+
     final ok = await showDialog<bool>(
       context: context,
       builder: (dctx) => StatefulBuilder(builder: (dctx, setD) => Directionality(
@@ -50,25 +68,44 @@ class _HolderCardState extends ConsumerState<HolderCard> {
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(tr('تعديل معلومات النقطة'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
-          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة.'),
+          content: SizedBox(width: 380, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(tr('يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.'),
                 style: noto(12.5, color: C.textSecondary, height: 1.5)),
             const SizedBox(height: 14),
-            TextField(controller: name, decoration: InputDecoration(labelText: tr('اسم النقطة'), border: const OutlineInputBorder())),
-            const SizedBox(height: 10),
-            TextField(controller: hours, decoration: InputDecoration(labelText: tr('ساعات العمل'), border: const OutlineInputBorder())),
-            const SizedBox(height: 10),
-            TextField(controller: phone, keyboardType: TextInputType.phone, textDirection: TextDirection.ltr,
-                decoration: InputDecoration(labelText: tr('الهاتف'), border: const OutlineInputBorder())),
-            if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: noto(12, color: C.danger))),
-          ]),
+            field(name, 'اسم النقطة'),
+            field(area, 'المنطقة'),
+            field(address, 'العنوان'),
+            field(accepts, 'يقبل (أنواع القوارير المقبولة)'),
+            field(hours, 'ساعات العمل'),
+            field(phone, 'الهاتف', phoneField: true),
+            field(details, 'تفاصيل إضافية', max: 3),
+            if (err != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(err!, style: noto(12, color: C.danger))),
+          ]))),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
             TextButton(
               onPressed: saving ? null : () async {
+                // Confirm before sending (the request is reviewed by an admin).
+                final confirmed = await showDialog<bool>(context: dctx, builder: (cctx) => Directionality(
+                  textDirection: appDirection,
+                  child: AlertDialog(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    content: Text(tr('هل تريد إرسال طلب التعديل إلى الإدارة؟'), style: noto(14, color: C.textSecondary, height: 1.5)),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(cctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+                      TextButton(onPressed: () => Navigator.pop(cctx, true), child: Text(tr('تأكيد الإرسال'), style: cairo(14, w: FontWeight.w800, color: C.green))),
+                    ],
+                  ),
+                ));
+                if (confirmed != true) return;
                 setD(() { saving = true; err = null; });
                 try {
-                  await ref.read(apiClientProvider).holderPointEditRequest(name: name.text.trim(), hours: hours.text.trim(), phone: phone.text.trim());
+                  await ref.read(apiClientProvider).holderPointEditRequest({
+                    'name': name.text.trim(), 'area': area.text.trim(), 'address': address.text.trim(),
+                    'accepts': accepts.text.trim(), 'hours': hours.text.trim(), 'phone': phone.text.trim(),
+                    'details': details.text.trim(),
+                  });
                   if (dctx.mounted) Navigator.pop(dctx, true);
                 } on ApiException catch (e) {
                   setD(() { saving = false; err = e.message; });
@@ -83,6 +120,44 @@ class _HolderCardState extends ConsumerState<HolderCard> {
       )),
     );
     if (ok == true && mounted) showToast(context, tr('تم إرسال الطلب، سيُطبَّق بعد موافقة الإدارة ✓'));
+  }
+
+  // Flag the container as full → the dashboard and field app are notified so an
+  // agent can come empty it. Confirm/cancel first.
+  Future<void> _notifyBagFull() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => Directionality(
+        textDirection: appDirection,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 56, height: 56, alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Color(0xFFFCE9D6), shape: BoxShape.circle),
+              child: mi('notification_important', size: 30, color: Color(0xFFC24A18))),
+            const SizedBox(height: 12),
+            Text(tr('الإبلاغ عن امتلاء الحاوية'), style: cairo(16.5, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            Text(tr('سيصل التنبيه إلى الإدارة وإلى موظف الميدان لتفريغ الحاوية. هل تؤكد؟'),
+                style: noto(13, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
+            TextButton(onPressed: () => Navigator.pop(dctx, true), child: Text(tr('نعم، الحاوية ممتلئة'), style: cairo(14, w: FontWeight.w800, color: const Color(0xFFC24A18)))),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref.read(apiClientProvider).holderPointFull();
+      if (mounted) showToast(context, tr('تم إرسال تنبيه الامتلاء ✓'));
+    } on ApiException catch (e) {
+      if (mounted) showToast(context, e.message);
+    } catch (_) {
+      if (mounted) showToast(context, tr('حدث خطأ، حاول مجدداً'));
+    }
   }
 
   @override
@@ -153,6 +228,24 @@ class _HolderCardState extends ConsumerState<HolderCard> {
               child: mi('leaderboard', size: 20, color: C.greenMid)),
           ),
         ]),
+        const SizedBox(height: 8),
+        // "Notify bag is full" — a bold, attention-grabbing button under the edit
+        // row. Alerts the dashboard + field app so an agent comes to empty it.
+        Pressable(
+          onTap: _notifyBagFull,
+          child: Container(
+            height: 48, width: double.infinity, alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFFF2994A), Color(0xFFE8730C)]),
+              borderRadius: BorderRadius.circular(13),
+              boxShadow: [BoxShadow(color: const Color(0xFFE8730C).withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 6))],
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              mi('notification_important', size: 21, color: Colors.white), const SizedBox(width: 8),
+              Text(tr('الإبلاغ عن امتلاء الحاوية'), style: cairo(14, w: FontWeight.w800, color: Colors.white)),
+            ]),
+          ),
+        ),
         if (last != null) ...[
           const SizedBox(height: 8),
           Text(trf('آخر تفريغ: {t}', {'t': timeAgo(DateTime.tryParse('${last['at']}')?.toLocal() ?? DateTime.now())}),

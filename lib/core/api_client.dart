@@ -232,10 +232,13 @@ class ApiClient {
   Future<Map<String, dynamic>> holderEmptying({double weightKg = 0, String note = ''}) =>
       _post('/holder/emptying', {'weightKg': weightKg, 'note': note});
 
-  /// Holder proposes new name/hours/phone for their point. Doesn't apply
-  /// immediately — it's queued as a support ticket until an admin approves it.
-  Future<Map<String, dynamic>> holderPointEditRequest({required String name, required String hours, required String phone}) =>
-      _post('/holder/point-edit-request', {'name': name, 'hours': hours, 'phone': phone});
+  /// Holder proposes new info for their point (all fields except location).
+  /// Doesn't apply immediately — queued as a support ticket for admin approval.
+  Future<Map<String, dynamic>> holderPointEditRequest(Map<String, dynamic> fields) =>
+      _post('/holder/point-edit-request', fields);
+
+  /// Holder flags their point's container as full → dashboard + field app see it.
+  Future<Map<String, dynamic>> holderPointFull() => _post('/holder/point-full', {});
 
   /// Second leaderboard: collection points in the user's wilaya.
   Future<Map<String, dynamic>> pointsLeaderboard() => _get('/leaderboard/points');

@@ -66,21 +66,24 @@ class CollectionPoint {
   final String id, name, area, address, phone, hours, accepts, code, logo, details;
   final double rating, lat, lng;
   final bool open;
+  /// 'green' = open to all users, 'others' = members-only (shown yellow).
+  final String ptype;
   double? distanceM; // filled client-side when user location is known
 
   CollectionPoint({
     required this.id, required this.name, required this.area, required this.address,
     required this.phone, required this.hours, required this.accepts, required this.code,
-    required this.rating, required this.lat, required this.lng, required this.open, this.distanceM, this.logo = '', this.details = '',
+    required this.rating, required this.lat, required this.lng, required this.open, this.distanceM, this.logo = '', this.details = '', this.ptype = 'green',
   });
 
   factory CollectionPoint.fromJson(Map<String, dynamic> j) => CollectionPoint(
         id: j['id'] ?? '', name: j['name'] ?? '', area: j['area'] ?? '', address: j['address'] ?? '',
         phone: j['phone'] ?? '', hours: j['hours'] ?? '', accepts: j['accepts'] ?? '', code: j['code'] ?? '',
         rating: _dbl(j['rating']), lat: _dbl(j['lat']), lng: _dbl(j['lng']), open: j['open'] == true,
-        logo: j['logo'] ?? '', details: j['details'] ?? '',
+        logo: j['logo'] ?? '', details: j['details'] ?? '', ptype: j['ptype'] == 'others' ? 'others' : 'green',
       );
 
+  bool get isMembersOnly => ptype == 'others';
   bool get hasLocation => lat != 0 || lng != 0;
   String get directionsUrl => 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
 

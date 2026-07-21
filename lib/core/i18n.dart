@@ -363,6 +363,25 @@ final Map<String, String> _fr = {
   // profile — phone is read-only
   'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.': 'Le numéro de téléphone ne peut pas être modifié. Contactez le support.',
 
+  // holder: edit point + bag full
+  'يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.': 'La modification est envoyée à l\'administration et ne s\'applique qu\'après approbation. L\'emplacement sur la carte ne peut pas être modifié.',
+  'يقبل (أنواع القوارير المقبولة)': 'Accepte (types acceptés)',
+  'تفاصيل إضافية': 'Détails supplémentaires',
+  'هل تريد إرسال طلب التعديل إلى الإدارة؟': 'Envoyer la demande de modification à l\'administration ?',
+  'تأكيد الإرسال': 'Confirmer l\'envoi',
+  'الإبلاغ عن امتلاء الحاوية': 'Signaler le conteneur plein',
+  'سيصل التنبيه إلى الإدارة وإلى موظف الميدان لتفريغ الحاوية. هل تؤكد؟': 'L\'alerte sera envoyée à l\'administration et à l\'agent de terrain pour vider le conteneur. Confirmer ?',
+  'نعم، الحاوية ممتلئة': 'Oui, le conteneur est plein',
+  'تم إرسال تنبيه الامتلاء ✓': 'Alerte de conteneur plein envoyée ✓',
+  // map: point types
+  'نقطة جمع خاصة': 'Point de collecte privé',
+  'هذه النقطة (باللون الأصفر) مخصّصة لأعضاء المكان فقط (مثل نادٍ رياضي أو مؤسسة)، وليست متاحة لعامة المستخدمين للإيداع.': 'Ce point (en jaune) est réservé aux membres du lieu (salle de sport, établissement…) et n\'est pas ouvert au dépôt public.',
+  'عرض التفاصيل': 'Voir les détails',
+  'أنواع نقاط الجمع': 'Types de points de collecte',
+  'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القوارير.': 'Points verts : ouverts à tous pour déposer les bouteilles.',
+  'النقاط الصفراء: خاصة بأعضاء المكان فقط (نادٍ، مؤسسة…).': 'Points jaunes : réservés aux membres du lieu (club, établissement…).',
+  'فهمت': 'Compris',
+
   // user profile + achievements
   'تعذّر تحميل الملف الشخصي': 'Impossible de charger le profil',
   'المركز {n} من {m}': 'Rang {n} sur {m}',
@@ -669,6 +688,25 @@ final Map<String, String> _en = {
   'ليس لديك حساب؟': 'Don\'t have an account?',
   // profile — phone is read-only
   'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.': 'Your phone number can\'t be changed. Contact support to update it.',
+
+  // holder: edit point + bag full
+  'يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.': 'The change is sent to the admin and only applies after approval. The map location can\'t be changed.',
+  'يقبل (أنواع القوارير المقبولة)': 'Accepts (accepted types)',
+  'تفاصيل إضافية': 'Extra details',
+  'هل تريد إرسال طلب التعديل إلى الإدارة؟': 'Send the edit request to the admin?',
+  'تأكيد الإرسال': 'Confirm send',
+  'الإبلاغ عن امتلاء الحاوية': 'Report container full',
+  'سيصل التنبيه إلى الإدارة وإلى موظف الميدان لتفريغ الحاوية. هل تؤكد؟': 'The alert goes to the admin and the field agent to empty the container. Confirm?',
+  'نعم، الحاوية ممتلئة': 'Yes, the container is full',
+  'تم إرسال تنبيه الامتلاء ✓': 'Full-container alert sent ✓',
+  // map: point types
+  'نقطة جمع خاصة': 'Private collection point',
+  'هذه النقطة (باللون الأصفر) مخصّصة لأعضاء المكان فقط (مثل نادٍ رياضي أو مؤسسة)، وليست متاحة لعامة المستخدمين للإيداع.': 'This point (in yellow) is for the venue\'s members only (e.g. a gym or an institution) and isn\'t open for public deposits.',
+  'عرض التفاصيل': 'View details',
+  'أنواع نقاط الجمع': 'Collection point types',
+  'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القوارير.': 'Green points: open to all users for depositing bottles.',
+  'النقاط الصفراء: خاصة بأعضاء المكان فقط (نادٍ، مؤسسة…).': 'Yellow points: reserved for the venue\'s members only (club, institution…).',
+  'فهمت': 'Got it',
 
   // user profile + achievements
   'تعذّر تحميل الملف الشخصي': 'Couldn\'t load profile',

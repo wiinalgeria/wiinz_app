@@ -33,6 +33,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
   final Map<String, CollectionPoint> _symbolPoints = {};
   bool _styleReady = false;
   bool _symbolsAdded = false;
+  bool _legendShown = false; // green-vs-yellow legend shown once per screen entry
   LatLng? _lastUser;
   bool _locationGranted = false;
   bool _locationDenied = false;
@@ -86,6 +87,10 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
       final pts = await ref.read(apiClientProvider).collectionPoints();
       setState(() { _points = pts; _loading = false; });
       _addSymbols();
+      // Show the green-vs-yellow legend once, but only if a members-only point
+      // actually exists in this wilaya (no point explaining a distinction the
+      // user won't see).
+      if (_points.any((p) => p.isMembersOnly)) _showMapLegend();
     } catch (_) {
       setState(() => _loading = false);
     }
@@ -212,7 +217,9 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
 
   Future<void> _onStyleLoaded() async {
     _styleReady = true;
-    try { await _map!.addImage('wiinz-pin', await _markerBytes()); } catch (_) {}
+    // Two pins: green for public points, yellow/amber for members-only ("others").
+    try { await _map!.addImage('wiinz-pin', await _markerBytes(const Color(0xFF34801f))); } catch (_) {}
+    try { await _map!.addImage('wiinz-pin-others', await _markerBytes(const Color(0xFFE0A400))); } catch (_) {}
     await _addSymbols();
     // center on the user's GPS if we have it, else on their registered wilaya
     if (_lastUser != null) { _recenterOnUser(); } else { _centerOnWilaya(); }
@@ -224,7 +231,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
     _symbolsAdded = true;
     final opts = _points.map((p) => SymbolOptions(
       geometry: LatLng(p.lat, p.lng),
-      iconImage: 'wiinz-pin',
+      iconImage: p.isMembersOnly ? 'wiinz-pin-others' : 'wiinz-pin',
       iconSize: 0.6,
       iconAnchor: 'bottom',
     )).toList();
@@ -238,15 +245,23 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
 
   void _onSymbolTapped(Symbol s) {
     final p = _symbolPoints[s.id];
-    if (p != null) _showPinSheet(p);
+    if (p != null) _openPoint(p);
   }
 
-  // Draw a green map-pin with a white disc and the recycle glyph, as a PNG for
-  // MapLibre. (Collection points keep the recycling symbol — the bottle mark is
-  // used for bottle/deposit contexts, not for the points themselves.)
-  Future<Uint8List> _markerBytes() async {
+  // Members-only ("others") points show a heads-up first, then the normal sheet.
+  void _openPoint(CollectionPoint p) {
+    if (p.isMembersOnly) {
+      _showMembersOnlyNotice(p);
+    } else {
+      _showPinSheet(p);
+    }
+  }
+
+  // Draw a map-pin (given colour) with a white disc and the recycle glyph, as a
+  // PNG for MapLibre. Green = public point, amber = members-only.
+  Future<Uint8List> _markerBytes(Color color) async {
     const size = 130;
-    const green = Color(0xFF34801f);
+    final green = color;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final cx = size / 2.0;
@@ -442,7 +457,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
   Widget _pointCard(CollectionPoint p) {
     return Pressable(
       pressedScale: 0.98,
-      onTap: () => _showPinSheet(p),
+      onTap: () => _openPoint(p),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder),
@@ -484,6 +499,69 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
         ]),
       ),
     );
+  }
+
+  // Heads-up shown when a user taps a members-only ("others") point, before the
+  // normal details sheet. Explains it's reserved for that place's members.
+  void _showMembersOnlyNotice(CollectionPoint p) {
+    showDialog<void>(
+      context: context, barrierColor: const Color(0xB80C140E),
+      builder: (dctx) => Directionality(textDirection: appDirection, child: Dialog(
+        backgroundColor: C.sand, insetPadding: const EdgeInsets.all(28),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+        child: Padding(padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 64, height: 64, alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Color(0xFFFDF3D6), shape: BoxShape.circle),
+              child: mi('groups', size: 32, color: Color(0xFFB8860B))),
+            const SizedBox(height: 14),
+            Text(tr('نقطة جمع خاصة'), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            Text(tr('هذه النقطة (باللون الأصفر) مخصّصة لأعضاء المكان فقط (مثل نادٍ رياضي أو مؤسسة)، وليست متاحة لعامة المستخدمين للإيداع.'),
+                textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
+            const SizedBox(height: 20),
+            GradientButton(label: tr('عرض التفاصيل'), height: 50, onTap: () { Navigator.pop(dctx); _showPinSheet(p); }),
+            const SizedBox(height: 8),
+            Pressable(onTap: () => Navigator.pop(dctx), child: Padding(padding: const EdgeInsets.all(8),
+              child: Text(tr('إغلاق'), style: cairo(14, w: FontWeight.w700, color: C.textTertiary)))),
+          ])),
+      )),
+    );
+  }
+
+  // One-time legend shown on first entry to the map: what green vs yellow means.
+  void _showMapLegend() {
+    if (_legendShown) return;
+    _legendShown = true;
+    Widget row(Color c, String icon, String text) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(children: [
+        Container(width: 40, height: 40, alignment: Alignment.center,
+          decoration: BoxDecoration(color: c.withValues(alpha: 0.15), shape: BoxShape.circle),
+          child: mi(icon, size: 22, color: c)),
+        const SizedBox(width: 12),
+        Expanded(child: Text(tr(text), style: noto(13, color: C.textSecondary, height: 1.5))),
+      ]),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog<void>(
+        context: context, barrierColor: const Color(0xB80C140E),
+        builder: (dctx) => Directionality(textDirection: appDirection, child: Dialog(
+          backgroundColor: C.sand, insetPadding: const EdgeInsets.all(28),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+          child: Padding(padding: const EdgeInsets.fromLTRB(24, 26, 24, 20),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(tr('أنواع نقاط الجمع'), style: cairo(19, w: FontWeight.w800, color: C.forest)),
+              const SizedBox(height: 6),
+              row(const Color(0xFF34801f), 'recycling', 'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القوارير.'),
+              row(const Color(0xFFE0A400), 'groups', 'النقاط الصفراء: خاصة بأعضاء المكان فقط (نادٍ، مؤسسة…).'),
+              const SizedBox(height: 16),
+              GradientButton(label: tr('فهمت'), height: 50, onTap: () => Navigator.pop(dctx)),
+            ])),
+        )),
+      );
+    });
   }
 
   void _showPinSheet(CollectionPoint p) {
