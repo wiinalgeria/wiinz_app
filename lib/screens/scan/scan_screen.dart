@@ -314,7 +314,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
                 Text(
                   _creditMode
                     ? trf('امسح رمز المستخدم لإضافة إيداعه في {name}', {'name': holder.name})
-                    : tr('امسح رمز نقطة الجمع لإيداع قواريرك أنت'),
+                    : tr('امسح رمز نقطة الجمع لإيداع قاروراتك أنت'),
                   textAlign: TextAlign.center, style: noto(11.5, color: C.textTertiary)),
                 const SizedBox(height: 12),
               ],

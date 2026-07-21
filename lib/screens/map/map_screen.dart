@@ -21,6 +21,29 @@ import '../../widgets/bottom_nav.dart';
 const _styleUrl = 'https://tiles.openfreemap.org/styles/liberty';
 const _algiers = LatLng(36.7538, 3.0588);
 
+// Members-only ("others") points. Same recycle mark as a public point — only
+// the colour changes — so the icon always reads as "collection point" and the
+// colour alone carries the public/members-only distinction.
+const _othersColor = Color(0xFFE0A400);
+const _othersGrad = LinearGradient(
+  begin: Alignment.topLeft, end: Alignment.bottomRight,
+  colors: [Color(0xFFF5BE2E), Color(0xFFD79300)],
+);
+
+/// The point's square avatar: its own logo when set, otherwise the recycle mark
+/// on a green (public) or yellow (members-only) tile.
+Widget pointBadge(CollectionPoint p, double size, {double radius = 15}) {
+  if (p.logo.isNotEmpty) return storeLogo(p.logo, size, fallbackIcon: 'recycling');
+  return Container(
+    width: size, height: size, alignment: Alignment.center,
+    decoration: BoxDecoration(
+      gradient: p.isMembersOnly ? _othersGrad : C.avatarGrad,
+      borderRadius: BorderRadius.circular(radius),
+    ),
+    child: mi('recycling', size: size * 0.5, color: Colors.white),
+  );
+}
+
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
   @override
@@ -219,7 +242,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
     _styleReady = true;
     // Two pins: green for public points, yellow/amber for members-only ("others").
     try { await _map!.addImage('wiinz-pin', await _markerBytes(const Color(0xFF34801f))); } catch (_) {}
-    try { await _map!.addImage('wiinz-pin-others', await _markerBytes(const Color(0xFFE0A400))); } catch (_) {}
+    try { await _map!.addImage('wiinz-pin-others', await _markerBytes(_othersColor)); } catch (_) {}
     await _addSymbols();
     // center on the user's GPS if we have it, else on their registered wilaya
     if (_lastUser != null) { _recenterOnUser(); } else { _centerOnWilaya(); }
@@ -463,14 +486,9 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder),
           boxShadow: [BoxShadow(color: const Color(0xFF785A14).withValues(alpha: 0.18), blurRadius: 16, offset: const Offset(0, 6))]),
         child: Row(children: [
-          // Big bottle mark on the left (the point's own logo wins when set).
-          p.logo.isNotEmpty
-            ? storeLogo(p.logo, 52, fallbackIcon: 'recycling')
-            : Container(
-                width: 52, height: 52, alignment: Alignment.center,
-                decoration: BoxDecoration(gradient: C.avatarGrad, borderRadius: BorderRadius.circular(15)),
-                child: mi('recycling', size: 26, color: Colors.white),
-              ),
+          // Recycle mark on the left, yellow for members-only points (the
+          // point's own logo wins when set).
+          pointBadge(p, 52),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(p.name, style: cairo(15, w: FontWeight.w700, color: C.ink), overflow: TextOverflow.ellipsis),
@@ -512,8 +530,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
         child: Padding(padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(width: 64, height: 64, alignment: Alignment.center,
-              decoration: const BoxDecoration(color: Color(0xFFFDF3D6), shape: BoxShape.circle),
-              child: mi('groups', size: 32, color: Color(0xFFB8860B))),
+              decoration: const BoxDecoration(gradient: _othersGrad, shape: BoxShape.circle),
+              child: mi('recycling', size: 32, color: Colors.white)),
             const SizedBox(height: 14),
             Text(tr('نقطة جمع خاصة'), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
             const SizedBox(height: 8),
@@ -533,12 +551,14 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
   void _showMapLegend() {
     if (_legendShown) return;
     _legendShown = true;
+    // Both rows carry the SAME recycle mark; only the colour differs, which is
+    // exactly the distinction the legend is teaching.
     Widget row(Color c, String icon, String text) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(children: [
         Container(width: 40, height: 40, alignment: Alignment.center,
-          decoration: BoxDecoration(color: c.withValues(alpha: 0.15), shape: BoxShape.circle),
-          child: mi(icon, size: 22, color: c)),
+          decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+          child: mi(icon, size: 22, color: Colors.white)),
         const SizedBox(width: 12),
         Expanded(child: Text(tr(text), style: noto(13, color: C.textSecondary, height: 1.5))),
       ]),
@@ -554,8 +574,8 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Text(tr('أنواع نقاط الجمع'), style: cairo(19, w: FontWeight.w800, color: C.forest)),
               const SizedBox(height: 6),
-              row(const Color(0xFF34801f), 'recycling', 'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القوارير.'),
-              row(const Color(0xFFE0A400), 'groups', 'النقاط الصفراء: خاصة بأعضاء المكان فقط (نادٍ، مؤسسة…).'),
+              row(const Color(0xFF34801f), 'recycling', 'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القارورات.'),
+              row(_othersColor, 'recycling', 'النقاط الصفراء: خاصة بأعضاء المكان فقط (نادٍ، مؤسسة…).'),
               const SizedBox(height: 16),
               GradientButton(label: tr('فهمت'), height: 50, onTap: () => Navigator.pop(dctx)),
             ])),
@@ -576,13 +596,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Center(child: Container(width: 44, height: 5, margin: const EdgeInsets.only(bottom: 18), decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3)))),
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            p.logo.isNotEmpty
-              ? storeLogo(p.logo, 56, fallbackIcon: 'recycling')
-              : Container(
-                  width: 56, height: 56, alignment: Alignment.center,
-                  decoration: BoxDecoration(gradient: C.avatarGrad, borderRadius: BorderRadius.circular(16)),
-                  child: mi('recycling', size: 28, color: Colors.white),
-                ),
+            pointBadge(p, 56, radius: 16),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(p.name, style: cairo(18, w: FontWeight.w800, color: C.forest)),

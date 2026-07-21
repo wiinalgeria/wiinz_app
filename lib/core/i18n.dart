@@ -364,9 +364,16 @@ final Map<String, String> _fr = {
   'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.': 'Le numéro de téléphone ne peut pas être modifié. Contactez le support.',
 
   // holder: edit point + bag full
+  'تعديل معلومات النقطة': 'Modifier les infos du point',
   'يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.': 'La modification est envoyée à l\'administration et ne s\'applique qu\'après approbation. L\'emplacement sur la carte ne peut pas être modifié.',
-  'يقبل (أنواع القوارير المقبولة)': 'Accepte (types acceptés)',
+  'اسم النقطة': 'Nom du point',
+  'المنطقة': 'Zone',
+  'الهاتف': 'Téléphone',
   'تفاصيل إضافية': 'Détails supplémentaires',
+  'من': 'De',
+  'إلى': 'À',
+  'مسح': 'Effacer',
+  'الحالي: {v}': 'Actuel : {v}',
   'هل تريد إرسال طلب التعديل إلى الإدارة؟': 'Envoyer la demande de modification à l\'administration ?',
   'تأكيد الإرسال': 'Confirmer l\'envoi',
   'الإبلاغ عن امتلاء الحاوية': 'Signaler le conteneur plein',
@@ -378,7 +385,7 @@ final Map<String, String> _fr = {
   'هذه النقطة (باللون الأصفر) مخصّصة لأعضاء المكان فقط (مثل نادٍ رياضي أو مؤسسة)، وليست متاحة لعامة المستخدمين للإيداع.': 'Ce point (en jaune) est réservé aux membres du lieu (salle de sport, établissement…) et n\'est pas ouvert au dépôt public.',
   'عرض التفاصيل': 'Voir les détails',
   'أنواع نقاط الجمع': 'Types de points de collecte',
-  'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القوارير.': 'Points verts : ouverts à tous pour déposer les bouteilles.',
+  'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القارورات.': 'Points verts : ouverts à tous pour déposer les bouteilles.',
   'النقاط الصفراء: خاصة بأعضاء المكان فقط (نادٍ، مؤسسة…).': 'Points jaunes : réservés aux membres du lieu (club, établissement…).',
   'فهمت': 'Compris',
 
@@ -690,9 +697,16 @@ final Map<String, String> _en = {
   'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.': 'Your phone number can\'t be changed. Contact support to update it.',
 
   // holder: edit point + bag full
+  'تعديل معلومات النقطة': 'Edit point info',
   'يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.': 'The change is sent to the admin and only applies after approval. The map location can\'t be changed.',
-  'يقبل (أنواع القوارير المقبولة)': 'Accepts (accepted types)',
+  'اسم النقطة': 'Point name',
+  'المنطقة': 'Area',
+  'الهاتف': 'Phone',
   'تفاصيل إضافية': 'Extra details',
+  'من': 'From',
+  'إلى': 'To',
+  'مسح': 'Clear',
+  'الحالي: {v}': 'Current: {v}',
   'هل تريد إرسال طلب التعديل إلى الإدارة؟': 'Send the edit request to the admin?',
   'تأكيد الإرسال': 'Confirm send',
   'الإبلاغ عن امتلاء الحاوية': 'Report container full',
@@ -704,7 +718,7 @@ final Map<String, String> _en = {
   'هذه النقطة (باللون الأصفر) مخصّصة لأعضاء المكان فقط (مثل نادٍ رياضي أو مؤسسة)، وليست متاحة لعامة المستخدمين للإيداع.': 'This point (in yellow) is for the venue\'s members only (e.g. a gym or an institution) and isn\'t open for public deposits.',
   'عرض التفاصيل': 'View details',
   'أنواع نقاط الجمع': 'Collection point types',
-  'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القوارير.': 'Green points: open to all users for depositing bottles.',
+  'النقاط الخضراء: متاحة لكل المستخدمين لإيداع القارورات.': 'Green points: open to all users for depositing bottles.',
   'النقاط الصفراء: خاصة بأعضاء المكان فقط (نادٍ، مؤسسة…).': 'Yellow points: reserved for the venue\'s members only (club, institution…).',
   'فهمت': 'Got it',
 

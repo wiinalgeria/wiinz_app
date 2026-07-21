@@ -41,10 +41,14 @@ class _HolderCardState extends ConsumerState<HolderCard> {
     final name = TextEditingController(text: '${point['name'] ?? ''}');
     final area = TextEditingController(text: '${point['area'] ?? ''}');
     final address = TextEditingController(text: '${point['address'] ?? ''}');
-    final accepts = TextEditingController(text: '${point['accepts'] ?? ''}');
-    final hours = TextEditingController(text: '${point['hours'] ?? ''}');
     final phone = TextEditingController(text: '${point['phone'] ?? ''}');
     final details = TextEditingController(text: '${point['details'] ?? ''}');
+    // Hours are picked from wheels, not typed, so the stored value is always
+    // "HH:MM - HH:MM". A legacy free-text value parses to nulls and is kept
+    // as-is unless the holder actually picks a new range.
+    final rawHours = '${point['hours'] ?? ''}';
+    final parsed = parseHoursRange(rawHours);
+    TimeOfDay? hFrom = parsed[0], hTo = parsed[1];
     bool saving = false;
     String? err;
 
@@ -75,8 +79,15 @@ class _HolderCardState extends ConsumerState<HolderCard> {
             field(name, 'اسم النقطة'),
             field(area, 'المنطقة'),
             field(address, 'العنوان'),
-            field(accepts, 'يقبل (أنواع القوارير المقبولة)'),
-            field(hours, 'ساعات العمل'),
+            HoursWheelField(
+              label: tr('ساعات العمل'),
+              from: hFrom, to: hTo,
+              fallback: rawHours,
+              onFrom: (t) => setD(() => hFrom = t),
+              onTo: (t) => setD(() => hTo = t),
+              onClear: () => setD(() { hFrom = null; hTo = null; }),
+            ),
+            const SizedBox(height: 10),
             field(phone, 'الهاتف', phoneField: true),
             field(details, 'تفاصيل إضافية', max: 3),
             if (err != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(err!, style: noto(12, color: C.danger))),
@@ -103,7 +114,7 @@ class _HolderCardState extends ConsumerState<HolderCard> {
                 try {
                   await ref.read(apiClientProvider).holderPointEditRequest({
                     'name': name.text.trim(), 'area': area.text.trim(), 'address': address.text.trim(),
-                    'accepts': accepts.text.trim(), 'hours': hours.text.trim(), 'phone': phone.text.trim(),
+                    'hours': hoursRangeString(hFrom, hTo, fallback: rawHours), 'phone': phone.text.trim(),
                     'details': details.text.trim(),
                   });
                   if (dctx.mounted) Navigator.pop(dctx, true);
@@ -254,6 +265,148 @@ class _HolderCardState extends ConsumerState<HolderCard> {
       ]),
     );
   }
+}
+
+// ---- opening hours -------------------------------------------------------
+// Stored on the point as one "HH:MM - HH:MM" string — the shape the dashboard,
+// the seed data and the field app already write. Wheels instead of a text box
+// guarantee that format and remove AM/PM ambiguity for early/late shifts.
+
+String _hhmm(TimeOfDay t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+/// Parse "08:00 - 20:00" back into its two ends. Anything else (old free text
+/// like «من 8 صباحاً») yields nulls rather than throwing.
+List<TimeOfDay?> parseHoursRange(String? raw) {
+  final m = RegExp(r'^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$').firstMatch((raw ?? '').trim());
+  if (m == null) return [null, null];
+  final h1 = int.tryParse(m.group(1)!), m1 = int.tryParse(m.group(2)!);
+  final h2 = int.tryParse(m.group(3)!), m2 = int.tryParse(m.group(4)!);
+  if (h1 == null || m1 == null || h2 == null || m2 == null) return [null, null];
+  if (h1 > 23 || h2 > 23 || m1 > 59 || m2 > 59) return [null, null];
+  return [TimeOfDay(hour: h1, minute: m1), TimeOfDay(hour: h2, minute: m2)];
+}
+
+/// Both ends picked → the canonical string. Nothing picked → keep whatever was
+/// stored, so opening the form and saving can't wipe a legacy value.
+String hoursRangeString(TimeOfDay? from, TimeOfDay? to, {String fallback = ''}) =>
+    (from != null && to != null) ? '${_hhmm(from)} - ${_hhmm(to)}' : fallback.trim();
+
+/// «من / إلى» opening-hours picker driven by scroll wheels.
+class HoursWheelField extends StatelessWidget {
+  final String label;
+  final TimeOfDay? from, to;
+  final String fallback;
+  final ValueChanged<TimeOfDay> onFrom, onTo;
+  final VoidCallback onClear;
+  const HoursWheelField({
+    super.key, required this.label, required this.from, required this.to,
+    required this.onFrom, required this.onTo, required this.onClear, this.fallback = '',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        Text(label, style: cairo(13, w: FontWeight.w700, color: C.forest)),
+        const Spacer(),
+        if (from != null || to != null)
+          Pressable(onTap: onClear, child: Padding(padding: const EdgeInsets.all(4),
+            child: Text(tr('مسح'), style: cairo(12, w: FontWeight.w700, color: C.textSecondary)))),
+      ]),
+      // A legacy free-text value can't be shown on the wheels — surface it so
+      // the holder knows what's currently saved before replacing it.
+      if (from == null && to == null && fallback.trim().isNotEmpty)
+        Padding(padding: const EdgeInsets.only(top: 2),
+          child: Text(trf('الحالي: {v}', {'v': fallback.trim()}), style: noto(11.5, color: C.textTertiary))),
+      const SizedBox(height: 6),
+      Row(children: [
+        Expanded(child: _slot(context, tr('من'), from, onFrom)),
+        const SizedBox(width: 10),
+        Expanded(child: _slot(context, tr('إلى'), to, onTo)),
+      ]),
+    ]);
+  }
+
+  Widget _slot(BuildContext context, String cap, TimeOfDay? v, ValueChanged<TimeOfDay> set) => Pressable(
+        pressedScale: 0.98,
+        onTap: () async {
+          final picked = await showTimeWheelSheet(context, title: cap, initial: v ?? const TimeOfDay(hour: 8, minute: 0));
+          if (picked != null) set(picked);
+        },
+        child: Container(
+          height: 52, padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: C.cardBorder, width: 1.4)),
+          child: Row(children: [
+            mi('schedule', size: 19, color: C.green),
+            const SizedBox(width: 8),
+            Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(cap, style: noto(10.5, color: C.textTertiary)),
+              Text(v == null ? '--:--' : _hhmm(v), style: cairo(15, w: FontWeight.w800, color: v == null ? C.textTertiary : C.ink),
+                  textDirection: TextDirection.ltr),
+            ])),
+            mi('expand_more', size: 20, color: C.textTertiary),
+          ]),
+        ),
+      );
+}
+
+/// Bottom sheet with an hour wheel and a minute wheel (5-minute steps). Always
+/// 24-hour, whatever the phone's locale says.
+Future<TimeOfDay?> showTimeWheelSheet(BuildContext context, {required String title, required TimeOfDay initial}) {
+  int hour = initial.hour;
+  int minute = (initial.minute ~/ 5) * 5;
+  final hCtrl = FixedExtentScrollController(initialItem: hour);
+  final mCtrl = FixedExtentScrollController(initialItem: minute ~/ 5);
+
+  Widget wheel(FixedExtentScrollController c, int count, int step, ValueChanged<int> onChange) => SizedBox(
+        width: 84, height: 180,
+        child: ListWheelScrollView.useDelegate(
+          controller: c,
+          itemExtent: 44,
+          perspective: 0.004,
+          diameterRatio: 1.5,
+          physics: const FixedExtentScrollPhysics(),
+          onSelectedItemChanged: onChange,
+          childDelegate: ListWheelChildBuilderDelegate(
+            childCount: count,
+            builder: (_, i) => Center(child: Text((i * step).toString().padLeft(2, '0'),
+                style: cairo(24, w: FontWeight.w800, color: C.forest), textDirection: TextDirection.ltr)),
+          ),
+        ),
+      );
+
+  return showModalBottomSheet<TimeOfDay>(
+    context: context, backgroundColor: C.sand,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+    builder: (sctx) => Directionality(
+      textDirection: appDirection,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(22, 16, 22, 22 + MediaQuery.of(sctx).padding.bottom),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 44, height: 5, decoration: BoxDecoration(color: const Color(0xFFE0D5BF), borderRadius: BorderRadius.circular(3))),
+          const SizedBox(height: 14),
+          Text(title, style: cairo(17, w: FontWeight.w800, color: C.forest)),
+          const SizedBox(height: 6),
+          // The wheels are always laid out LTR so hour sits left of minute,
+          // matching the HH:MM value they produce even in Arabic.
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Stack(alignment: Alignment.center, children: [
+              Container(height: 46, decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(12))),
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                wheel(hCtrl, 24, 1, (i) => hour = i),
+                Text(':', style: cairo(24, w: FontWeight.w800, color: C.forest)),
+                wheel(mCtrl, 12, 5, (i) => minute = i * 5),
+              ]),
+            ]),
+          ),
+          const SizedBox(height: 14),
+          GradientButton(label: tr('تم'), height: 50, onTap: () => Navigator.pop(sctx, TimeOfDay(hour: hour, minute: minute))),
+        ]),
+      ),
+    ),
+  );
 }
 
 /// Second leaderboard: how the collection points in this wilaya compare.
