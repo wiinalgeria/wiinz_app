@@ -300,6 +300,18 @@ final Map<String, String> _fr = {
   'تم تغيير كلمة المرور ✓': 'Mot de passe changé ✓',
   'هل تريد تغيير كلمة مرورك؟': 'Voulez-vous changer votre mot de passe ?',
 
+  // holder: bag-full report locked until the container is emptied
+  'تم الإبلاغ — بانتظار التفريغ': 'Signalé — en attente de vidage',
+  'أُبلغ {t}': 'Signalé {t}',
+
+  // holder: point-edit request pending review
+  'جارٍ تحميل معلومات النقطة...': 'Chargement des informations du point...',
+  'جارٍ الإرسال...': 'Envoi en cours...',
+  'معدّل': 'Modifié',
+  'طلب قيد المراجعة': 'Demande en cours d\'examen',
+  'أرسلت طلب تعديل ولم تردّ عليه الإدارة بعد. لا يمكن إرسال طلب جديد حتى تتم الموافقة أو الرفض.':
+      'Vous avez envoyé une demande de modification et l\'administration n\'a pas encore répondu. Vous ne pouvez pas en envoyer une nouvelle avant son acceptation ou son refus.',
+
   // common / network
   'حسناً': 'OK', 'تم': 'Terminé', 'حدث خطأ، حاول مجدداً': 'Une erreur est survenue, réessayez',
   'تعذّر الاتصال بالخادم، قد يكون بطيئاً الآن. حاول مجدداً بعد لحظات.':
@@ -668,6 +680,18 @@ final Map<String, String> _en = {
   'كلمة المرور الجديدة قصيرة (8 أحرف على الأقل)': 'New password too short (min. 8 characters)',
   'تم تغيير كلمة المرور ✓': 'Password changed ✓',
   'هل تريد تغيير كلمة مرورك؟': 'Do you want to change your password?',
+
+  // holder: bag-full report locked until the container is emptied
+  'تم الإبلاغ — بانتظار التفريغ': 'Reported — awaiting emptying',
+  'أُبلغ {t}': 'Reported {t}',
+
+  // holder: point-edit request pending review
+  'جارٍ تحميل معلومات النقطة...': 'Loading point details...',
+  'جارٍ الإرسال...': 'Sending...',
+  'معدّل': 'Changed',
+  'طلب قيد المراجعة': 'Request under review',
+  'أرسلت طلب تعديل ولم تردّ عليه الإدارة بعد. لا يمكن إرسال طلب جديد حتى تتم الموافقة أو الرفض.':
+      'You sent an edit request and the administration has not responded yet. You cannot send a new one until it is approved or rejected.',
 
   'حسناً': 'OK', 'تم': 'Done', 'حدث خطأ، حاول مجدداً': 'Something went wrong, try again',
   'تعذّر الاتصال بالخادم، قد يكون بطيئاً الآن. حاول مجدداً بعد لحظات.':

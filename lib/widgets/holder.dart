@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,14 +19,35 @@ class HolderCard extends ConsumerStatefulWidget {
   ConsumerState<HolderCard> createState() => _HolderCardState();
 }
 
-class _HolderCardState extends ConsumerState<HolderCard> {
+class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObserver {
   Map<String, dynamic>? s;
   bool loading = true;
+  Timer? _alertPoll;
+
+  /// The point's currently-open "bag is full" alert, or null. Comes from the
+  /// server, never from local state — the alert is cleared by whoever empties
+  /// the container (a field agent, or the holder), which this app can't observe.
+  Map? get _openAlert => s?['bagAlert'] as Map?;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    _alertPoll?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back to the app is the most likely moment for the agent to have
+    // emptied the container, so refresh then rather than waiting for the poll.
+    if (state == AppLifecycleState.resumed && _openAlert != null) _load();
   }
 
   Future<void> _load() async {
@@ -32,6 +55,24 @@ class _HolderCardState extends ConsumerState<HolderCard> {
     if (u == null || !u.isHolder) { if (mounted) setState(() => loading = false); return; }
     try { s = await ref.read(apiClientProvider).holderStats(); } catch (_) {}
     if (mounted) setState(() => loading = false);
+    _syncAlertPoll();
+  }
+
+  /// Poll only while an alert is open, so the button re-enables on its own once
+  /// the container is emptied. No alert → no timer, so an idle holder card costs
+  /// nothing.
+  void _syncAlertPoll() {
+    final open = _openAlert != null;
+    if (open && _alertPoll == null) {
+      _alertPoll = Timer.periodic(const Duration(seconds: 60), (_) {
+        if (!mounted) return;
+        if (_openAlert == null) { _syncAlertPoll(); return; }
+        _load();
+      });
+    } else if (!open && _alertPoll != null) {
+      _alertPoll!.cancel();
+      _alertPoll = null;
+    }
   }
 
   // Propose new info for the point (everything except its location). This does
@@ -43,12 +84,28 @@ class _HolderCardState extends ConsumerState<HolderCard> {
     // admin changed in the dashboard since then (or a previously approved edit)
     // would otherwise show stale — and re-saving would propose reverting it.
     // A failed refresh just falls back to what we already have.
-    try {
-      final fresh = await ref.read(apiClientProvider).holderStats();
+    //
+    // The refresh hits a Render free-tier server that may be cold (30–50s), so
+    // it gets a blocking spinner. Without one the tap looked dead and people
+    // tapped again.
+    Map? pending;
+    final fresh = await _withProgress(tr('جارٍ تحميل معلومات النقطة...'),
+        () => ref.read(apiClientProvider).holderStats());
+    if (fresh != null) {
       final p = fresh['point'];
-      if (p is Map) { point = p; if (mounted) setState(() => s = fresh); }
-    } catch (_) {}
+      if (p is Map) point = p;
+      final pe = fresh['pendingEdit'];
+      if (pe is Map) pending = pe;
+      if (mounted) setState(() => s = fresh);
+    }
     if (!mounted) return;
+
+    // A request is already queued: show what was proposed, read-only. Editing
+    // again is blocked until an admin approves or rejects it (the server 409s
+    // on a second one anyway) — otherwise the form would open on the OLD values
+    // and look like the request had vanished.
+    if (pending != null) { await _showPendingEdit(point, pending); return; }
+
     final name = TextEditingController(text: '${point['name'] ?? ''}');
     final area = TextEditingController(text: '${point['area'] ?? ''}');
     final address = TextEditingController(text: '${point['address'] ?? ''}');
@@ -135,13 +192,132 @@ class _HolderCardState extends ConsumerState<HolderCard> {
                   setD(() { saving = false; err = tr('حدث خطأ، حاول مجدداً'); });
                 }
               },
-              child: Text(saving ? '...' : tr('إرسال الطلب'), style: cairo(14, w: FontWeight.w800, color: C.green)),
+              // While the request is in flight this is a spinner + «جارٍ
+              // الإرسال...», not a bare "...". The call can take 30–50s against a
+              // cold Render instance, and the old label made that look frozen.
+              child: saving
+                  ? Row(mainAxisSize: MainAxisSize.min, children: [
+                      const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2.2, color: C.green)),
+                      const SizedBox(width: 8),
+                      Text(tr('جارٍ الإرسال...'), style: cairo(14, w: FontWeight.w800, color: C.green)),
+                    ])
+                  : Text(tr('إرسال الطلب'), style: cairo(14, w: FontWeight.w800, color: C.green)),
             ),
           ],
         ),
       )),
     );
-    if (ok == true && mounted) showToast(context, tr('تم إرسال الطلب، سيُطبَّق بعد موافقة الإدارة ✓'));
+    if (ok == true && mounted) {
+      showToast(context, tr('تم إرسال الطلب، سيُطبَّق بعد موافقة الإدارة ✓'));
+      // Pull the queued request straight back in, so re-opening the form shows
+      // the "under review" view immediately instead of the pre-edit values.
+      _load();
+    }
+  }
+
+  /// Run [task] behind a modal spinner. Returns null if it failed — every call
+  /// site here has a sane fallback, and a dead-looking tap is worse than a
+  /// degraded one. Used for the calls that hit a possibly-cold Render instance.
+  Future<T?> _withProgress<T>(String label, Future<T> Function() task) async {
+    if (!mounted) return null;
+    final nav = Navigator.of(context, rootNavigator: true);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Directionality(
+        textDirection: appDirection,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          content: Row(mainAxisSize: MainAxisSize.min, children: [
+            const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: C.green)),
+            const SizedBox(width: 14),
+            Flexible(child: Text(label, style: noto(13.5, color: C.textSecondary))),
+          ]),
+        ),
+      ),
+    );
+    T? out;
+    try { out = await task(); } catch (_) {}
+    if (nav.canPop()) nav.pop();
+    return out;
+  }
+
+  /// The point already has an edit waiting on an admin. Show the proposed values
+  /// read-only — the holder needs to see that their request survived, and what
+  /// they asked for, without being able to stack a second request on top.
+  Future<void> _showPendingEdit(Map point, Map pending) async {
+    final changes = (pending['changes'] as Map?) ?? {};
+    const labels = {
+      'name': 'اسم النقطة', 'area': 'البلدية', 'address': 'العنوان',
+      'phone': 'الهاتف', 'hours': 'ساعات العمل', 'details': 'قاعة رياضية، مؤسسة، ..الخ',
+    };
+    // Every field, so this reads as the point's full record — the ones being
+    // changed are highlighted, the rest show what is currently stored.
+    Widget row(String k) {
+      final changed = changes.containsKey(k);
+      final shown = changed ? '${changes[k] ?? ''}' : '${point[k] ?? ''}';
+      final isPhone = k == 'phone';
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Text(tr(labels[k]!), style: noto(11, color: C.textTertiary)),
+            if (changed) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(color: const Color(0xFFFCE9D6), borderRadius: BorderRadius.circular(6)),
+                child: Text(tr('معدّل'), style: cairo(9.5, w: FontWeight.w800, color: const Color(0xFFC24A18))),
+              ),
+            ],
+          ]),
+          const SizedBox(height: 3),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+            decoration: BoxDecoration(
+              color: changed ? const Color(0xFFFFF6E6) : const Color(0xFFF4F4F2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: changed ? const Color(0xFFF3E1BC) : C.cardBorder),
+            ),
+            child: Text(shown.isEmpty ? '—' : shown,
+                style: noto(13, color: C.ink, height: 1.4),
+                textDirection: isPhone ? TextDirection.ltr : null),
+          ),
+        ]),
+      );
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dctx) => Directionality(
+        textDirection: appDirection,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(children: [
+            mi('pending_actions', size: 21, color: const Color(0xFFC24A18)),
+            const SizedBox(width: 8),
+            Flexible(child: Text(tr('طلب قيد المراجعة'), style: cairo(16.5, w: FontWeight.w800, color: C.forest))),
+          ]),
+          content: SizedBox(width: 380, child: SingleChildScrollView(child: Column(
+            mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(tr('أرسلت طلب تعديل ولم تردّ عليه الإدارة بعد. لا يمكن إرسال طلب جديد حتى تتم الموافقة أو الرفض.'),
+                  style: noto(12.5, color: C.textSecondary, height: 1.5)),
+              const SizedBox(height: 12),
+              ...labels.keys.map(row),
+            ],
+          ))),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dctx),
+              child: Text(tr('حسناً'), style: cairo(14, w: FontWeight.w800, color: C.green)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // Flag the container as full → the dashboard and field app are notified so an
@@ -200,6 +376,10 @@ class _HolderCardState extends ConsumerState<HolderCard> {
     } catch (_) {
       if (mounted) showToast(context, tr('حدث خطأ، حاول مجدداً'));
     }
+    // Refresh either way: on success this flips the button to its reported
+    // state, and on an "already reported" error it syncs the button with the
+    // alert that already exists.
+    await _load();
   }
 
   @override
@@ -271,23 +451,53 @@ class _HolderCardState extends ConsumerState<HolderCard> {
           ),
         ]),
         const SizedBox(height: 8),
-        // "Notify bag is full" — a bold, attention-grabbing button under the edit
-        // row. Alerts the dashboard + field app so an agent comes to empty it.
-        Pressable(
-          onTap: _notifyBagFull,
-          child: Container(
+        // "Notify bag is full". Once reported, this LOCKS until the container is
+        // actually emptied — a second report would be a no-op server-side (one
+        // open alert per point) and repeat taps only made holders think the
+        // first one hadn't registered. It unlocks by itself when a field agent
+        // services the point, which resolves the alert.
+        if (_openAlert != null)
+          Container(
             height: 48, width: double.infinity, alignment: Alignment.center,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFFF2994A), Color(0xFFE8730C)]),
+              color: const Color(0xFFF7EFE3),
               borderRadius: BorderRadius.circular(13),
-              boxShadow: [BoxShadow(color: const Color(0xFFE8730C).withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 6))],
+              border: Border.all(color: const Color(0xFFE4D5BE)),
             ),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              mi('notification_important', size: 21, color: Colors.white), const SizedBox(width: 8),
-              Text(tr('الإبلاغ عن امتلاء الحاوية'), style: cairo(14, w: FontWeight.w800, color: Colors.white)),
+              mi('check_circle', size: 20, color: const Color(0xFFB07A2E)),
+              const SizedBox(width: 8),
+              Flexible(child: Text(
+                tr('تم الإبلاغ — بانتظار التفريغ'),
+                style: cairo(13.5, w: FontWeight.w800, color: const Color(0xFFB07A2E)),
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+              )),
             ]),
+          )
+        else
+          Pressable(
+            onTap: _notifyBagFull,
+            child: Container(
+              height: 48, width: double.infinity, alignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFFF2994A), Color(0xFFE8730C)]),
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: [BoxShadow(color: const Color(0xFFE8730C).withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 6))],
+              ),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                mi('notification_important', size: 21, color: Colors.white), const SizedBox(width: 8),
+                Text(tr('الإبلاغ عن امتلاء الحاوية'), style: cairo(14, w: FontWeight.w800, color: Colors.white)),
+              ]),
+            ),
           ),
-        ),
+        if (_openAlert != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Text(
+              trf('أُبلغ {t}', {'t': timeAgo(DateTime.tryParse('${_openAlert!['at']}')?.toLocal() ?? DateTime.now())}),
+              style: noto(10.5, color: C.textTertiary),
+            ),
+          ),
         if (last != null) ...[
           const SizedBox(height: 8),
           Text(trf('آخر تفريغ: {t}', {'t': timeAgo(DateTime.tryParse('${last['at']}')?.toLocal() ?? DateTime.now())}),
