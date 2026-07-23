@@ -152,7 +152,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
             Row(children: [storeLogo(g.store.logo, 15), const SizedBox(width: 4), Flexible(child: Text(g.store.name, style: cairo(11.5, w: FontWeight.w700, color: C.greenMid), overflow: TextOverflow.ellipsis))]),
           Text(g.code, style: noto(11, color: C.textTertiary), textDirection: TextDirection.ltr),
           const SizedBox(height: 4),
-          Text(g.cost > 0 ? '${g.cost} Wz' : 'مجاناً', style: cairo(15, w: FontWeight.w800, color: C.goldText)),
+          Text(g.cost > 0 ? '${g.cost} Wz' : tr('مجاناً'), style: cairo(15, w: FontWeight.w800, color: C.goldText)),
         ])),
         const SizedBox(width: 10),
         SizedBox(width: 120, child: Column(children: [

@@ -454,7 +454,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
               ]),
               Row(children: [
                 mi('sort', size: 16, color: C.green), const SizedBox(width: 4),
-                Text(_locationGranted ? 'الأقرب أولاً' : 'كل النقاط', style: noto(12, color: C.textSecondary)),
+                Text(_locationGranted ? tr('الأقرب أولاً') : tr('كل النقاط'), style: noto(12, color: C.textSecondary)),
                 const SizedBox(width: 8),
                 AnimatedRotation(
                   turns: _listCollapsed ? 0.5 : 0,
@@ -501,7 +501,7 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
               const SizedBox(width: 10),
               Container(width: 6, height: 6, decoration: BoxDecoration(color: p.open ? C.greenBtnEnd : C.danger, shape: BoxShape.circle)),
               const SizedBox(width: 3),
-              Text(p.open ? 'مفتوح' : 'مغلق', style: cairo(11.5, w: FontWeight.w700, color: p.open ? C.greenBtnEnd : C.danger)),
+              Text(p.open ? tr('مفتوح') : tr('مغلق'), style: cairo(11.5, w: FontWeight.w700, color: p.open ? C.greenBtnEnd : C.danger)),
               const SizedBox(width: 8),
               Text(p.hours, style: noto(11.5, color: C.textTertiary)),
             ]),

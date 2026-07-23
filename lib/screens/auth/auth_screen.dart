@@ -230,9 +230,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   } catch (_) {}
                   if (!dctx.mounted) return;
                   Navigator.pop(dctx);
-                  if (mounted) showToast(context, 'تم إرسال طلبك ✓ سيتواصل معك الفريق قريباً');
+                  if (mounted) showToast(context, tr('تم إرسال طلبك ✓ سيتواصل معك الفريق قريباً'));
                 },
-                child: Text(sending ? '...' : 'إرسال الطلب', style: cairo(14, w: FontWeight.w800, color: C.green)),
+                child: Text(sending ? '...' : tr('إرسال الطلب'), style: cairo(14, w: FontWeight.w800, color: C.green)),
               ),
             ],
           ),
