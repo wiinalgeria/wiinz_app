@@ -300,6 +300,10 @@ final Map<String, String> _fr = {
   'تم تغيير كلمة المرور ✓': 'Mot de passe changé ✓',
   'هل تريد تغيير كلمة مرورك؟': 'Voulez-vous changer votre mot de passe ?',
 
+  // daily bonus: transient-failure retry (flaky network keeps the popup open)
+  'إعادة المحاولة': 'Réessayer',
+  'تعذّر الاتصال، حاول مرة أخرى': 'Connexion impossible, réessayez',
+
   // holder: bag-full report locked until the container is emptied
   'تم الإبلاغ — بانتظار التفريغ': 'Signalé — en attente de vidage',
   'أُبلغ {t}': 'Signalé {t}',
@@ -680,6 +684,10 @@ final Map<String, String> _en = {
   'كلمة المرور الجديدة قصيرة (8 أحرف على الأقل)': 'New password too short (min. 8 characters)',
   'تم تغيير كلمة المرور ✓': 'Password changed ✓',
   'هل تريد تغيير كلمة مرورك؟': 'Do you want to change your password?',
+
+  // daily bonus: transient-failure retry (flaky network keeps the popup open)
+  'إعادة المحاولة': 'Retry',
+  'تعذّر الاتصال، حاول مرة أخرى': 'Connection failed, try again',
 
   // holder: bag-full report locked until the container is emptied
   'تم الإبلاغ — بانتظار التفريغ': 'Reported — awaiting emptying',

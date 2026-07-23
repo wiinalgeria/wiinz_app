@@ -18,55 +18,70 @@ String bonusClock(int seconds) {
 
 /// The claim popup: shown on app entry when a bonus is available, and again
 /// (as a success state) right after claiming. Returns true if the user claimed.
+///
+/// This is a real StatefulWidget (was a StatefulBuilder with externally-captured
+/// vars). The state bug — vars declared inside the builder, reset on every
+/// rebuild — was fixed once before, but the ERROR handling still produced a
+/// two-tap: on this flaky-TLS network the first claim often fails with a
+/// transient HandshakeException/timeout, and the old code either silently reset
+/// `busy=false` (so the tap looked ignored → tap again) or popped the whole
+/// dialog. Now a transient failure keeps the popup open with an inline error and
+/// a live button, so ONE retry works; a terminal reply (already claimed / not
+/// ready) closes cleanly with a toast.
 Future<bool> showDailyBonusDialog(BuildContext context, WidgetRef ref, {required int points}) async {
-  bool claimed = false;
-  // These MUST live outside the StatefulBuilder's builder. They used to be
-  // declared inside it, so every setD() rebuild reset them to false: the first
-  // tap set busy=true, the rebuild immediately cleared it, and the success
-  // state could never render either — the dialog just sat there looking
-  // untouched, which is why claiming appeared to need a second tap. (The first
-  // tap did reach the server; the second then failed as "already claimed".)
-  bool busy = false, done = false;
-  int newBalance = 0;
-  await showDialog<void>(
+  final claimed = await showDialog<bool>(
     context: context,
     barrierColor: const Color(0xB80C140E),
-    builder: (dctx) => StatefulBuilder(
-      builder: (dctx, setD) {
-        return _BonusDialogBody(
-          points: points,
-          onClaim: () async {
-            if (busy) return;
-            setD(() => busy = true);
-            try {
-              final res = await ref.read(apiClientProvider).claimDailyBonus();
-              newBalance = (res['newBalance'] as num?)?.toInt() ?? 0;
-              ref.read(sessionProvider.notifier).setPoints(newBalance);
-              claimed = true;
-              setD(() { busy = false; done = true; });
-            } on ApiException catch (e) {
-              setD(() => busy = false);
-              if (dctx.mounted) { Navigator.pop(dctx); showToast(context, e.message); }
-            } catch (_) {
-              setD(() => busy = false);
-            }
-          },
-          busy: busy, done: done, newBalance: newBalance,
-        );
-      },
-    ),
+    builder: (dctx) => _BonusDialog(points: points),
   );
-  return claimed;
+  return claimed == true;
 }
 
-class _BonusDialogBody extends StatelessWidget {
-  final int points, newBalance;
-  final bool busy, done;
-  final VoidCallback onClaim;
-  const _BonusDialogBody({required this.points, required this.onClaim, required this.busy, required this.done, required this.newBalance});
+class _BonusDialog extends ConsumerStatefulWidget {
+  final int points;
+  const _BonusDialog({required this.points});
+  @override
+  ConsumerState<_BonusDialog> createState() => _BonusDialogState();
+}
+
+class _BonusDialogState extends ConsumerState<_BonusDialog> {
+  bool _busy = false, _done = false;
+  int _newBalance = 0;
+  String? _error;
+
+  Future<void> _claim() async {
+    if (_busy || _done) return; // guard re-entry while a request is in flight
+    setState(() { _busy = true; _error = null; });
+    try {
+      final res = await ref.read(apiClientProvider).claimDailyBonus();
+      if (!mounted) return;
+      _newBalance = (res['newBalance'] as num?)?.toInt() ?? 0;
+      ref.read(sessionProvider.notifier).setPoints(_newBalance);
+      setState(() { _busy = false; _done = true; });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      // Terminal replies — retrying won't help, so close and report. `not_ready`
+      // means the window already elapsed on the server (e.g. claimed elsewhere);
+      // treat it as effectively done rather than an error to retry.
+      const terminal = {'not_ready', 'disabled'};
+      if (terminal.contains(e.code)) {
+        Navigator.pop(context, e.code == 'not_ready');
+        showToast(context, e.message);
+        return;
+      }
+      // Transient (timeout / offline / TLS handshake — common on this network):
+      // keep the popup open, show the reason, re-enable the button. This is the
+      // case that used to silently reset and read as "the tap did nothing".
+      setState(() { _busy = false; _error = e.message; });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() { _busy = false; _error = tr('تعذّر الاتصال، حاول مرة أخرى'); });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final points = widget.points;
     return Directionality(
       textDirection: appDirection,
       child: Dialog(
@@ -79,13 +94,13 @@ class _BonusDialogBody extends StatelessWidget {
               width: 96, height: 96,
               decoration: BoxDecoration(gradient: C.avatarGrad, shape: BoxShape.circle,
                 boxShadow: [BoxShadow(color: C.greenMid.withValues(alpha: 0.5), blurRadius: 30, offset: const Offset(0, 16))]),
-              child: mi(done ? 'check_circle' : 'card_giftcard', size: 52, color: Colors.white, fill: true),
+              child: mi(_done ? 'check_circle' : 'card_giftcard', size: 52, color: Colors.white, fill: true),
             ),
             const SizedBox(height: 18),
-            Text(done ? tr('تم استلام مكافأتك!') : tr('مكافأتك اليومية'),
+            Text(_done ? tr('تم استلام مكافأتك!') : tr('مكافأتك اليومية'),
               style: cairo(23, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
             const SizedBox(height: 6),
-            Text(done ? tr('عُد غداً لمكافأة جديدة 🎁') : tr('استلم نقاطك المجانية لهذا اليوم'),
+            Text(_done ? tr('عُد غداً لمكافأة جديدة 🎁') : tr('استلم نقاطك المجانية لهذا اليوم'),
               style: noto(14, color: C.textSecondary), textAlign: TextAlign.center),
             const SizedBox(height: 20),
             Container(
@@ -97,16 +112,22 @@ class _BonusDialogBody extends StatelessWidget {
                 Text('Wz', style: cairo(20, w: FontWeight.w800, color: C.goldText)),
               ]),
             ),
-            if (done) ...[
+            if (_done) ...[
               const SizedBox(height: 12),
               Text.rich(TextSpan(text: tr('رصيدك الآن '), style: noto(13, color: const Color(0xFF6B6459)), children: [
-                TextSpan(text: '$newBalance Wz', style: cairo(13, w: FontWeight.w800, color: C.goldText)),
+                TextSpan(text: '$_newBalance Wz', style: cairo(13, w: FontWeight.w800, color: C.goldText)),
               ])),
             ],
+            if (_error != null && !_done) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: noto(12.5, color: C.danger, height: 1.4), textAlign: TextAlign.center),
+            ],
             const SizedBox(height: 20),
-            done
-              ? GradientButton(label: tr('رائع، تم'), height: 54, onTap: () => Navigator.pop(context))
-              : GradientButton(label: busy ? '...' : tr('استلم المكافأة'), height: 54, loading: busy, onTap: busy ? () {} : onClaim),
+            _done
+              ? GradientButton(label: tr('رائع، تم'), height: 54, onTap: () => Navigator.pop(context, true))
+              : GradientButton(
+                  label: _error != null ? tr('إعادة المحاولة') : tr('استلم المكافأة'),
+                  height: 54, loading: _busy, onTap: _claim),
           ]),
         ),
       ),
