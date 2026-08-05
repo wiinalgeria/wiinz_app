@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -141,9 +142,54 @@ class _MapScreenState extends ConsumerState<MapScreen> with WidgetsBindingObserv
     }
     final on = await Geolocator.isLocationServiceEnabled();
     if (!on) {
-      await Geolocator.openLocationSettings(); // re-checked on resume
+      // ⚠️ Platform difference, found on a real iPhone (2026-08-05).
+      // Android: openLocationSettings() opens the system location toggle — the
+      // exact screen the user needs.
+      // iOS: there is NO public way to deep-link to Settings → Privacy &
+      // Security → Location Services. geolocator falls back to opening the
+      // APP's own settings page, which does not contain the device-wide switch,
+      // so the button looked broken: it navigated away and changed nothing.
+      // (The private App-Prefs: URL scheme would do it and gets apps rejected.)
+      // So on iOS we explain the path instead of pretending we can open it.
+      if (Platform.isIOS) {
+        await _showIosLocationServicesHelp();
+      } else {
+        await Geolocator.openLocationSettings(); // re-checked on resume
+      }
       return;
     }
+    await _checkLocation();
+  }
+
+  /// iOS-only: the device-wide location switch is off and no app can open that
+  /// screen, so tell the user exactly where it lives.
+  Future<void> _showIosLocationServicesHelp() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(children: [
+          mi('location_off', size: 24, color: C.green),
+          const SizedBox(width: 10),
+          Expanded(child: Text(tr('خدمات الموقع مغلقة على الجهاز'),
+              style: cairo(17, w: FontWeight.w800, color: C.forest))),
+        ]),
+        content: Text(
+          tr('خدمات الموقع مغلقة على مستوى الجهاز كله، ولا يمكن للتطبيق فتحها بنفسه. افتح: الإعدادات ← الخصوصية والأمان ← خدمات الموقع، فعّلها، ثم ارجع إلى التطبيق.'),
+          style: noto(14, color: C.textSecondary, height: 1.6),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(tr('فهمت'), style: cairo(15, w: FontWeight.w800, color: C.green)),
+          ),
+        ],
+      ),
+    );
+    // The gate re-checks on resume, but the user may fix it and come straight
+    // back without the app ever being backgrounded — so re-check here too.
     await _checkLocation();
   }
 

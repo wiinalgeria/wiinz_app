@@ -197,6 +197,9 @@ final Map<String, String> _fr = {
   'تفعيل الموقع': 'Activer la localisation',
   'تفعيل': 'Activer',
   'الموقع مطلوب للخريطة': 'Localisation requise pour la carte',
+  'خدمات الموقع مغلقة على الجهاز': 'Service de localisation désactivé',
+  'خدمات الموقع مغلقة على مستوى الجهاز كله، ولا يمكن للتطبيق فتحها بنفسه. افتح: الإعدادات ← الخصوصية والأمان ← خدمات الموقع، فعّلها، ثم ارجع إلى التطبيق.':
+      'Le service de localisation est désactivé pour tout l\'appareil et l\'application ne peut pas l\'activer elle-même. Ouvrez : Réglages → Confidentialité et sécurité → Service de localisation, activez-le, puis revenez dans l\'application.',
   'لعرض أقرب نقاط الجمع إليك وحساب المسافات، يجب تفعيل الموقع. لا يمكن استخدام الخريطة بدون تفعيل الموقع.':
       'Pour afficher les points proches et calculer les distances, la localisation doit être activée. La carte est inutilisable sans elle.',
   'فعّل الموقع لعرض أقرب نقاط الجمع وحساب المسافات': 'Activez la localisation pour voir les points proches et les distances',
@@ -587,6 +590,9 @@ final Map<String, String> _en = {
   'تفعيل الموقع': 'Enable location',
   'تفعيل': 'Enable',
   'الموقع مطلوب للخريطة': 'Location required for the map',
+  'خدمات الموقع مغلقة على الجهاز': 'Location Services are off',
+  'خدمات الموقع مغلقة على مستوى الجهاز كله، ولا يمكن للتطبيق فتحها بنفسه. افتح: الإعدادات ← الخصوصية والأمان ← خدمات الموقع، فعّلها، ثم ارجع إلى التطبيق.':
+      'Location Services are turned off for the whole device, and the app cannot turn them on itself. Open: Settings → Privacy & Security → Location Services, turn it on, then come back to the app.',
   'لعرض أقرب نقاط الجمع إليك وحساب المسافات، يجب تفعيل الموقع. لا يمكن استخدام الخريطة بدون تفعيل الموقع.':
       'To show nearby points and distances, location must be enabled. The map cannot be used without it.',
   'فعّل الموقع لعرض أقرب نقاط الجمع وحساب المسافات': 'Enable location to see nearby points and distances',

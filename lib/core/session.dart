@@ -165,15 +165,34 @@ class SessionNotifier extends Notifier<SessionState> {
   String? _pushToken;
   StreamSubscription<String>? _tokenSub;
 
-  Future<void> _registerPush() async {
-    final token = await pushToken();
-    if (token == null) return;
-    _pushToken = token;
-    await api.registerPushToken(token);
+  Future<void> _registerPush({int attempt = 0}) async {
+    // ⚠️ Subscribe BEFORE asking for the token, not after.
+    // This used to sit below the `token == null` early return, which made a
+    // first launch on iOS able to end up permanently unregistered: APNs has to
+    // hand Firebase a token before FCM can mint one, and on a cold first launch
+    // over a slow network that can take longer than pushToken() waits. The old
+    // code then bailed out *and* never attached this listener, so when the token
+    // did arrive there was nothing left to notice it — the phone silently
+    // received no push until some later app launch happened to win the race.
+    // Attaching first means a late token is always picked up.
     _tokenSub ??= onTokenRefresh?.listen((t) {
       _pushToken = t;
       if (state.isLoggedIn) api.registerPushToken(t);
     });
+
+    final token = await pushToken();
+    if (token == null) {
+      // Belt and braces: onTokenRefresh above should catch it, but it only
+      // fires when FCM mints a *new* token. Retry a couple of times so a slow
+      // APNs handshake resolves within this session rather than the next one.
+      if (attempt < 2 && state.isLoggedIn) {
+        await Future.delayed(const Duration(seconds: 5));
+        if (state.isLoggedIn) await _registerPush(attempt: attempt + 1);
+      }
+      return;
+    }
+    _pushToken = token;
+    await api.registerPushToken(token);
   }
 
   // On logout: stop this phone from receiving the signed-out user's pushes.
