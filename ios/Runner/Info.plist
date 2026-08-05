@@ -74,6 +74,13 @@
 	<string>يستخدم WIIN الكاميرا لمسح رموز QR في نقاط الجمع لتسجيل قواريرك وكسب النقاط. — WIIN uses the camera to scan the QR code at a collection point when you deposit bottles.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>يستخدم WIIN موقعك لعرض أقرب نقاط الجمع على الخريطة وترتيبها حسب المسافة. — WIIN uses your location to show nearby collection points on the map and sort them by distance.</string>
+	<!-- ⚠️ Required even though WIIN never requests "always" location. Apple's
+	     ITMS-90683 check is on the APIs the BINARY REFERENCES, not the ones you
+	     call: geolocator/permission_handler link the always-authorization API,
+	     so the purpose string must exist or the upload is flagged. Worded to
+	     match reality — the app only ever asks for while-in-use. -->
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>يستخدم WIIN موقعك أثناء استعمال التطبيق فقط، لعرض أقرب نقاط الجمع وترتيبها حسب المسافة. لا يتتبّع التطبيق موقعك في الخلفية. — WIIN uses your location only while you are using the app, to show nearby collection points and sort them by distance. It does not track your location in the background.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>يستخدم WIIN مكتبة الصور لاختيار صورة ملفك الشخصي. — WIIN uses your photo library so you can pick a profile picture.</string>
 
