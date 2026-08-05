@@ -27,11 +27,12 @@ workflows:
       app_store_connect: WIINZ ASC Key
 
     environment:
-      ios_signing:
-        # Automatic signing: Codemagic uses the ASC API key to fetch/create the
-        # App Store distribution profile for this bundle id. No manual certs.
-        distribution_type: app_store
-        bundle_identifier: com.wiinalgeria.wiinz
+      # NOTE: deliberately NO `ios_signing:` block here. That shorthand only
+      # FETCHES existing signing files, so on a brand-new Apple account — which
+      # has no distribution certificate and no provisioning profile yet — it
+      # fails with "No matching profiles found for bundle identifier ... and
+      # distribution type app_store". The explicit script below passes --create,
+      # which makes Apple mint both on the first run.
       vars:
         BUNDLE_ID: "com.wiinalgeria.wiinz"
       flutter: stable
@@ -52,8 +53,25 @@ workflows:
         script: |
           cd ios && pod install
 
+      # Automatic code signing, the explicit form. Credentials come from the
+      # `integrations.app_store_connect` key above (exported as
+      # APP_STORE_CONNECT_* env vars), so nothing secret lives in this file.
+      #
+      # --create is the important flag: it lets Apple mint the distribution
+      # certificate and the App Store provisioning profile if they don't exist
+      # yet. After the first successful build they do exist and it just fetches.
+      #
+      # ⚠️ The API key needs enough authority to create signing assets. If this
+      # step fails with a 403/FORBIDDEN, the key's role is too low — regenerate
+      # it as Admin (Team Keys, not Individual Keys).
       - name: Set up code signing settings on Xcode project
-        script: xcode-project use-profiles
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
 
       - name: Flutter build ipa
         script: |
