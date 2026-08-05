@@ -33,6 +33,11 @@ workflows:
       # fails with "No matching profiles found for bundle identifier ... and
       # distribution type app_store". The explicit script below passes --create,
       # which makes Apple mint both on the first run.
+      groups:
+        # Codemagic UI → app settings → Environment variables. Must contain
+        # CERTIFICATE_PRIVATE_KEY (marked Secure): the RSA private key that the
+        # iOS distribution certificate is issued against. See the signing step.
+        - ios_signing
       vars:
         BUNDLE_ID: "com.wiinalgeria.wiinz"
       flutter: stable
@@ -57,18 +62,25 @@ workflows:
       # `integrations.app_store_connect` key above (exported as
       # APP_STORE_CONNECT_* env vars), so nothing secret lives in this file.
       #
-      # --create is the important flag: it lets Apple mint the distribution
-      # certificate and the App Store provisioning profile if they don't exist
-      # yet. After the first successful build they do exist and it just fetches.
+      # --create lets Apple mint the distribution certificate and the App Store
+      # provisioning profile if they don't exist yet. After the first successful
+      # build they do exist and this just fetches them.
       #
-      # ⚠️ The API key needs enough authority to create signing assets. If this
-      # step fails with a 403/FORBIDDEN, the key's role is too low — regenerate
-      # it as Admin (Team Keys, not Individual Keys).
+      # ⚠️ --certificate-key is NOT optional when creating. A certificate is
+      # issued against a private key you own, so without one the tool logs
+      # "Cannot save Signing Certificates without certificate private key",
+      # saves no .p12, and every later step quietly produces nothing — the
+      # keychain ends up empty and `flutter build ipa` fails with the misleading
+      # "No valid code signing certificates were found".
+      #
+      # ⚠️ Keep using the SAME private key. A new key means a new certificate on
+      # every build, and Apple caps distribution certificates per account.
       - name: Set up code signing settings on Xcode project
         script: |
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
             --create
           keychain add-certificates
           xcode-project use-profiles
