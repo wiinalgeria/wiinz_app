@@ -36,15 +36,20 @@ import 'package:firebase_core/firebase_core.dart';
 ///    portal (Keys → + → Apple Push Notifications service). Without that key
 ///    Firebase cannot deliver to iOS at all, no matter what is set here.
 ///
-/// Until step 3 is done these stay empty, `iosFirebaseOptions()` returns null,
-/// and `initPush()` simply skips Firebase on iOS: the app runs normally, just
-/// with no push. Nothing else breaks.
+/// ✅ **Filled in 2026-08-05** from the GoogleService-Info.plist for the iOS app
+/// registered in the `wiinz-app` Firebase project, with the APNs authentication
+/// key (Sandbox & Production, team-scoped) uploaded to Cloud Messaging.
+///
+/// If these are ever emptied, `iosFirebaseOptions()` returns null and
+/// `initPush()` simply skips Firebase on iOS: the app runs normally, just with
+/// no push. Nothing else breaks.
 /// ---------------------------------------------------------------------------
 
-const _apiKey = '';
-const _appId = '';
+const _apiKey = 'AIzaSyBxV-w28fvDi0Gqb4eiU6dMG3LH-x8JfSg';
+const _appId = '1:736202502215:ios:3588870a150f4f228a4162';
 const _senderId = '736202502215'; // same Firebase project as Android
 const _projectId = 'wiinz-app';
+const _storageBucket = 'wiinz-app.firebasestorage.app';
 
 /// The iOS Firebase options, or null while the config above is unfilled.
 FirebaseOptions? iosFirebaseOptions() {
@@ -54,5 +59,6 @@ FirebaseOptions? iosFirebaseOptions() {
     appId: _appId,
     messagingSenderId: _senderId,
     projectId: _projectId,
+    storageBucket: _storageBucket,
   );
 }
