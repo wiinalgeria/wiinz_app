@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'firebase_ios.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'local_notify.dart';
 
 /// Real out-of-app push notifications via Firebase Cloud Messaging.
@@ -53,15 +53,13 @@ String? _initError;
 Future<void> initPush() async {
   if (_ready) return;
   try {
-    if (Platform.isIOS) {
-      // iOS carries no GoogleService-Info.plist — the config is passed in from
-      // Dart instead (see firebase_ios.dart for why, and how to fill it).
-      final opts = iosFirebaseOptions();
-      if (opts == null) { _initError = 'iOS Firebase options missing'; return; }
-      await Firebase.initializeApp(options: opts);
-    } else {
-      await Firebase.initializeApp();
-    }
+    // Both platforms now configure from their bundled config file — Android
+    // from google-services.json, iOS from GoogleService-Info.plist, which
+    // AppDelegate already applied via FirebaseApp.configure() before Flutter
+    // started. This call therefore just returns the existing default app on
+    // iOS. Passing explicit options here would be wrong: firebase_core throws
+    // if the default app already exists with a different configuration.
+    await Firebase.initializeApp();
     _ready = true;
 
     // Create the high-importance channel up front so Android has it ready when a
@@ -98,7 +96,16 @@ Future<Map<String, String>> pushDiagnostics() async {
   final out = <String, String>{};
   out['Platform'] = Platform.isIOS ? 'iOS' : 'Android';
   if (Platform.isIOS) {
-    out['iOS config'] = iosFirebaseOptions() == null ? '❌ missing' : '✅ present';
+    // Written natively by AppDelegate when Apple answers the registration —
+    // either with a token or with the reason it refused. This is the only place
+    // an APNs registration failure is visible at all; iOS surfaces it nowhere
+    // else, and the app would otherwise just see a null token forever.
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      out['APNs registration'] = prefs.getString('apns_status') ?? '⏳ no answer from Apple yet';
+    } catch (e) {
+      out['APNs registration'] = 'error: $e';
+    }
   }
   out['Firebase init'] = _ready ? '✅ ready' : '❌ ${_initError ?? 'not initialised'}';
   if (!_ready) return out;
