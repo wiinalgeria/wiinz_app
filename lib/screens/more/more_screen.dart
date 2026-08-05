@@ -131,7 +131,6 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 _settingRow('تغيير كلمة المرور', 'lock', _changePassword),
                 _settingRow('المساعدة والدعم', 'help', _openSupport),
                 _settingRow('تغيير اللغة', 'language', () => showLanguageSheet(context, ref), trailingText: langNames[currentLang]),
-                _settingRow('تشخيص الإشعارات', 'notifications', _showPushDiagnostics),
                 _settingRow('عن التطبيق', 'info', _openAbout, last: true),
               ]),
             ),
@@ -140,7 +139,19 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               child: Container(height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF3D9D5), width: 1.5)),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [mi('logout', size: 22, color: C.danger), const SizedBox(width: 8), Text(tr('تسجيل الخروج'), style: cairo(15, w: FontWeight.w700, color: C.danger))]))),
             const SizedBox(height: 22),
-            Center(child: Text(tr('WIIN · الإصدار 2.0'), style: noto(12, color: C.textTertiary))),
+            // Tapping the version 7 times opens the push diagnostics. Hidden
+            // rather than removed: it answers "why am I getting no
+            // notifications?" in seconds — the question that cost four build
+            // cycles to answer once — but the raw APNs/FCM detail means nothing
+            // to a normal user, so it does not belong in the settings list.
+            Center(child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _onVersionTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                child: Text(tr('WIIN · الإصدار 2.0'), style: noto(12, color: C.textTertiary)),
+              ),
+            )),
           ])),
           const WiinzBottomNav(current: null),
         ]),
@@ -270,6 +281,25 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         Text(tr(label), style: cairo(13, w: FontWeight.w700, color: C.ink)),
       ]),
     )));
+  }
+
+  // Hidden entry point for the diagnostics sheet. The counter resets if the
+  // taps are more than two seconds apart, so an idle tap on the version line
+  // can never accumulate into opening it by accident.
+  int _versionTaps = 0;
+  DateTime? _lastVersionTap;
+
+  void _onVersionTap() {
+    final now = DateTime.now();
+    if (_lastVersionTap == null || now.difference(_lastVersionTap!) > const Duration(seconds: 2)) {
+      _versionTaps = 0;
+    }
+    _lastVersionTap = now;
+    _versionTaps++;
+    if (_versionTaps >= 7) {
+      _versionTaps = 0;
+      _showPushDiagnostics();
+    }
   }
 
   /// Shows, step by step, everything push delivery depends on. Each of these can
