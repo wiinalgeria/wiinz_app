@@ -9,6 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/push.dart';
 import '../../core/session.dart';
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
@@ -130,6 +131,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 _settingRow('تغيير كلمة المرور', 'lock', _changePassword),
                 _settingRow('المساعدة والدعم', 'help', _openSupport),
                 _settingRow('تغيير اللغة', 'language', () => showLanguageSheet(context, ref), trailingText: langNames[currentLang]),
+                _settingRow('تشخيص الإشعارات', 'notifications', _showPushDiagnostics),
                 _settingRow('عن التطبيق', 'info', _openAbout, last: true),
               ]),
             ),
@@ -268,6 +270,47 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         Text(tr(label), style: cairo(13, w: FontWeight.w700, color: C.ink)),
       ]),
     )));
+  }
+
+  /// Shows, step by step, everything push delivery depends on. Each of these can
+  /// fail on its own and produce the exact same symptom — no notification — so
+  /// without this the only way to tell them apart is a 30-minute build cycle.
+  /// The copy button exists so a tester can paste the result into a support
+  /// message instead of retyping it.
+  Future<void> _showPushDiagnostics() async {
+    final diag = await pushDiagnostics();
+    if (!mounted) return;
+    final text = diag.entries.map((e) => '${e.key}: ${e.value}').join('\n');
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(tr('تشخيص الإشعارات'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+          children: diag.entries.map((e) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              SizedBox(width: 110, child: Text(e.key, style: cairo(13, w: FontWeight.w700, color: C.textSecondary))),
+              Expanded(child: Text(e.value, style: noto(13, color: C.ink))),
+            ]),
+          )).toList()),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: text));
+              if (ctx.mounted) Navigator.of(ctx).pop();
+              if (mounted) showToast(context, tr('تم النسخ'));
+            },
+            child: Text(tr('نسخ'), style: cairo(15, w: FontWeight.w800, color: C.green)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(tr('إغلاق'), style: cairo(15, w: FontWeight.w800, color: C.textSecondary)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _settingRow(String label, String icon, VoidCallback onTap, {bool last = false, String? trailingText}) {

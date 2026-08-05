@@ -43,6 +43,12 @@ Future<void> _onBackgroundMessage(RemoteMessage message) async {}
 
 bool _ready = false;
 
+/// Why init failed, kept for the diagnostics sheet. Every failure path in
+/// `initPush()` used to end in a bare `return`, so "Firebase threw", "iOS config
+/// missing" and "permission denied" were indistinguishable from the outside —
+/// which is exactly why the first iOS push bug took several build cycles.
+String? _initError;
+
 /// Called once at app start (before runApp).
 Future<void> initPush() async {
   if (_ready) return;
@@ -51,7 +57,7 @@ Future<void> initPush() async {
       // iOS carries no GoogleService-Info.plist — the config is passed in from
       // Dart instead (see firebase_ios.dart for why, and how to fill it).
       final opts = iosFirebaseOptions();
-      if (opts == null) return; // not configured yet → run without push
+      if (opts == null) { _initError = 'iOS Firebase options missing'; return; }
       await Firebase.initializeApp(options: opts);
     } else {
       await Firebase.initializeApp();
@@ -82,7 +88,46 @@ Future<void> initPush() async {
   } catch (e) {
     // No Firebase config / offline → app still works, just without push.
     _ready = false;
+    _initError = e.toString();
   }
+}
+
+/// A readable snapshot of every step push depends on, for the diagnostics sheet
+/// in Settings. Each line is a step that can fail independently and silently.
+Future<Map<String, String>> pushDiagnostics() async {
+  final out = <String, String>{};
+  out['Platform'] = Platform.isIOS ? 'iOS' : 'Android';
+  if (Platform.isIOS) {
+    out['iOS config'] = iosFirebaseOptions() == null ? '❌ missing' : '✅ present';
+  }
+  out['Firebase init'] = _ready ? '✅ ready' : '❌ ${_initError ?? 'not initialised'}';
+  if (!_ready) return out;
+
+  try {
+    final s = await FirebaseMessaging.instance.getNotificationSettings();
+    out['Permission'] = s.authorizationStatus.name;
+  } catch (e) {
+    out['Permission'] = 'error: $e';
+  }
+
+  if (Platform.isIOS) {
+    // The step that silently blocked everything: no APNs token means FCM can
+    // never mint one, and getToken() throws instead of returning null.
+    try {
+      final a = await FirebaseMessaging.instance.getAPNSToken();
+      out['APNs token'] = a == null ? '❌ null' : '✅ ${a.length} chars';
+    } catch (e) {
+      out['APNs token'] = 'error: $e';
+    }
+  }
+
+  try {
+    final t = await FirebaseMessaging.instance.getToken();
+    out['FCM token'] = t == null ? '❌ null' : '✅ ${t.substring(0, 12)}…';
+  } catch (e) {
+    out['FCM token'] = 'error: $e';
+  }
+  return out;
 }
 
 /// The device's current FCM token, or null if push isn't available.

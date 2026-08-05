@@ -197,6 +197,9 @@ final Map<String, String> _fr = {
   'تفعيل الموقع': 'Activer la localisation',
   'تفعيل': 'Activer',
   'الموقع مطلوب للخريطة': 'Localisation requise pour la carte',
+  'تشخيص الإشعارات': 'Diagnostic des notifications',
+  'نسخ': 'Copier',
+  'تم النسخ': 'Copié',
   'خدمات الموقع مغلقة على الجهاز': 'Service de localisation désactivé',
   'خدمات الموقع مغلقة على مستوى الجهاز كله، ولا يمكن للتطبيق فتحها بنفسه. افتح: الإعدادات ← الخصوصية والأمان ← خدمات الموقع، فعّلها، ثم ارجع إلى التطبيق.':
       'Le service de localisation est désactivé pour tout l\'appareil et l\'application ne peut pas l\'activer elle-même. Ouvrez : Réglages → Confidentialité et sécurité → Service de localisation, activez-le, puis revenez dans l\'application.',
@@ -590,6 +593,9 @@ final Map<String, String> _en = {
   'تفعيل الموقع': 'Enable location',
   'تفعيل': 'Enable',
   'الموقع مطلوب للخريطة': 'Location required for the map',
+  'تشخيص الإشعارات': 'Notification diagnostics',
+  'نسخ': 'Copy',
+  'تم النسخ': 'Copied',
   'خدمات الموقع مغلقة على الجهاز': 'Location Services are off',
   'خدمات الموقع مغلقة على مستوى الجهاز كله، ولا يمكن للتطبيق فتحها بنفسه. افتح: الإعدادات ← الخصوصية والأمان ← خدمات الموقع، فعّلها، ثم ارجع إلى التطبيق.':
       'Location Services are turned off for the whole device, and the app cannot turn them on itself. Open: Settings → Privacy & Security → Location Services, turn it on, then come back to the app.',
