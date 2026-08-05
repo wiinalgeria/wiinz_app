@@ -11,7 +11,15 @@ Future<void> initLocalNotifications() async {
   if (_inited) return;
   _inited = true;
   const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const settings = InitializationSettings(android: android);
+  // iOS: request nothing at init — the prompt is raised in context from Home,
+  // same as Android (see the note below). Without a Darwin section at all the
+  // plugin is a no-op on iOS and foreground notifications never appear.
+  const ios = DarwinInitializationSettings(
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
+  );
+  const settings = InitializationSettings(android: android, iOS: ios);
   try {
     await _plugin.initialize(settings);
     // NOTE: the permission request itself is NOT made here (cold boot, over the
@@ -46,6 +54,10 @@ Future<void> showLocalNotification(String title, String body) async {
       'wiinz_general', 'إشعارات WIIN',
       channelDescription: 'إشعارات تطبيق WIIN',
       importance: Importance.max, priority: Priority.high,
+    ),
+    // iOS has no channels; presentation is per-notification.
+    iOS: DarwinNotificationDetails(
+      presentAlert: true, presentBadge: true, presentSound: true,
     ),
   );
   try {

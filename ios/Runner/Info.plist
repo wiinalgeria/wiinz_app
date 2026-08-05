@@ -66,11 +66,35 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Purpose strings. Arabic first (the app is Arabic-first and the market is
+	     Algeria), English appended so an App Store reviewer reads them without a
+	     translator. See the localization note in HANDOFF-CURRENT.md if these ever
+	     need to become per-language InfoPlist.strings files. -->
 	<key>NSCameraUsageDescription</key>
-	<string>يستخدم WIINZ الكاميرا لمسح رموز QR الخاصة بإعادة التدوير وكسب النقاط.</string>
+	<string>يستخدم WIIN الكاميرا لمسح رموز QR في نقاط الجمع لتسجيل قواريرك وكسب النقاط. — WIIN uses the camera to scan the QR code at a collection point when you deposit bottles.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>يستخدم WIINZ موقعك لعرض أقرب نقاط إعادة التدوير على الخريطة.</string>
+	<string>يستخدم WIIN موقعك لعرض أقرب نقاط الجمع على الخريطة وترتيبها حسب المسافة. — WIIN uses your location to show nearby collection points on the map and sort them by distance.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>يستخدم WIINZ مكتبة الصور لاختيار صورة ملفك الشخصي.</string>
+	<string>يستخدم WIIN مكتبة الصور لاختيار صورة ملفك الشخصي. — WIIN uses your photo library so you can pick a profile picture.</string>
+
+	<!-- The app ships no encryption of its own; it only talks HTTPS to the WIIN
+	     API, which is exempt. Declaring it here means TestFlight never blocks a
+	     build on the export-compliance question. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- FCM: lets a push wake the app to handle a data payload. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- The App Store listing advertises these three languages. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ar</string>
+		<string>fr</string>
+		<string>en</string>
+	</array>
 </dict>
 </plist>

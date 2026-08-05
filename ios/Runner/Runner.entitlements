@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Release / Profile entitlements: TestFlight and App Store builds talk to
+	     the PRODUCTION APNs environment.
+
+	     ⚠️ The App ID com.wiinalgeria.wiinz must have the "Push Notifications"
+	     capability enabled in developer.apple.com → Certificates, IDs & Profiles
+	     → Identifiers BEFORE the first build. Without it the provisioning profile
+	     carries no aps-environment and the build fails at the signing step with
+	     "Provisioning profile ... doesn't include the aps-environment entitlement". -->
+	<key>aps-environment</key>
+	<string>production</string>
+</dict>
+</plist>

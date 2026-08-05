@@ -72,11 +72,15 @@ dev_dependencies:
 # App launcher icon generation. Run: dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   image_path: "assets/icon/WIINZ_icon.png"
   min_sdk_android: 21
   adaptive_icon_background: "#1F7A1F"
   adaptive_icon_foreground: "assets/icon/WIINZ_icon.png"
+  # The App Store rejects a 1024x1024 icon that carries an alpha channel, and
+  # iOS icons must not be transparent anyway — flatten onto the brand green.
+  remove_alpha_ios: true
+  background_color_ios: "#1F7A1F"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
