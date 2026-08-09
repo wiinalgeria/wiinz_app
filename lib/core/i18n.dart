@@ -14,6 +14,22 @@ String get currentLang => _lang;
 bool get isRtl => _lang == 'ar';
 TextDirection get appDirection => isRtl ? TextDirection.rtl : TextDirection.ltr;
 
+/// Where text should START for the current language: right in Arabic, left in
+/// French/English.
+///
+/// Use this instead of a hardcoded `TextAlign.right` on any field that also
+/// sets `textDirection: TextDirection.ltr` — phone, email, password. Those
+/// fields must keep LTR *character order* (digits and addresses must not
+/// reorder in Arabic), but that forced direction also makes `TextAlign.start`
+/// resolve to LEFT in every language, so `start` cannot be used there. A bare
+/// `TextAlign.right` had the mirror-image problem: it pinned the caret and the
+/// hint to the right in French and English too, which is why typing appeared to
+/// begin from the wrong side.
+TextAlign get startAlign => isRtl ? TextAlign.right : TextAlign.left;
+
+/// The opposite side to [startAlign].
+TextAlign get endAlign => isRtl ? TextAlign.left : TextAlign.right;
+
 const _prefsKey = 'wiinz_lang';
 
 /// Load the saved language before runApp so there's no flash of the wrong one.

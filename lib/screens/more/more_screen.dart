@@ -461,7 +461,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         decoration: BoxDecoration(color: readOnly ? const Color(0xFFF1EEE6) : Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
         child: Row(children: [mi(icon, size: 22, color: readOnly ? C.textTertiary : C.green), const SizedBox(width: 10),
           Expanded(child: TextField(controller: c, readOnly: readOnly, enableInteractiveSelection: !readOnly,
-            textDirection: ltr ? TextDirection.ltr : null, textAlign: TextAlign.right,
+            textDirection: ltr ? TextDirection.ltr : null, textAlign: startAlign,
             decoration: const InputDecoration(border: InputBorder.none, isDense: true),
             style: noto(16, color: readOnly ? C.textSecondary : C.ink))),
           if (readOnly) mi('lock', size: 18, color: C.textTertiary),
@@ -496,7 +496,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               const SizedBox(height: 8),
               Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
-                child: TextField(controller: details, maxLines: 4, textAlign: TextAlign.right,
+                child: TextField(controller: details, maxLines: 4, textAlign: startAlign,
                   decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: tr('اكتب التفاصيل هنا…'), hintStyle: noto(14, color: C.textTertiary)), style: noto(15, color: C.ink))),
               const SizedBox(height: 18),
               Row(children: [

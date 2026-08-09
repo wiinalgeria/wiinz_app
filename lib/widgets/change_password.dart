@@ -51,7 +51,7 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
           child: Row(children: [
             mi('lock', size: 20, color: C.green), const SizedBox(width: 8),
             Expanded(child: TextField(
-              controller: c, obscureText: !show, textDirection: TextDirection.ltr, textAlign: TextAlign.right,
+              controller: c, obscureText: !show, textDirection: TextDirection.ltr, textAlign: startAlign,
               decoration: InputDecoration(hintText: hint, border: InputBorder.none, isDense: true, hintStyle: noto(14, color: C.textTertiary)),
               style: noto(15, color: C.ink),
             )),

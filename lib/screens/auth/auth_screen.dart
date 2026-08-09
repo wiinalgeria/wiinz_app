@@ -211,7 +211,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 child: Row(children: [
                   mi('person', size: 20, color: C.green), const SizedBox(width: 8),
                   Expanded(child: TextField(
-                    controller: controller, textDirection: TextDirection.ltr, textAlign: TextAlign.right,
+                    controller: controller, textDirection: TextDirection.ltr, textAlign: startAlign,
                     decoration: InputDecoration(hintText: tr('الهاتف أو البريد'), border: InputBorder.none, isDense: true, hintStyle: noto(14, color: C.textTertiary)),
                     style: noto(15, color: C.ink),
                   )),
@@ -382,7 +382,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     label: tr(signup ? 'إنشاء الحساب' : 'تسجيل الدخول'),
                     leading: loading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Transform.flip(flipX: true, child: mi('arrow_forward', color: Colors.white, size: 22)),
+                        // "Forward" points left in Arabic and right in FR/EN.
+                        // This used to flip unconditionally, so the Latin
+                        // locales got a back-pointing arrow on a submit button.
+                        : Transform.flip(flipX: isRtl, child: mi('arrow_forward', color: Colors.white, size: 22)),
                     onTap: loading ? () {} : _submit,
                   ),
 
@@ -456,7 +459,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           const SizedBox(height: 8),
           Container(
             height: 56,
-            padding: EdgeInsets.only(right: 16, left: hasEye ? 4 : 16),
+            // Directional, not physical: the icon sits at the start of the row
+            // and the eye button at the end, so these must swap with the
+            // language or the eye overlaps the text in FR/EN.
+            padding: EdgeInsetsDirectional.only(start: 16, end: hasEye ? 4 : 16),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor ?? C.inputBorder, width: borderColor != null ? 1.8 : 1.5)),
             child: Row(children: [
@@ -465,8 +471,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               Expanded(child: TextField(
                 controller: c, obscureText: hidden, keyboardType: keyboard,
                 inputFormatters: formatters.isEmpty ? null : formatters,
+                // `ltr` forces character order for phone/email/password. It also
+                // makes TextAlign.start resolve to left in every language, so
+                // alignment has to come from the app language instead.
                 textDirection: ltr ? TextDirection.ltr : null,
-                textAlign: TextAlign.right,
+                textAlign: startAlign,
                 decoration: InputDecoration(hintText: hint == null ? null : tr(hint), border: InputBorder.none, isDense: true, hintStyle: noto(15, color: C.textTertiary)),
                 style: noto(16, color: C.ink),
               )),
@@ -478,7 +487,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
             ]),
           ),
-          if (footer != null) Padding(padding: const EdgeInsets.only(top: 6, right: 4), child: footer),
+          if (footer != null) Padding(padding: const EdgeInsetsDirectional.only(top: 6, start: 4), child: footer),
         ],
       ),
     );

@@ -554,7 +554,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 12),
               Text(user.name, style: cairo(17, w: FontWeight.w700, color: Colors.white)),
               const SizedBox(height: 14),
-              Text(tr('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك'), style: noto(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.right),
+              Text(tr('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك'), style: noto(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.start),
             ])),
           ])
         : Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [

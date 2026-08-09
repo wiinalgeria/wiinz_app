@@ -324,7 +324,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                           TextSpan(text: '$nextLeft Wz', style: cairo(12.5, w: FontWeight.w800, color: C.goldLight)),
                           TextSpan(text: tr(' للوصول إلى '), style: noto(12.5, color: Colors.white.withValues(alpha: 0.75))),
                           TextSpan(text: nextName, style: cairo(12.5, w: FontWeight.w700, color: Colors.white)),
-                        ]), textAlign: TextAlign.right),
+                        ]), textAlign: TextAlign.start),
                       ])),
                     ]),
                     const SizedBox(height: 14),

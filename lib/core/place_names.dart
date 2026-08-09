@@ -33,6 +33,35 @@ const _latin = <String, String>{
   'قسنطينة المدينة': 'Constantine Centre', 'الخروب': 'El Khroub', 'عين السمارة': 'Aïn Smara',
   'عنابة المدينة': 'Annaba Centre', 'سيدي عمار': 'Sidi Amar', 'البوني': 'El Bouni',
   'البليدة المدينة': 'Blida Centre', 'بوفاريك': 'Boufarik', 'الأربعاء': 'Larbaâ',
+
+  // ---- the communes the dashboard actually serves (GET /api/locations) ----
+  // These are the ones a user can pick at signup and in Edit profile. Without
+  // them every commune outside the seed list above fell back to Arabic in the
+  // French and English UI. Keep this in step with قوائم التسجيل in the
+  // dashboard: adding a commune there and not here silently reintroduces the
+  // Arabic fallback. tool/check-place-names.js verifies the two agree.
+  //
+  // Oran (26 communes; وهران / بئر الجير / السانية / عين الترك are above)
+  'قديل': 'Gdyel', 'حاسي بونيف': 'Hassi Bounif', 'أرزيو': 'Arzew', 'بطيوة': 'Bethioua',
+  'مرسى الحجاج': 'Marsat El Hadjadj', 'العنصر': 'El Ançor', 'وادي تليلات': 'Oued Tlelat',
+  'طفراوي': 'Tafraoui', 'سيدي الشحمي': 'Sidi Chahmi', 'بوفاطيس': 'Boufatis',
+  'المرسى الكبير': 'Mers El Kébir', 'بوسفر': 'Bousfer', 'الكرمة': 'El Kerma',
+  'البراية': 'El Braya', 'حاسي بن عقبة': 'Hassi Ben Okba', 'بن فريحة': 'Ben Freha',
+  'حاسي مفسوخ': 'Hassi Mefsoukh', 'سيدي بن يبقى': 'Sidi Ben Yebka', 'مسرغين': 'Misserghin',
+  'بوتليليس': 'Boutlelis', 'عين الكرمة': 'Aïn El Kerma', 'عين البية': 'Aïn El Bia',
+
+  // Mostaganem (32 communes; مستغانم is above as the wilaya)
+  'مزغران': 'Mezghrane', 'صيادة': 'Sayada', 'حاسي ماماش': 'Hassi Mameche',
+  'فورناكة': 'Fornaka', 'عين نويسي': 'Aïn Nouissy', 'خير الدين': 'Kheïr Eddine',
+  'سيرات': 'Sirat', 'عين تادلس': 'Aïn Tédelès', 'سيدي بلعطار': 'Sidi Bellater',
+  'عين بودينار': 'Aïn Boudinar', 'سيدي علي': 'Sidi Ali', 'سيدي لخضر': 'Sidi Lakhdar',
+  'خضرة': 'Khadra', 'أولاد بوغالم': 'Ouled Boughalem', 'عشعاشة': 'Achaacha',
+  'عبد المالك رمضان': 'Abdelmalek Ramdane', 'نكمارية': 'Nekmaria', 'سيدي الشريف': 'Sidi Cherif',
+  'تازقايت': 'Tazgait', 'وادي الخير': 'Oued El Kheir', 'منصورة': 'Mansourah',
+  'ماسرة': 'Mesra', 'بوقيراط': 'Bouguirat', 'الحسيان': 'El Hassiane',
+  'أولاد مع الله': 'Ouled Maallah', 'السوافلية': 'Souaflia', 'الصفصاف': 'Safsaf',
+  'الحجاج': 'Hadjadj', 'الصور': 'Sour', 'بلد الطواهرية': 'Bled Touahria',
+  'عين سيدي الشريف': 'Aïn Sidi Cherif',
 };
 
 /// Display form of a wilaya/commune for the current language.

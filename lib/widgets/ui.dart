@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import '../core/i18n.dart';
 import '../theme/app_theme.dart';
 
 /// Wraps any tappable so it feels alive: a subtle scale-down + light haptic on
@@ -279,10 +280,22 @@ class GradientButton extends StatelessWidget {
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    // The arrow stays on the RIGHT of the label in every
+                    // language. A Row mirrors under Directionality, so keeping
+                    // `leading` first put the arrow right in Arabic but left in
+                    // FR/EN. Emitting it last in LTR pins it to the right in
+                    // both, which is also the conventional side for a submit
+                    // affordance in a Latin locale.
                     children: [
-                      if (leading != null) ...[leading!, const SizedBox(width: 12)],
-                      if (leading == null && icon != null) ...[mi(icon!, color: textColor, size: 24), const SizedBox(width: 10)],
-                      Text(label, style: cairo(17, w: FontWeight.w700, color: textColor)),
+                      if (isRtl) ...[
+                        if (leading != null) ...[leading!, const SizedBox(width: 12)],
+                        if (leading == null && icon != null) ...[mi(icon!, color: textColor, size: 24), const SizedBox(width: 10)],
+                        Text(label, style: cairo(17, w: FontWeight.w700, color: textColor)),
+                      ] else ...[
+                        Text(label, style: cairo(17, w: FontWeight.w700, color: textColor)),
+                        if (leading != null) ...[const SizedBox(width: 12), leading!],
+                        if (leading == null && icon != null) ...[const SizedBox(width: 10), mi(icon!, color: textColor, size: 24)],
+                      ],
                     ],
                   ),
           ),
