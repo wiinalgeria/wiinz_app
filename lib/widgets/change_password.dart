@@ -23,7 +23,7 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
             const SizedBox(height: 14),
             Text(tr('تغيير كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             const SizedBox(height: 6),
-            Text(tr('هل تريد تغيير كلمة مرورك؟'), textAlign: TextAlign.center, style: body(13.5, color: C.textSecondary)),
+            Text(tr('هل تريد تغيير كلمة مرورك؟'), textAlign: TextAlign.center, style: body(14.5, color: C.textSecondary)),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
@@ -75,7 +75,7 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
               pwField(current, tr('كلمة المرور الحالية'), showCur, () => setD(() => showCur = !showCur)),
               pwField(next, tr('كلمة المرور الجديدة'), showNew, () => setD(() => showNew = !showNew)),
               pwField(confirm, tr('تأكيد كلمة المرور الجديدة'), showConf, () => setD(() => showConf = !showConf)),
-              if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: body(12.5, color: C.danger))),
+              if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: body(13.5, color: C.danger))),
             ]),
             actions: [
               TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),

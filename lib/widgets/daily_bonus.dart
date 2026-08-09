@@ -114,13 +114,13 @@ class _BonusDialogState extends ConsumerState<_BonusDialog> {
             ),
             if (_done) ...[
               const SizedBox(height: 12),
-              Text.rich(TextSpan(text: tr('رصيدك الآن '), style: body(13, color: const Color(0xFF6B6459)), children: [
+              Text.rich(TextSpan(text: tr('رصيدك الآن '), style: body(14, color: const Color(0xFF6B6459)), children: [
                 TextSpan(text: '$_newBalance Wz', style: cairo(13, w: FontWeight.w800, color: C.goldText)),
               ])),
             ],
             if (_error != null && !_done) ...[
               const SizedBox(height: 12),
-              Text(_error!, style: body(12.5, color: C.danger, height: 1.4), textAlign: TextAlign.center),
+              Text(_error!, style: body(13.5, color: C.danger, height: 1.4), textAlign: TextAlign.center),
             ],
             const SizedBox(height: 20),
             _done
@@ -223,7 +223,7 @@ class _DailyBonusCardState extends ConsumerState<DailyBonusCard> {
               Text(tr('المكافأة اليومية'), style: cairo(16, w: FontWeight.w800, color: _available ? Colors.white : C.forest)),
               const SizedBox(height: 2),
               if (_available)
-                Text(trf('استلم {n} Wz مجاناً اليوم', {'n': '$_points'}), style: body(12.5, color: Colors.white.withValues(alpha: 0.9)))
+                Text(trf('استلم {n} Wz مجاناً اليوم', {'n': '$_points'}), style: body(13.5, color: Colors.white.withValues(alpha: 0.9)))
               else
                 Row(children: [
                   mi('timer', size: 14, color: C.greenMid),

@@ -149,7 +149,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               onTap: _onVersionTap,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-                child: Text(tr('WIIN · الإصدار 2.0'), style: body(12, color: C.textTertiary)),
+                child: Text(tr('WIIN · الإصدار 2.0'), style: body(13, color: C.textTertiary)),
               ),
             )),
           ])),
@@ -176,7 +176,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             const SizedBox(height: 4),
             // Phone intentionally not shown here (kept out of the settings screen);
             // it stays editable inside "تعديل الملف الشخصي".
-            Row(children: [mi('location_on', size: 15, color: const Color(0xFF6B7F73)), const SizedBox(width: 5), Flexible(child: Text(user.address.isEmpty ? placeName(user.commune) : user.address, style: body(13, color: const Color(0xFF6B7F73)), overflow: TextOverflow.ellipsis))]),
+            Row(children: [mi('location_on', size: 15, color: const Color(0xFF6B7F73)), const SizedBox(width: 5), Flexible(child: Text(user.address.isEmpty ? placeName(user.commune) : user.address, style: body(14, color: const Color(0xFF6B7F73)), overflow: TextOverflow.ellipsis))]),
           ])),
         ]),
         const SizedBox(height: 14),
@@ -200,7 +200,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(tr('شاهد الفيديوهات واربح النقاط'), style: cairo(16, w: FontWeight.w800, color: Colors.white)),
-              Text(tr('شاهد إعلاناً قصيراً واكسب حتى 5 Wz يومياً'), style: body(12, color: Colors.white.withValues(alpha: 0.85))),
+              Text(tr('شاهد إعلاناً قصيراً واكسب حتى 5 Wz يومياً'), style: body(13, color: Colors.white.withValues(alpha: 0.85))),
             ])),
           ]),
           const SizedBox(height: 14),
@@ -235,7 +235,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             child: Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(13)), child: mi('ios_share', size: 22, color: Colors.white))),
         ]),
         const SizedBox(height: 10),
-        Text(tr('شارك رمزك واحصل على 20 Wz لكل صديق ينضم 🎉'), style: body(11.5, color: Colors.white.withValues(alpha: 0.6))),
+        Text(tr('شارك رمزك واحصل على 20 Wz لكل صديق ينضم 🎉'), style: body(12.5, color: Colors.white.withValues(alpha: 0.6))),
       ]),
     );
   }
@@ -255,7 +255,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             child: Text('${_referrals.length}', style: cairo(15, w: FontWeight.w800, color: C.greenMid))),
         ]),
         if (_referrals.isEmpty)
-          Padding(padding: const EdgeInsets.only(top: 12), child: Text(tr('لم ينضم أحد بعد — شارك رمزك لتبدأ الربح'), style: body(12.5, color: C.textTertiary)))
+          Padding(padding: const EdgeInsets.only(top: 12), child: Text(tr('لم ينضم أحد بعد — شارك رمزك لتبدأ الربح'), style: body(13.5, color: C.textTertiary)))
         else
           ..._referrals.map((r) => Container(
             margin: const EdgeInsets.only(top: 8), padding: const EdgeInsets.only(top: 8),
@@ -263,7 +263,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             child: Row(children: [
               Container(width: 34, height: 34, alignment: Alignment.center, decoration: const BoxDecoration(color: C.tint3, shape: BoxShape.circle), child: Text(r.initial, style: cairo(14, w: FontWeight.w800, color: C.greenMid))),
               const SizedBox(width: 10),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(r.name, style: cairo(14, w: FontWeight.w700, color: C.ink)), Text(r.when, style: body(11.5, color: C.textTertiary))])),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(r.name, style: cairo(14, w: FontWeight.w700, color: C.ink)), Text(r.when, style: body(12.5, color: C.textTertiary))])),
               Text('+${r.reward} Wz', style: cairo(13, w: FontWeight.w800, color: C.goldText)),
             ]),
           )),
@@ -322,7 +322,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               SizedBox(width: 110, child: Text(e.key, style: cairo(13, w: FontWeight.w700, color: C.textSecondary))),
-              Expanded(child: Text(e.value, style: body(13, color: C.ink))),
+              Expanded(child: Text(e.value, style: body(14, color: C.ink))),
             ]),
           )).toList()),
         actions: [
@@ -466,7 +466,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             style: body(16, color: readOnly ? C.textSecondary : C.ink))),
           if (readOnly) mi('lock', size: 18, color: C.textTertiary),
         ])),
-      if (note != null) Padding(padding: const EdgeInsets.only(top: 6, right: 4), child: Text(tr(note), style: body(11.5, color: C.textTertiary))),
+      if (note != null) Padding(padding: const EdgeInsets.only(top: 6, right: 4), child: Text(tr(note), style: body(12.5, color: C.textTertiary))),
     ]));
   }
 
@@ -489,7 +489,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               const SizedBox(height: 16),
               Row(children: [mi('support_agent', size: 24, color: C.green), const SizedBox(width: 8), Text(tr('المساعدة والدعم'), style: cairo(19, w: FontWeight.w800, color: C.forest))]),
               const SizedBox(height: 4),
-              Text(tr('صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIIN.'), style: body(13, color: C.textSecondary)),
+              Text(tr('صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIIN.'), style: body(14, color: C.textSecondary)),
               const SizedBox(height: 18),
               _editField('عنوان المشكلة / الاقتراح', subject, 'help'),
               Text(tr('التفاصيل'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
@@ -546,9 +546,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           const SizedBox(height: 16),
           Text('WIIN ALGERIA', style: cairo(20, w: FontWeight.w900, color: C.forest)),
           const SizedBox(height: 4),
-          Text(tr('شركة ناشئة في تسيير النفايات وإعادة التدوير'), style: body(13.5, color: C.textSecondary), textAlign: TextAlign.center),
+          Text(tr('شركة ناشئة في تسيير النفايات وإعادة التدوير'), style: body(14.5, color: C.textSecondary), textAlign: TextAlign.center),
           const SizedBox(height: 6),
-          Text(tr('طُوّر ونُشر بواسطة WIIN ALGERIA'), style: body(12, color: C.textTertiary), textAlign: TextAlign.center),
+          Text(tr('طُوّر ونُشر بواسطة WIIN ALGERIA'), style: body(13, color: C.textTertiary), textAlign: TextAlign.center),
           const SizedBox(height: 22),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             social(FontAwesomeIcons.facebookF, const Color(0xFF1877F2), 'https://www.facebook.com/wiin.algeria/'),
@@ -562,7 +562,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             social(FontAwesomeIcons.tiktok, C.ink, 'https://www.tiktok.com/@wiinalgeria0'),
           ]),
           const SizedBox(height: 20),
-          Text(tr('WIIN · الإصدار 2.0'), style: body(12, color: C.textTertiary)),
+          Text(tr('WIIN · الإصدار 2.0'), style: body(13, color: C.textTertiary)),
         ]),
       )),
     );

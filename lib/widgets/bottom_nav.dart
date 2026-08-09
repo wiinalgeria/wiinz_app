@@ -70,7 +70,7 @@ class WiinzBottomNav extends ConsumerWidget {
                     width: 74,
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: Text(tr('امسح'), maxLines: 1, softWrap: false, style: cairo(10.5, w: FontWeight.w800, color: C.greenMid)),
+                      child: Text(tr('امسح'), maxLines: 1, softWrap: false, style: cairo(11, w: FontWeight.w800, color: C.greenMid)),
                     ),
                   ),
                 ],
@@ -109,7 +109,7 @@ class WiinzBottomNav extends ConsumerWidget {
                   child: Text(
                     trNav(label), maxLines: 1, softWrap: false, overflow: TextOverflow.visible,
                     textAlign: TextAlign.center,
-                    style: cairo(10.5, w: active ? FontWeight.w800 : FontWeight.w600, color: active ? C.forest : C.textTertiary),
+                    style: cairo(11, w: active ? FontWeight.w800 : FontWeight.w600, color: active ? C.forest : C.textTertiary),
                   ),
                 ),
               ],

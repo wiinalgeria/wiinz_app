@@ -179,7 +179,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
               const SizedBox(height: 14),
               Text(tr('قيّم نقطة الجمع'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
               const SizedBox(height: 6),
-              Text(tr('كيف كانت تجربتك في هذه النقطة؟'), textAlign: TextAlign.center, style: body(13, color: C.textSecondary)),
+              Text(tr('كيف كانت تجربتك في هذه النقطة؟'), textAlign: TextAlign.center, style: body(14, color: C.textSecondary)),
               const SizedBox(height: 16),
               // Stars laid out left → right (star 1 on the left) regardless of RTL.
               Directionality(
@@ -315,10 +315,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> with WidgetsBindingObse
                   _creditMode
                     ? trf('امسح رمز المستخدم لإضافة إيداعه في {name}', {'name': holder.name})
                     : tr('امسح رمز نقطة الجمع لإيداع قاروراتك أنت'),
-                  textAlign: TextAlign.center, style: body(11.5, color: C.textTertiary)),
+                  textAlign: TextAlign.center, style: body(12.5, color: C.textTertiary)),
                 const SizedBox(height: 12),
               ],
-              Text(tr('لا تعرف أين توجد نقاط الجمع؟'), style: body(12.5, color: C.textTertiary)),
+              Text(tr('لا تعرف أين توجد نقاط الجمع؟'), style: body(13.5, color: C.textTertiary)),
               const SizedBox(height: 10),
               Pressable(onTap: () => context.go('/map'), child: Container(
                 height: 52, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: C.tint4, width: 1.5)),

@@ -203,7 +203,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             title: Text(tr('استعادة كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(tr('أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIIN لإعادة تعيين كلمة مرورك.'),
-                  style: body(13, color: C.textSecondary, height: 1.5)),
+                  style: body(14, color: C.textSecondary, height: 1.5)),
               const SizedBox(height: 14),
               Container(
                 height: 52, padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -315,7 +315,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Text(tr('اجمع القارورات وحافظ على بيئتك'),
                       textAlign: TextAlign.center,
-                      style: body(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92), height: 1.5)),
+                      style: body(14, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92), height: 1.5)),
                   ),
                 ],
               ),
@@ -405,7 +405,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Row(children: [
                       const Expanded(child: Divider(color: C.inputBorder)),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(tr('أو'), style: body(12, color: C.textTertiary))),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(tr('أو'), style: body(13, color: C.textTertiary))),
                       const Expanded(child: Divider(color: C.inputBorder)),
                     ]),
                   ),

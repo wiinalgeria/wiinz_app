@@ -90,7 +90,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                         Container(width: 34, height: 34, decoration: const BoxDecoration(gradient: C.goldGrad, shape: BoxShape.circle), alignment: Alignment.center,
                           child: Text('Wz', style: cairo(13, w: FontWeight.w800, color: Colors.white))),
                         const SizedBox(width: 10),
-                        Text(tr('رصيدك الحالي'), style: body(13, color: const Color(0xFF8A6A1E))),
+                        Text(tr('رصيدك الحالي'), style: body(14, color: const Color(0xFF8A6A1E))),
                         const Spacer(),
                         Text.rich(TextSpan(text: '$balance ', style: cairo(20, w: FontWeight.w800, color: C.goldText), children: [TextSpan(text: 'Wz', style: cairo(13, w: FontWeight.w800, color: C.goldText))])),
                       ]),
@@ -107,7 +107,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text(tr('ترتيبك المحلي'), style: cairo(15, w: FontWeight.w700, color: C.ink)),
-                            Text(trf('من أصل {n} في {zone}', {'n': '$_totalPlayers', 'zone': _zone}), style: body(12, color: C.textSecondary)),
+                            Text(trf('من أصل {n} في {zone}', {'n': '$_totalPlayers', 'zone': _zone}), style: body(13, color: C.textSecondary)),
                           ])),
                           Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: C.tint1, borderRadius: BorderRadius.circular(12)),
                             child: Text('#$_myRank', style: cairo(18, w: FontWeight.w900, color: C.greenMid))),
@@ -119,7 +119,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                     const SizedBox(height: 20),
                     Text(tr('هداياي'), style: cairo(16, w: FontWeight.w800, color: C.forest)),
                     const SizedBox(height: 4),
-                    Text(tr('اعرض الكود لموظف المتجر ليمسحه ويسلّمك هديتك'), style: body(12, color: C.textSecondary)),
+                    Text(tr('اعرض الكود لموظف المتجر ليمسحه ويسلّمك هديتك'), style: body(13, color: C.textSecondary)),
                     const SizedBox(height: 12),
                     if (_myGifts.isEmpty)
                       Padding(padding: const EdgeInsets.symmetric(vertical: 30), child: Column(children: [
@@ -127,7 +127,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
                         const SizedBox(height: 10),
                         Text(tr('لا توجد مكافآت بعد'), style: cairo(15, w: FontWeight.w700, color: C.textTertiary)),
                         const SizedBox(height: 4),
-                        Text(tr('اختر هدية من صفحة «الهدايا» لتظهر هنا'), style: body(12.5, color: C.textTertiary)),
+                        Text(tr('اختر هدية من صفحة «الهدايا» لتظهر هنا'), style: body(13.5, color: C.textTertiary)),
                       ]))
                     else ..._myGifts.map(_giftCard),
                   ]),
@@ -150,7 +150,7 @@ class _PerksScreenState extends ConsumerState<PerksScreen> {
           Text(g.title, style: cairo(16, w: FontWeight.w700, color: C.ink)),
           if (g.store.name.isNotEmpty)
             Row(children: [storeLogo(g.store.logo, 15), const SizedBox(width: 4), Flexible(child: Text(g.store.name, style: cairo(11.5, w: FontWeight.w700, color: C.greenMid), overflow: TextOverflow.ellipsis))]),
-          Text(g.code, style: body(11, color: C.textTertiary), textDirection: TextDirection.ltr),
+          Text(g.code, style: body(12, color: C.textTertiary), textDirection: TextDirection.ltr),
           const SizedBox(height: 4),
           Text(g.cost > 0 ? '${g.cost} Wz' : tr('مجاناً'), style: cairo(15, w: FontWeight.w800, color: C.goldText)),
         ])),

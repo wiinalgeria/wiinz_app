@@ -81,7 +81,7 @@ class _AchievementsSheetState extends ConsumerState<_AchievementsSheet> {
                   const SizedBox(height: 14),
                   if (items.isEmpty)
                     Padding(padding: const EdgeInsets.all(30),
-                        child: Center(child: Text(tr('لا توجد إنجازات بعد'), style: body(13, color: C.textTertiary))))
+                        child: Center(child: Text(tr('لا توجد إنجازات بعد'), style: body(14, color: C.textTertiary))))
                   else
                     ...items.map(_row),
                 ],
@@ -122,7 +122,7 @@ class _AchievementsSheetState extends ConsumerState<_AchievementsSheet> {
           Text('${a['name'] ?? ''}', style: cairo(14.5, w: FontWeight.w800, color: unlocked ? C.forest : C.ink)),
           const SizedBox(height: 3),
           Text(trf('{have} / {need} قارورة', {'have': '$have', 'need': '$need'}),
-              style: body(11.5, color: C.textSecondary)),
+              style: body(12.5, color: C.textSecondary)),
           const SizedBox(height: 6),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
@@ -137,7 +137,7 @@ class _AchievementsSheetState extends ConsumerState<_AchievementsSheet> {
         if (claimed)
           Column(children: [
             mi('check_circle', size: 22, color: C.greenMid, fill: true),
-            Text(tr('تم الاستلام'), style: cairo(10, w: FontWeight.w700, color: C.greenMid)),
+            Text(tr('تم الاستلام'), style: cairo(11, w: FontWeight.w700, color: C.greenMid)),
           ])
         else if (claimable)
           Pressable(
@@ -153,7 +153,7 @@ class _AchievementsSheetState extends ConsumerState<_AchievementsSheet> {
         else
           Column(children: [
             mi('lock', size: 18, color: C.textTertiary),
-            if (bonus > 0) Text('$bonus Wz', style: cairo(10.5, w: FontWeight.w700, color: C.textTertiary)),
+            if (bonus > 0) Text('$bonus Wz', style: cairo(11, w: FontWeight.w700, color: C.textTertiary)),
           ]),
       ]),
     );

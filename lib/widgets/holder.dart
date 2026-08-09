@@ -142,7 +142,7 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
           title: Text(tr('تعديل معلومات النقطة'), style: cairo(17, w: FontWeight.w800, color: C.forest)),
           content: SizedBox(width: 380, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(tr('يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.'),
-                style: body(12.5, color: C.textSecondary, height: 1.5)),
+                style: body(13.5, color: C.textSecondary, height: 1.5)),
             const SizedBox(height: 14),
             field(name, 'اسم النقطة'),
             field(area, 'البلدية'),
@@ -158,7 +158,7 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
             const SizedBox(height: 10),
             field(phone, 'الهاتف', phoneField: true),
             field(details, 'قاعة رياضية، مؤسسة، ..الخ', max: 3),
-            if (err != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(err!, style: body(12, color: C.danger))),
+            if (err != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(err!, style: body(13, color: C.danger))),
           ]))),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dctx, false), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
@@ -232,7 +232,7 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
           content: Row(mainAxisSize: MainAxisSize.min, children: [
             const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: C.green)),
             const SizedBox(width: 14),
-            Flexible(child: Text(label, style: body(13.5, color: C.textSecondary))),
+            Flexible(child: Text(label, style: body(14.5, color: C.textSecondary))),
           ]),
         ),
       ),
@@ -262,13 +262,13 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
         padding: const EdgeInsets.only(bottom: 10),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Text(tr(labels[k]!), style: body(11, color: C.textTertiary)),
+            Text(tr(labels[k]!), style: body(12, color: C.textTertiary)),
             if (changed) ...[
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(color: const Color(0xFFFCE9D6), borderRadius: BorderRadius.circular(6)),
-                child: Text(tr('معدّل'), style: cairo(9.5, w: FontWeight.w800, color: const Color(0xFFC24A18))),
+                child: Text(tr('معدّل'), style: cairo(11, w: FontWeight.w800, color: const Color(0xFFC24A18))),
               ),
             ],
           ]),
@@ -282,7 +282,7 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
               border: Border.all(color: changed ? const Color(0xFFF3E1BC) : C.cardBorder),
             ),
             child: Text(shown.isEmpty ? '—' : shown,
-                style: body(13, color: C.ink, height: 1.4),
+                style: body(14, color: C.ink, height: 1.4),
                 textDirection: isPhone ? TextDirection.ltr : null),
           ),
         ]),
@@ -304,7 +304,7 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
           content: SizedBox(width: 380, child: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(tr('أرسلت طلب تعديل ولم تردّ عليه الإدارة بعد. لا يمكن إرسال طلب جديد حتى تتم الموافقة أو الرفض.'),
-                  style: body(12.5, color: C.textSecondary, height: 1.5)),
+                  style: body(13.5, color: C.textSecondary, height: 1.5)),
               const SizedBox(height: 12),
               ...labels.keys.map(row),
             ],
@@ -338,7 +338,7 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
             Text(tr('الإبلاغ عن امتلاء الحاوية'), style: cairo(16.5, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(tr('سيصل التنبيه إلى الإدارة وإلى موظف الميدان لتفريغ الحاوية. هل تؤكد؟'),
-                style: body(13, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
+                style: body(14, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
           ]),
           // The confirmation is a solid GREEN button, not a text link: it is the
           // action the holder came here to take, so it should read as the
@@ -396,7 +396,7 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
 
     Widget cell(String v, String label) => Expanded(child: Column(children: [
       Text(v, style: cairo(18, w: FontWeight.w900, color: C.forest)),
-      Text(tr(label), style: body(10.5, color: C.textSecondary), textAlign: TextAlign.center),
+      Text(tr(label), style: body(11.5, color: C.textSecondary), textAlign: TextAlign.center),
     ]));
 
     return Container(
@@ -414,9 +414,9 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
             child: mi('star', size: 24, color: C.goldText, fill: true)),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(tr('نقطة الجمع الخاصة بك'), style: body(11.5, color: C.textSecondary)),
+            Text(tr('نقطة الجمع الخاصة بك'), style: body(12.5, color: C.textSecondary)),
             Text('${point['name'] ?? ''}', style: cairo(15.5, w: FontWeight.w800, color: C.forest)),
-            Text('${point['code'] ?? ''}', style: body(11, color: C.textTertiary), textDirection: TextDirection.ltr),
+            Text('${point['code'] ?? ''}', style: body(12, color: C.textTertiary), textDirection: TextDirection.ltr),
           ])),
           const BottleIcon(size: 34, color: C.goldText),
         ]),
@@ -495,13 +495,13 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
             padding: const EdgeInsets.only(top: 5),
             child: Text(
               trf('أُبلغ {t}', {'t': timeAgo(DateTime.tryParse('${_openAlert!['at']}')?.toLocal() ?? DateTime.now())}),
-              style: body(10.5, color: C.textTertiary),
+              style: body(11.5, color: C.textTertiary),
             ),
           ),
         if (last != null) ...[
           const SizedBox(height: 8),
           Text(trf('آخر تفريغ: {t}', {'t': timeAgo(DateTime.tryParse('${last['at']}')?.toLocal() ?? DateTime.now())}),
-              style: body(11, color: C.textTertiary)),
+              style: body(12, color: C.textTertiary)),
         ],
       ]),
     );
@@ -559,7 +559,7 @@ class HoursWheelField extends StatelessWidget {
       // the holder knows what's currently saved before replacing it.
       if (from == null && to == null && fallback.trim().isNotEmpty)
         Padding(padding: const EdgeInsets.only(top: 2),
-          child: Text(trf('الحالي: {v}', {'v': fallback.trim()}), style: body(11.5, color: C.textTertiary))),
+          child: Text(trf('الحالي: {v}', {'v': fallback.trim()}), style: body(12.5, color: C.textTertiary))),
       const SizedBox(height: 6),
       Row(children: [
         Expanded(child: _slot(context, tr('من'), from, onFrom)),
@@ -587,7 +587,7 @@ class HoursWheelField extends StatelessWidget {
             // caption) they used to wrap, which broke "08:00" across lines and
             // read as a hyphenated time.
             Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(cap, style: body(10.5, color: C.textTertiary), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
+              Text(cap, style: body(11.5, color: C.textTertiary), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: AlignmentDirectional.centerStart,
@@ -713,11 +713,11 @@ class _PointsBoardSheetState extends ConsumerState<_PointsBoardSheet> {
                   Center(child: Text(trf('ترتيب نقاط الجمع · {zone}', {'zone': zone}),
                       style: cairo(17, w: FontWeight.w800, color: C.forest))),
                   const SizedBox(height: 4),
-                  Center(child: Text(tr('حسب عدد القارورات المُجمَّعة'), style: body(11.5, color: C.textTertiary))),
+                  Center(child: Text(tr('حسب عدد القارورات المُجمَّعة'), style: body(12.5, color: C.textTertiary))),
                   const SizedBox(height: 14),
                   if (rows.isEmpty)
                     Padding(padding: const EdgeInsets.all(30),
-                        child: Center(child: Text(tr('لا توجد بيانات بعد'), style: body(13, color: C.textTertiary))))
+                        child: Center(child: Text(tr('لا توجد بيانات بعد'), style: body(14, color: C.textTertiary))))
                   else
                     ...rows.map((r) {
                       final mine = r['isMine'] == true;
@@ -739,7 +739,7 @@ class _PointsBoardSheetState extends ConsumerState<_PointsBoardSheet> {
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text('${r['name'] ?? ''}', style: cairo(14, w: mine ? FontWeight.w800 : FontWeight.w700, color: mine ? C.forest : C.ink), overflow: TextOverflow.ellipsis),
                             Text(trf('{d} إيداع · {u} مستخدم', {'d': '${r['deposits'] ?? 0}', 'u': '${r['users'] ?? 0}'}),
-                                style: body(11, color: C.textTertiary)),
+                                style: body(12, color: C.textTertiary)),
                           ])),
                           Row(children: [
                             const BottleIcon(size: 20, color: C.greenMid),
