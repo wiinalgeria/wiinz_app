@@ -157,7 +157,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (dctx) => StatefulBuilder(
-        builder: (dctx, setD) => Directionality(
+        builder: (dctx, setD) {
+          // Built once so the Row below can order the two buttons per language
+          // without duplicating either of them.
+          final backBtn = Expanded(child: Pressable(
+            onTap: () => pageCtrl.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
+            child: Container(height: 52, alignment: Alignment.center,
+              decoration: BoxDecoration(color: const Color(0xFFF1F8EF), borderRadius: BorderRadius.circular(15), border: Border.all(color: C.cardBorder)),
+              child: Text(tr('السابق'), style: cairo(15, w: FontWeight.w700, color: C.forest))),
+          ));
+          return Directionality(
           textDirection: appDirection,
           child: Dialog(
             backgroundColor: Colors.white,
@@ -214,8 +223,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ))),
                 ),
                 const SizedBox(height: 18),
-                // RTL: "التالي/ابدأ" on the RIGHT (first child), "السابق" on the LEFT.
+                // "Next/Start" is the forward action and belongs on the side the
+                // language advances toward: RIGHT in Arabic (first child of a
+                // mirrored Row) and RIGHT in FR/EN (last child). Emitting one
+                // fixed order put "next" on the LEFT and "back" on the RIGHT in
+                // the Latin locales, which is backwards for a carousel.
                 Row(children: [
+                  if (!isRtl && page > 0) ...[backBtn, const SizedBox(width: 10)],
                   Expanded(child: Pressable(
                     onTap: () {
                       if (page < slides.length - 1) {
@@ -229,20 +243,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         boxShadow: [BoxShadow(color: const Color(0xFF3D7C32).withValues(alpha: 0.45), blurRadius: 14, offset: const Offset(0, 6))]),
                       child: Text(tr(page < slides.length - 1 ? 'التالي' : 'ابدأ الآن'), style: cairo(15.5, w: FontWeight.w800, color: Colors.white))),
                   )),
-                  // back button (hidden on the first slide) — appears on the LEFT
-                  if (page > 0) const SizedBox(width: 10),
-                  if (page > 0)
-                    Expanded(child: Pressable(
-                      onTap: () => pageCtrl.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
-                      child: Container(height: 52, alignment: Alignment.center,
-                        decoration: BoxDecoration(color: const Color(0xFFF1F8EF), borderRadius: BorderRadius.circular(15), border: Border.all(color: C.cardBorder)),
-                        child: Text(tr('السابق'), style: cairo(15, w: FontWeight.w700, color: C.forest))),
-                    )),
+                  if (isRtl && page > 0) ...[const SizedBox(width: 10), backBtn],
                 ]),
               ]),
             ),
           ),
-        ),
+        );
+        },
       ),
     );
   }

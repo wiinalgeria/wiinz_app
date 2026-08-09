@@ -255,7 +255,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         Row(children: [
           Expanded(flex: 5, child: _dateDropdown<int>(hint: tr('اليوم'), icon: 'cake', value: _bDay, items: days, label: (d) => '$d', onChanged: (v) => setState(() => _bDay = v))),
           const SizedBox(width: 8),
-          Expanded(flex: 7, child: _dateDropdown<int>(hint: tr('الشهر'), value: _bMonth, items: months, label: (m) => _monthNames[m - 1], onChanged: (v) => setState(() => _bMonth = v))),
+          Expanded(flex: 7, child: _dateDropdown<int>(hint: tr('الشهر'), value: _bMonth, items: months, label: (m) => tr(_monthNames[m - 1]), onChanged: (v) => setState(() => _bMonth = v))),
           const SizedBox(width: 8),
           Expanded(flex: 6, child: _dateDropdown<int>(hint: tr('السنة'), value: _bYear, items: years, label: (y) => '$y', onChanged: (v) => setState(() => _bYear = v))),
         ]),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n.dart';
+import '../../core/place_names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/session.dart';
@@ -323,7 +324,9 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                         Text.rich(TextSpan(text: tr('باقٍ '), style: body(13.5, color: Colors.white.withValues(alpha: 0.75)), children: [
                           TextSpan(text: '$nextLeft Wz', style: cairo(12.5, w: FontWeight.w800, color: C.goldLight)),
                           TextSpan(text: tr(' للوصول إلى '), style: body(13.5, color: Colors.white.withValues(alpha: 0.75))),
-                          TextSpan(text: nextName, style: cairo(12.5, w: FontWeight.w700, color: Colors.white)),
+                          // tr() — the tier names are dictionary keys; without
+                          // this the next-tier name stayed Arabic in FR/EN.
+                          TextSpan(text: tr(nextName), style: cairo(12.5, w: FontWeight.w700, color: Colors.white)),
                         ]), textAlign: TextAlign.start),
                       ])),
                     ]),
@@ -344,7 +347,9 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                 const DailyBonusCard(),
                 const SizedBox(height: 22),
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Row(children: [mi('leaderboard', size: 20, color: C.greenMid), const SizedBox(width: 6), Text(trf('لوحة الصدارة · {zone}', {'zone': '$zone'}), style: cairo(15, w: FontWeight.w800, color: C.forest))]),
+                  Row(children: [mi('leaderboard', size: 20, color: C.greenMid), const SizedBox(width: 6), // placeName(): the zone is a wilaya stored in Arabic, so it needs the
+// Latin form in FR/EN like every other place name in the app.
+Text(trf('لوحة الصدارة · {zone}', {'zone': placeName('$zone')}), style: cairo(15, w: FontWeight.w800, color: C.forest))]),
                   // opens the admin-defined achievements (unlock + claim bonus)
                   Pressable(
                     onTap: () => showAchievementsSheet(context, ref),
@@ -403,8 +408,10 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                       child: mi(h.icon, size: 22, color: h.positive ? C.greenMid : C.goldText)),
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(h.title, style: cairo(14, w: FontWeight.w700, color: C.ink)),
-                      Text(h.when, style: body(12.5, color: C.textTertiary)),
+                      // Both arrive from the server pre-composed in Arabic; see
+                      // trHistoryTitle/trWhen for why tr() alone cannot work.
+                      Text(trHistoryTitle(h.title), style: cairo(14, w: FontWeight.w700, color: C.ink)),
+                      Text(trWhen(h.when), style: body(12.5, color: C.textTertiary)),
                     ])),
                     Text(h.amount, style: cairo(15, w: FontWeight.w800, color: h.positive ? C.greenMid : C.goldText)),
                   ]),
@@ -494,7 +501,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
     return Column(children: [
       if (_pointsZone.isNotEmpty)
         Padding(padding: const EdgeInsets.only(bottom: 8),
-          child: Text(trf('ترتيب نقاط الجمع · {zone} · حسب عدد القارورات المُجمَّعة', {'zone': _pointsZone}), style: body(12.5, color: C.textTertiary))),
+          child: Text(trf('ترتيب نقاط الجمع · {zone} · حسب عدد القارورات المُجمَّعة', {'zone': placeName(_pointsZone)}), style: body(12.5, color: C.textTertiary))),
       ..._pointsBoard.map((r) {
         final mine = r['isMine'] == true;
         final rank = (r['rank'] as num?)?.toInt() ?? 0;

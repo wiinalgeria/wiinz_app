@@ -561,6 +561,28 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
             const SizedBox(width: 12),
             social(FontAwesomeIcons.tiktok, C.ink, 'https://www.tiktok.com/@wiinalgeria0'),
           ]),
+          const SizedBox(height: 18),
+          // Official site. Shown as the bare domain and always LTR — a URL must
+          // not reorder in the Arabic layout.
+          Pressable(
+            pressedScale: 0.94,
+            onTap: () => launchUrl(Uri.parse('https://www.wiinalgeria.com'), mode: LaunchMode.externalApplication),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: C.cardBorder),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                mi('language', size: 19, color: C.green),
+                const SizedBox(width: 8),
+                Text('www.wiinalgeria.com',
+                    textDirection: TextDirection.ltr,
+                    style: cairo(14, w: FontWeight.w700, color: C.greenMid)),
+              ]),
+            ),
+          ),
           const SizedBox(height: 20),
           Text(tr('WIIN · الإصدار 2.0'), style: body(13, color: C.textTertiary)),
         ]),

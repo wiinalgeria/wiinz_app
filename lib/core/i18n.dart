@@ -70,6 +70,64 @@ String trf(String ar, Map<String, String> args) {
   return s;
 }
 
+/// Prefixes the SERVER puts in front of user data when it writes a points
+/// transaction (`addTransaction` in server.js). The remainder is a collect-point
+/// name, a gift title or an achievement name — real content that must never be
+/// translated — so only the prefix is looked up.
+const _historyPrefixes = [
+  'مسح في ', 'إيداع في ', 'مسح من ',
+  'استبدال: ', 'هدية: ', 'استرجاع نقاط: ', 'مكافأة إنجاز: ',
+];
+
+/// Translate a points-history row title.
+///
+/// The server stores these already-composed and in Arabic, e.g.
+/// `'مسح في نقطة الجمع وهران (12 قارورة)'`. A plain [tr] can never match, because
+/// the point name in the middle is data. So: try the whole string (covers the
+/// fixed titles like «المكافأة اليومية»), then peel off the bottle-count suffix,
+/// then translate a known prefix and keep the middle verbatim.
+String trHistoryTitle(String s) {
+  if (_lang == 'ar') return s;
+  final m = _lang == 'fr' ? _fr : _en;
+  final whole = m[s];
+  if (whole != null) return whole;
+
+  var rest = s;
+  var suffix = '';
+  final bottles = RegExp(r'\s*\((\d+)\s*قارورة\)\s*$').firstMatch(rest);
+  if (bottles != null) {
+    rest = rest.substring(0, bottles.start);
+    suffix = ' ${trf('({n} قارورة)', {'n': bottles.group(1)!})}';
+  }
+  for (final p in _historyPrefixes) {
+    if (rest.startsWith(p)) return '${m[p] ?? p}${rest.substring(p.length)}$suffix';
+  }
+  return '${m[rest] ?? rest}$suffix';
+}
+
+/// Translate the server's pre-formatted history timestamp.
+///
+/// `whenLabel()` in server.js emits one of four Arabic forms — «اليوم», «أمس»,
+/// «قبل N أيام», «قبل أسبوع» — so the FR/EN UI showed Arabic dates. Handled
+/// here rather than by changing the stored format, so rows already in the
+/// database keep working.
+/// ⚠️ These do NOT go through the shared dictionary. «اليوم» is already a key
+/// there meaning the birthdate field label "Day"/"Jour" — the same Arabic word
+/// in a different sense. Looking a timestamp up in the shared map would render
+/// a history row as "Day" instead of "Today".
+const _whenFr = {'اليوم': 'Aujourd\'hui', 'أمس': 'hier', 'قبل أسبوع': 'Il y a une semaine'};
+const _whenEn = {'اليوم': 'Today', 'أمس': 'yesterday', 'قبل أسبوع': 'A week ago'};
+
+String trWhen(String s) {
+  if (_lang == 'ar') return s;
+  final t = s.trim();
+  final exact = (_lang == 'fr' ? _whenFr : _whenEn)[t];
+  if (exact != null) return exact;
+  final days = RegExp(r'^قبل\s+(\d+)\s+أيام$').firstMatch(t);
+  if (days != null) return trf('قبل {n} أيام', {'n': days.group(1)!});
+  return s;
+}
+
 /// Relative "when" label for a past timestamp, in the current language.
 /// Clock skew (a timestamp slightly in the future) reads as "now" rather than
 /// a negative age.
@@ -382,6 +440,20 @@ final Map<String, String> _fr = {
   // {n} templates. Without them a fresh timestamp rendered as Arabic «الآن» /
   // «أمس» in the middle of the French UI.
   'الآن': 'à l\'instant', 'أمس': 'hier',
+
+  // Points history — whole titles the server writes with no user data in them.
+  // («المكافأة اليومية» is already above; month names are already in the
+  // birthdate block — they only ever rendered as Arabic because the dropdown
+  // was not calling tr() on them.)
+  'مكافأة دعوة صديق': 'Récompense de parrainage',
+  'مشاهدة فيديو': 'Vidéo regardée',
+  'تعديل إداري': 'Ajustement administratif',
+  'تعديل إداري جماعي': 'Ajustement administratif groupé',
+  // Points history — prefixes; whatever follows is a point/gift name and stays.
+  'مسح في ': 'Scan à ', 'إيداع في ': 'Dépôt à ', 'مسح من ': 'Scan depuis ',
+  'استبدال: ': 'Échange : ', 'هدية: ': 'Cadeau : ',
+  'استرجاع نقاط: ': 'Points remboursés : ', 'مكافأة إنجاز: ': 'Récompense de succès : ',
+  '({n} قارورة)': '({n} bouteilles)',
   'قبل {n} دقيقة': 'il y a {n} min', 'قبل {n} ساعة': 'il y a {n} h',
   'قبل {n} أيام': 'il y a {n} jours', 'قبل {n} أسابيع': 'il y a {n} sem.',
   'قبل {n} أشهر': 'il y a {n} mois', 'قبل {n} سنة': 'il y a {n} an(s)',
@@ -773,6 +845,18 @@ final Map<String, String> _en = {
   // timeAgo(): see the note on the French side -- «الآن» and «أمس» are not
   // {n} templates and were missing, so they leaked Arabic into the English UI.
   'الآن': 'just now', 'أمس': 'yesterday',
+
+  // Points history — whole titles the server writes with no user data in them.
+  // («المكافأة اليومية» and the month names already exist above.)
+  'مكافأة دعوة صديق': 'Referral reward',
+  'مشاهدة فيديو': 'Video watched',
+  'تعديل إداري': 'Admin adjustment',
+  'تعديل إداري جماعي': 'Bulk admin adjustment',
+  // Points history — prefixes; whatever follows is a point/gift name and stays.
+  'مسح في ': 'Scan at ', 'إيداع في ': 'Deposit at ', 'مسح من ': 'Scan from ',
+  'استبدال: ': 'Redeemed: ', 'هدية: ': 'Gift: ',
+  'استرجاع نقاط: ': 'Points refunded: ', 'مكافأة إنجاز: ': 'Achievement reward: ',
+  '({n} قارورة)': '({n} bottles)',
   'قبل {n} دقيقة': '{n} min ago', 'قبل {n} ساعة': '{n} h ago',
   'قبل {n} أيام': '{n} days ago', 'قبل {n} أسابيع': '{n} weeks ago',
   'قبل {n} أشهر': '{n} months ago', 'قبل {n} سنة': '{n} year(s) ago',
