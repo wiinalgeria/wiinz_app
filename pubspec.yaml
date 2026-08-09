@@ -16,7 +16,12 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+# The +N suffix is the Android versionCode. Play rejects any upload whose
+# versionCode is not strictly higher than one already uploaded, and +1 was
+# consumed by the first AAB, so this MUST be bumped for every Play upload.
+# iOS ignores both values: codemagic.yaml passes --build-name/--build-number
+# explicitly, so the iOS build number comes from Codemagic's own counter.
+version: 1.0.0+2
 
 environment:
   sdk: ^3.12.2
