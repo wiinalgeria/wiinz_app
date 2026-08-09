@@ -66,10 +66,10 @@ Future<void> showNotificationDetail(BuildContext context, AppNotification n) {
             const SizedBox(height: 14),
             Text(n.title, style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
             const SizedBox(height: 6),
-            Text(n.whenLabel, style: noto(11.5, color: C.textTertiary)),
+            Text(n.whenLabel, style: body(11.5, color: C.textTertiary)),
             if (n.showAudience) ...[const SizedBox(height: 10), _audienceChip(n)],
             const SizedBox(height: 14),
-            Text(n.body, style: noto(14, color: C.textSecondary, height: 1.6), textAlign: TextAlign.center),
+            Text(n.body, style: body(14, color: C.textSecondary, height: 1.6), textAlign: TextAlign.center),
             const SizedBox(height: 20),
             if (n.hasCta) ...[
               GradientButton(label: n.ctaText, height: 52, onTap: () async {
@@ -145,7 +145,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
                 const SizedBox(height: 8),
                 if (tempPw) _tempPasswordBanner(),
                 if (items.isEmpty && !tempPw)
-                  Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد إشعارات'), style: noto(13, color: C.textTertiary))))
+                  Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد إشعارات'), style: body(13, color: C.textTertiary))))
                 else
                   ...items.map(_row),
               ],
@@ -164,7 +164,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(tr('كلمة مرور مؤقتة'), style: cairo(14, w: FontWeight.w800, color: C.forest)),
-          Text(tr('تم تعيين كلمة مرور مؤقتة لحسابك. غيّرها الآن.'), style: noto(12, color: C.textSecondary)),
+          Text(tr('تم تعيين كلمة مرور مؤقتة لحسابك. غيّرها الآن.'), style: body(12, color: C.textSecondary)),
         ])),
       ]),
       const SizedBox(height: 10),
@@ -189,7 +189,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(n.title, style: cairo(14, w: FontWeight.w700, color: C.ink)),
           if (n.body.isNotEmpty)
-            Text(n.body, style: noto(12, color: C.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(n.body, style: body(12, color: C.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
           if (n.showAudience || n.hasCta) ...[
             const SizedBox(height: 6),
             Row(children: [
@@ -201,7 +201,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
         ])),
         const SizedBox(width: 8),
         Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text(n.whenLabel, style: noto(11, color: C.textTertiary)),
+          Text(n.whenLabel, style: body(11, color: C.textTertiary)),
           const SizedBox(height: 8),
           mi(isRtl ? 'chevron_left' : 'chevron_right', size: 18, color: C.textTertiary),
         ]),
@@ -320,9 +320,9 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: C.green.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(999)),
                           child: Row(mainAxisSize: MainAxisSize.min, children: [mi('eco', size: 15, color: const Color(0xFFCFF3E0)), const SizedBox(width: 5), Text(trf('المستوى: {name}', {'name': tr(levelName)}), style: cairo(12, w: FontWeight.w700, color: const Color(0xFFCFF3E0)))])),
                         const SizedBox(height: 8),
-                        Text.rich(TextSpan(text: tr('باقٍ '), style: noto(12.5, color: Colors.white.withValues(alpha: 0.75)), children: [
+                        Text.rich(TextSpan(text: tr('باقٍ '), style: body(12.5, color: Colors.white.withValues(alpha: 0.75)), children: [
                           TextSpan(text: '$nextLeft Wz', style: cairo(12.5, w: FontWeight.w800, color: C.goldLight)),
-                          TextSpan(text: tr(' للوصول إلى '), style: noto(12.5, color: Colors.white.withValues(alpha: 0.75))),
+                          TextSpan(text: tr(' للوصول إلى '), style: body(12.5, color: Colors.white.withValues(alpha: 0.75))),
                           TextSpan(text: nextName, style: cairo(12.5, w: FontWeight.w700, color: Colors.white)),
                         ]), textAlign: TextAlign.start),
                       ])),
@@ -394,7 +394,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                 const SizedBox(height: 20),
                 Text(tr('سجل النقاط'), style: cairo(15, w: FontWeight.w800, color: C.forest)),
                 const SizedBox(height: 8),
-                if (history.isEmpty) Padding(padding: const EdgeInsets.all(16), child: Center(child: Text(tr('لا توجد حركات بعد'), style: noto(13, color: C.textTertiary))))
+                if (history.isEmpty) Padding(padding: const EdgeInsets.all(16), child: Center(child: Text(tr('لا توجد حركات بعد'), style: body(13, color: C.textTertiary))))
                 else ...history.map((h) => Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFF0E9DA)))),
@@ -404,7 +404,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(h.title, style: cairo(14, w: FontWeight.w700, color: C.ink)),
-                      Text(h.when, style: noto(11.5, color: C.textTertiary)),
+                      Text(h.when, style: body(11.5, color: C.textTertiary)),
                     ])),
                     Text(h.amount, style: cairo(15, w: FontWeight.w800, color: h.positive ? C.greenMid : C.goldText)),
                   ]),
@@ -417,7 +417,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
   Widget _quick(String v, String l, Color color) => Expanded(child: Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.cardBorder)),
-    child: Column(children: [Text(v, style: cairo(22, w: FontWeight.w900, color: color)), const SizedBox(height: 2), Text(tr(l), style: noto(11, color: C.textSecondary), textAlign: TextAlign.center)]),
+    child: Column(children: [Text(v, style: cairo(22, w: FontWeight.w900, color: color)), const SizedBox(height: 2), Text(tr(l), style: body(11, color: C.textSecondary), textAlign: TextAlign.center)]),
   ));
 
   Widget _leaderRow(LeaderRow l) {
@@ -488,13 +488,13 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
   Widget _pointsBoardBody() {
     if (_pointsLoading) return const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()));
     if (_pointsBoard.isEmpty) {
-      return Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد بيانات بعد'), style: noto(13, color: C.textTertiary))));
+      return Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(tr('لا توجد بيانات بعد'), style: body(13, color: C.textTertiary))));
     }
     const medals = [Color(0xFFC9A227), Color(0xFFAEB7C2), Color(0xFFB08D57)];
     return Column(children: [
       if (_pointsZone.isNotEmpty)
         Padding(padding: const EdgeInsets.only(bottom: 8),
-          child: Text(trf('ترتيب نقاط الجمع · {zone} · حسب عدد القارورات المُجمَّعة', {'zone': _pointsZone}), style: noto(11.5, color: C.textTertiary))),
+          child: Text(trf('ترتيب نقاط الجمع · {zone} · حسب عدد القارورات المُجمَّعة', {'zone': _pointsZone}), style: body(11.5, color: C.textTertiary))),
       ..._pointsBoard.map((r) {
         final mine = r['isMine'] == true;
         final rank = (r['rank'] as num?)?.toInt() ?? 0;
@@ -513,7 +513,7 @@ class _StatsSheetState extends ConsumerState<_StatsSheet> {
             const SizedBox(width: 11),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${r['name'] ?? ''}', style: cairo(14, w: mine ? FontWeight.w800 : FontWeight.w700, color: mine ? C.forest : C.ink), overflow: TextOverflow.ellipsis),
-              Text(trf('{d} إيداع · {u} مستخدم', {'d': '${r['deposits'] ?? 0}', 'u': '${r['users'] ?? 0}'}), style: noto(11, color: C.textTertiary)),
+              Text(trf('{d} إيداع · {u} مستخدم', {'d': '${r['deposits'] ?? 0}', 'u': '${r['users'] ?? 0}'}), style: body(11, color: C.textTertiary)),
             ])),
             Row(children: [
               const BottleIcon(size: 20, color: C.greenMid),

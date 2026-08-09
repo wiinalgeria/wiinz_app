@@ -85,7 +85,7 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
           Expanded(child: _loading
               ? const Center(child: CircularProgressIndicator())
               : ListView(padding: const EdgeInsets.fromLTRB(20, 8, 20, 20), children: [
-                  Text(tr('مكافآت خاصة ومحدودة — متوفرة لفترة قصيرة فقط ✨'), style: noto(13.5, color: C.textSecondary)),
+                  Text(tr('مكافآت خاصة ومحدودة — متوفرة لفترة قصيرة فقط ✨'), style: body(13.5, color: C.textSecondary)),
                   const SizedBox(height: 18),
                   if (_hero != null) _heroCard(_hero!),
                   const SizedBox(height: 18),
@@ -121,14 +121,14 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
           const SizedBox(height: 10),
           Text(h.title, style: cairo(21, w: FontWeight.w800, color: Colors.white)),
           const SizedBox(height: 4),
-          Text(h.desc, style: noto(13, color: Colors.white.withValues(alpha: 0.75), height: 1.5)),
+          Text(h.desc, style: body(13, color: Colors.white.withValues(alpha: 0.75), height: 1.5)),
           const SizedBox(height: 16),
           Row(children: [
             mi('schedule', size: 16, color: C.goldLight), const SizedBox(width: 5),
-            Text(h.ends, style: noto(12, color: Colors.white.withValues(alpha: 0.8))),
+            Text(h.ends, style: body(12, color: Colors.white.withValues(alpha: 0.8))),
             const SizedBox(width: 14),
             mi('inventory_2', size: 16, color: C.goldLight), const SizedBox(width: 5),
-            Text(h.left, style: noto(12, color: Colors.white.withValues(alpha: 0.8))),
+            Text(h.left, style: body(12, color: Colors.white.withValues(alpha: 0.8))),
           ]),
           const SizedBox(height: 18),
           Pressable(onTap: _busyId == h.id ? null : () => _claim(h.id, h.title, h.cost, confirmLabel: tr('تأكيد')), child: Container(
@@ -198,8 +198,8 @@ class _GiftsScreenState extends ConsumerState<GiftsScreen> {
           if (g.store.name.isNotEmpty)
             Row(children: [storeLogo(g.store.logo, 16), const SizedBox(width: 4), Flexible(child: Text(g.store.name, style: cairo(12, w: FontWeight.w700, color: C.greenMid), overflow: TextOverflow.ellipsis))]),
           if (g.store.address.isNotEmpty)
-            Row(children: [mi('location_on', size: 12, color: C.textTertiary), const SizedBox(width: 3), Flexible(child: Text(g.store.address, style: noto(11, color: C.textSecondary), overflow: TextOverflow.ellipsis))]),
-          Text(g.left, style: noto(11.5, color: C.textTertiary)),
+            Row(children: [mi('location_on', size: 12, color: C.textTertiary), const SizedBox(width: 3), Flexible(child: Text(g.store.address, style: body(11, color: C.textSecondary), overflow: TextOverflow.ellipsis))]),
+          Text(g.left, style: body(11.5, color: C.textTertiary)),
           const SizedBox(height: 4),
           Text(g.priceLabel, style: cairo(14, w: FontWeight.w800, color: C.goldText)),
         ])),

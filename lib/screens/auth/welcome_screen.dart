@@ -44,7 +44,7 @@ class WelcomeScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Text(tr('اجمع القارورات وحافظ على بيئتك'),
                     textAlign: TextAlign.center,
-                    style: noto(15, color: Colors.white.withValues(alpha: 0.92), height: 1.7)),
+                    style: body(15, color: Colors.white.withValues(alpha: 0.92), height: 1.7)),
                 const Spacer(flex: 2),
                 // إنشاء حساب — filled white/green primary
                 Pressable(

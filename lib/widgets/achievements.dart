@@ -81,7 +81,7 @@ class _AchievementsSheetState extends ConsumerState<_AchievementsSheet> {
                   const SizedBox(height: 14),
                   if (items.isEmpty)
                     Padding(padding: const EdgeInsets.all(30),
-                        child: Center(child: Text(tr('لا توجد إنجازات بعد'), style: noto(13, color: C.textTertiary))))
+                        child: Center(child: Text(tr('لا توجد إنجازات بعد'), style: body(13, color: C.textTertiary))))
                   else
                     ...items.map(_row),
                 ],
@@ -122,7 +122,7 @@ class _AchievementsSheetState extends ConsumerState<_AchievementsSheet> {
           Text('${a['name'] ?? ''}', style: cairo(14.5, w: FontWeight.w800, color: unlocked ? C.forest : C.ink)),
           const SizedBox(height: 3),
           Text(trf('{have} / {need} قارورة', {'have': '$have', 'need': '$need'}),
-              style: noto(11.5, color: C.textSecondary)),
+              style: body(11.5, color: C.textSecondary)),
           const SizedBox(height: 6),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),

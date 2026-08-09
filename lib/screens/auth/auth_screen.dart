@@ -203,7 +203,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             title: Text(tr('استعادة كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(tr('أدخل رقم هاتفك أو بريدك الإلكتروني. سيتواصل معك فريق WIIN لإعادة تعيين كلمة مرورك.'),
-                  style: noto(13, color: C.textSecondary, height: 1.5)),
+                  style: body(13, color: C.textSecondary, height: 1.5)),
               const SizedBox(height: 14),
               Container(
                 height: 52, padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -212,8 +212,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   mi('person', size: 20, color: C.green), const SizedBox(width: 8),
                   Expanded(child: TextField(
                     controller: controller, textDirection: TextDirection.ltr, textAlign: startAlign,
-                    decoration: InputDecoration(hintText: tr('الهاتف أو البريد'), border: InputBorder.none, isDense: true, hintStyle: noto(14, color: C.textTertiary)),
-                    style: noto(15, color: C.ink),
+                    decoration: InputDecoration(hintText: tr('الهاتف أو البريد'), border: InputBorder.none, isDense: true, hintStyle: body(14, color: C.textTertiary)),
+                    style: body(15, color: C.ink),
                   )),
                 ]),
               ),
@@ -272,10 +272,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         if (icon != null) ...[mi(icon, size: 18, color: C.green), const SizedBox(width: 6)],
         Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<T>(
           value: value, isExpanded: true, isDense: true,
-          hint: Text(hint, style: noto(14, color: C.textTertiary), overflow: TextOverflow.ellipsis),
+          hint: Text(hint, style: body(14, color: C.textTertiary), overflow: TextOverflow.ellipsis),
           icon: mi('expand_more', size: 18, color: C.textTertiary),
           menuMaxHeight: 280, // short, scrollable popup instead of a full-height list
-          items: items.map((e) => DropdownMenuItem(value: e, child: Text(label(e), style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(label(e), style: body(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
           onChanged: (v) { if (v != null) onChanged(v); },
         ))),
       ]),
@@ -315,7 +315,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Text(tr('اجمع القارورات وحافظ على بيئتك'),
                       textAlign: TextAlign.center,
-                      style: noto(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92), height: 1.5)),
+                      style: body(13, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92), height: 1.5)),
                   ),
                 ],
               ),
@@ -327,7 +327,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 children: [
                   Text(tr(signup ? 'أنشئ حسابك' : 'مرحباً بعودتك'), style: cairo(23, w: FontWeight.w800, color: C.forest)),
                   const SizedBox(height: 4),
-                  Text(tr(signup ? 'ابدأ رحلتك في إعادة التدوير' : 'سجّل الدخول لمتابعة كسب النقاط'), style: noto(14, color: C.textSecondary)),
+                  Text(tr(signup ? 'ابدأ رحلتك في إعادة التدوير' : 'سجّل الدخول لمتابعة كسب النقاط'), style: body(14, color: C.textSecondary)),
                   const SizedBox(height: 24),
 
                   if (signup) ...[
@@ -405,7 +405,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Row(children: [
                       const Expanded(child: Divider(color: C.inputBorder)),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(tr('أو'), style: noto(12, color: C.textTertiary))),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(tr('أو'), style: body(12, color: C.textTertiary))),
                       const Expanded(child: Divider(color: C.inputBorder)),
                     ]),
                   ),
@@ -425,7 +425,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       child: Text.rich(
                         TextSpan(
                           text: '${tr(signup ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟')} ',
-                          style: noto(15, w: FontWeight.w600, color: const Color(0xFF4A463E)),
+                          style: body(15, w: FontWeight.w600, color: const Color(0xFF4A463E)),
                           children: [TextSpan(text: tr(signup ? 'سجّل الدخول' : 'أنشئ حساباً'), style: cairo(17, w: FontWeight.w800, color: const Color(0xFF3c8a2b)))],
                         ),
                         textAlign: TextAlign.center,
@@ -476,8 +476,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 // alignment has to come from the app language instead.
                 textDirection: ltr ? TextDirection.ltr : null,
                 textAlign: startAlign,
-                decoration: InputDecoration(hintText: hint == null ? null : tr(hint), border: InputBorder.none, isDense: true, hintStyle: noto(15, color: C.textTertiary)),
-                style: noto(16, color: C.ink),
+                decoration: InputDecoration(hintText: hint == null ? null : tr(hint), border: InputBorder.none, isDense: true, hintStyle: body(15, color: C.textTertiary)),
+                style: body(16, color: C.ink),
               )),
               if (hasEye)
                 IconButton(
@@ -510,7 +510,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               value: safeValue, isExpanded: true, icon: mi('expand_more', size: 20, color: C.textTertiary),
               menuMaxHeight: 320, // short, scrollable popup instead of a full-height list
               // wilaya/commune: value stays the Arabic key, label is transliterated in FR/EN
-              items: items.map((e) => DropdownMenuItem(value: e, child: Text(placeName(e), style: noto(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
+              items: items.map((e) => DropdownMenuItem(value: e, child: Text(placeName(e), style: body(15, color: C.ink), overflow: TextOverflow.ellipsis))).toList(),
               onChanged: (v) { if (v != null) onChanged(v); },
             ))),
           ]),

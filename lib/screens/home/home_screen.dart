@@ -87,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Text(tr('فعّل الإشعارات'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             const SizedBox(height: 8),
             Text(tr('الإشعارات معطّلة. فعّلها لتصلك التنبيهات عن الهدايا والنقاط الجديدة حتى وأنت خارج التطبيق.'),
-                textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
+                textAlign: TextAlign.center, style: body(13.5, color: C.textSecondary, height: 1.6)),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('لاحقاً'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
@@ -197,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Text(tr(s.$1), textAlign: TextAlign.center, style: cairo(19, w: FontWeight.w800, color: C.ink)),
                         const SizedBox(height: 8),
                         Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(tr(s.$2), textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6))),
+                          child: Text(tr(s.$2), textAlign: TextAlign.center, style: body(13.5, color: C.textSecondary, height: 1.6))),
                       ]);
                     },
                   ),
@@ -262,7 +262,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Text(tr('كلمة مرور مؤقتة'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             const SizedBox(height: 8),
             Text(tr('تم تعيين كلمة مرور مؤقتة لحسابك من قِبل الإدارة. هل تريد تغييرها الآن إلى كلمة مرور خاصة بك؟'),
-                textAlign: TextAlign.center, style: noto(13.5, color: C.textSecondary, height: 1.6)),
+                textAlign: TextAlign.center, style: body(13.5, color: C.textSecondary, height: 1.6)),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('تخطّي'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
@@ -315,7 +315,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text.rich(TextSpan(text: tr('مرحباً، '), style: noto(14, color: C.textSecondary), children: [
+                      child: Text.rich(TextSpan(text: tr('مرحباً، '), style: body(14, color: C.textSecondary), children: [
                         TextSpan(text: user.name, style: cairo(14, w: FontWeight.w700, color: C.ink)),
                         const TextSpan(text: ' 👋'),
                       ])),
@@ -341,7 +341,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(width: 6),
                       Flexible(child: Text(
                         tr(_flipped ? 'اضغط للعودة إلى الرصيد' : 'اضغط على البطاقة لعرض رمز QR · اسحب للبطاقات الأخرى'),
-                        style: noto(11.5, color: C.textTertiary), overflow: TextOverflow.ellipsis)),
+                        style: body(11.5, color: C.textTertiary), overflow: TextOverflow.ellipsis)),
                     ])),
                     const SizedBox(height: 14),
                     // primary scan
@@ -511,7 +511,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Row(mainAxisSize: MainAxisSize.min, children: [
                 mi('location_on', size: 14, color: Colors.white.withValues(alpha: 0.85)),
                 const SizedBox(width: 4),
-                Text(user.commune, style: noto(12.5, color: Colors.white.withValues(alpha: 0.9))),
+                Text(user.commune, style: body(12.5, color: Colors.white.withValues(alpha: 0.9))),
               ]),
             ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -537,7 +537,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       const SizedBox(height: 5),
       Text(label, style: cairo(10.5, w: FontWeight.w800, color: Colors.white)),
-      Text(caption, style: noto(9, color: Colors.white.withValues(alpha: 0.6)), textDirection: TextDirection.ltr),
+      Text(caption, style: body(9, color: Colors.white.withValues(alpha: 0.6)), textDirection: TextDirection.ltr),
     ]);
 
     return Container(
@@ -554,7 +554,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 12),
               Text(user.name, style: cairo(17, w: FontWeight.w700, color: Colors.white)),
               const SizedBox(height: 14),
-              Text(tr('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك'), style: noto(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.start),
+              Text(tr('اعرض هذا الرمز لموظف نقطة الجمع ليضيف نقاطك'), style: body(11.5, color: Colors.white.withValues(alpha: 0.55), height: 1.5), textAlign: TextAlign.start),
             ])),
           ])
         : Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
@@ -649,11 +649,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (adImg == null) Positioned(left: -30, bottom: -40, child: Container(width: 150, height: 150, decoration: BoxDecoration(color: C.gold.withValues(alpha: 0.85), shape: BoxShape.circle))),
           if (adImg == null) Positioned(left: 20, top: 20, child: Container(width: 90, height: 90, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.12), shape: BoxShape.circle))),
           Positioned(top: 8, right: 12, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.22), borderRadius: BorderRadius.circular(6)),
-            child: Text(tr('إعلان'), style: noto(10, w: FontWeight.w600, color: Colors.white)))),
+            child: Text(tr('إعلان'), style: body(10, w: FontWeight.w600, color: Colors.white)))),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 20), child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, style: cairo(19, w: FontWeight.w800, color: Colors.white, height: 1.3), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
-            Text(sub, style: noto(12.5, color: Colors.white.withValues(alpha: 0.85)), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(sub, style: body(12.5, color: Colors.white.withValues(alpha: 0.85)), maxLines: 1, overflow: TextOverflow.ellipsis),
             if (hasCta) ...[
               const SizedBox(height: 10),
               Container(
@@ -778,7 +778,7 @@ class _PromoDialogState extends State<_PromoDialog> {
           if (s.title.isNotEmpty) Text(s.title, textAlign: TextAlign.center, style: cairo(19, w: FontWeight.w800, color: C.forest)),
           if (s.subtitle.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(s.subtitle, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: noto(13.5, color: C.textSecondary, height: 1.6)),
+            Text(s.subtitle, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: body(13.5, color: C.textSecondary, height: 1.6)),
           ],
           if (hasCta) ...[
             const SizedBox(height: 16),

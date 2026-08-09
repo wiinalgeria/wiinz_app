@@ -69,7 +69,7 @@ class _UserProfileSheetState extends ConsumerState<_UserProfileSheet> {
           if (loading) return const Center(child: Padding(padding: EdgeInsets.all(50), child: CircularProgressIndicator()));
           if (failed || p == null) {
             return Center(child: Padding(padding: const EdgeInsets.all(40),
-              child: Text(tr('تعذّر تحميل الملف الشخصي'), style: noto(14, color: C.textSecondary))));
+              child: Text(tr('تعذّر تحميل الملف الشخصي'), style: body(14, color: C.textSecondary))));
           }
           return ListView(
             controller: scroll,
@@ -109,7 +109,7 @@ class _UserProfileSheetState extends ConsumerState<_UserProfileSheet> {
           const SizedBox(height: 4),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             mi('location_on', size: 14, color: const Color(0xFFCFF3E0)), const SizedBox(width: 4),
-            Text(region, style: noto(12.5, color: const Color(0xFFCFF3E0))),
+            Text(region, style: body(12.5, color: const Color(0xFFCFF3E0))),
           ]),
         ],
         const SizedBox(height: 14),
@@ -130,7 +130,7 @@ class _UserProfileSheetState extends ConsumerState<_UserProfileSheet> {
         ),
         if (joined != null) ...[
           const SizedBox(height: 10),
-          Text(trf('انضم {t}', {'t': timeAgo(joined)}), style: noto(11.5, color: Colors.white.withValues(alpha: 0.6))),
+          Text(trf('انضم {t}', {'t': timeAgo(joined)}), style: body(11.5, color: Colors.white.withValues(alpha: 0.6))),
         ],
       ]),
     );
@@ -153,7 +153,7 @@ class _UserProfileSheetState extends ConsumerState<_UserProfileSheet> {
         mi(icon, size: 22, color: color), const SizedBox(height: 6),
         Text(v, style: cairo(20, w: FontWeight.w900, color: color)),
         const SizedBox(height: 2),
-        Text(tr(label), style: noto(11, color: C.textSecondary), textAlign: TextAlign.center),
+        Text(tr(label), style: body(11, color: C.textSecondary), textAlign: TextAlign.center),
       ]),
     ));
     return Row(children: [
@@ -214,7 +214,7 @@ class _UserProfileSheetState extends ConsumerState<_UserProfileSheet> {
         const SizedBox(height: 8),
         Text(tr(title), style: cairo(11, w: FontWeight.w800, color: unlocked ? C.forest : C.textTertiary), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
         const SizedBox(height: 2),
-        Text(tr(desc), style: noto(8.5, color: C.textTertiary), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+        Text(tr(desc), style: body(8.5, color: C.textTertiary), textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
       ]),
     );
   }

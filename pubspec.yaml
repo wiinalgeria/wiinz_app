@@ -45,7 +45,10 @@ dependencies:
   shared_preferences: ^2.5.5
   http: ^1.6.0
   go_router: ^17.3.0
-  google_fonts: ^8.1.0
+  # google_fonts REMOVED deliberately. It fetched Cairo/Noto from
+  # fonts.gstatic.com at first launch, so the app rendered Arabic in the
+  # platform fallback font until that download finished — and permanently when
+  # offline. Cairo is now bundled from assets/fonts. See lib/theme/app_theme.dart.
   material_symbols_icons: ^4.2951.0
   maplibre_gl: ^0.26.2
   url_launcher: ^6.3.2
@@ -99,6 +102,25 @@ flutter:
     - assets/images/splash-screen.jpg
     - assets/images/wiin-logo-green.png
     - assets/images/wiin-logo-white.png
+
+  # Cairo is the app's only type family — it covers Arabic, Latin and the
+  # French accents, so nothing falls back to a system font. Bundled rather
+  # than fetched at runtime; see the google_fonts note in dependencies.
+  # Weights match what the UI actually asks for: w400 body, w600/w700/w800
+  # headings, w900 display.
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Cairo-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Cairo-Black.ttf
+          weight: 900
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

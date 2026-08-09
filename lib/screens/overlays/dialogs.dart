@@ -23,7 +23,7 @@ Future<bool> showConfirm(BuildContext context, {required String title, required 
           const SizedBox(height: 16),
           Text(tr(title), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
           const SizedBox(height: 6),
-          Text(message, style: noto(14, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
+          Text(message, style: body(14, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
           const SizedBox(height: 22),
           Row(children: [
             Expanded(child: Pressable(
@@ -67,7 +67,7 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
             const SizedBox(height: 16),
             Text(tr(title), style: cairo(19, w: FontWeight.w800, color: C.forest), textAlign: TextAlign.center),
             const SizedBox(height: 4),
-            Text(pointName, style: noto(13, color: C.textSecondary)),
+            Text(pointName, style: body(13, color: C.textSecondary)),
             const SizedBox(height: 20),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               _stepBtn('remove', () { if (count > 1) setLocal(() => count--); }, enabled: count > 1),
@@ -87,7 +87,7 @@ Future<int?> showBottleStepper(BuildContext context, {required String pointName,
             if (atMax) ...[
               const SizedBox(height: 8),
               Text(trf('الحد الأقصى {n} قارورة في الإيداع الواحد', {'n': '$maxBottles'}),
-                textAlign: TextAlign.center, style: noto(12, color: C.goldText)),
+                textAlign: TextAlign.center, style: body(12, color: C.goldText)),
             ],
             const SizedBox(height: 22),
             Row(children: [
@@ -175,7 +175,7 @@ class _CooldownDialogState extends State<_CooldownDialog> {
             const SizedBox(height: 6),
             Text(done ? tr('انتهى وقت الانتظار، يمكنك مسح رمز QR وإيداع قارورات جديدة')
                       : tr('يمكنك إيداع قارورات جديدة بعد'),
-              style: noto(13.5, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
+              style: body(13.5, color: C.textSecondary, height: 1.5), textAlign: TextAlign.center),
             if (!done) ...[
               const SizedBox(height: 14),
               Container(
@@ -224,7 +224,7 @@ Future<void> showScanIntro(BuildContext context) {
             : mi(icon, size: 21, color: C.greenMid),
       ),
       const SizedBox(width: 12),
-      Expanded(child: Text(tr(title), style: noto(13.5, color: C.textSecondary, height: 1.45))),
+      Expanded(child: Text(tr(title), style: body(13.5, color: C.textSecondary, height: 1.45))),
       const SizedBox(width: 8),
       Text('$n', style: cairo(19, w: FontWeight.w900, color: C.tint4)),
     ]),
@@ -284,7 +284,7 @@ Future<void> showScanSuccess(BuildContext context, {required int points, require
           const SizedBox(height: 18),
           Text(tr('تمت إضافة نقاطك!'), style: cairo(23, w: FontWeight.w800, color: C.forest)),
           const SizedBox(height: 6),
-          Text(tr('شكراً لمساهمتك في إعادة التدوير ♻️'), style: noto(14, color: C.textSecondary)),
+          Text(tr('شكراً لمساهمتك في إعادة التدوير ♻️'), style: body(14, color: C.textSecondary)),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
@@ -296,7 +296,7 @@ Future<void> showScanSuccess(BuildContext context, {required int points, require
             ]),
           ),
           const SizedBox(height: 12),
-          Text.rich(TextSpan(text: tr('رصيدك الآن '), style: noto(13, color: const Color(0xFF6B6459)), children: [
+          Text.rich(TextSpan(text: tr('رصيدك الآن '), style: body(13, color: const Color(0xFF6B6459)), children: [
             TextSpan(text: '$newBalance Wz', style: cairo(13, w: FontWeight.w800, color: C.goldText)),
           ])),
           const SizedBox(height: 20),
@@ -325,7 +325,7 @@ Future<void> showCodePopup(BuildContext context, {required String title, require
             const SizedBox(height: 12),
             Text(tr('تم الاستلام بنجاح!'), style: cairo(20, w: FontWeight.w800, color: Colors.white)),
             const SizedBox(height: 4),
-            Text(tr(title), style: noto(13, color: Colors.white.withValues(alpha: 0.7))),
+            Text(tr(title), style: body(13, color: Colors.white.withValues(alpha: 0.7))),
           ]),
         ),
         Padding(
@@ -341,7 +341,7 @@ Future<void> showCodePopup(BuildContext context, {required String title, require
               width: double.infinity, padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: const Color(0xFFF5FBF7), borderRadius: BorderRadius.circular(16), border: Border.all(color: C.tint4, width: 2)),
               child: Column(children: [
-                Text('CODE', style: noto(10, color: C.textSecondary, w: FontWeight.w600)),
+                Text('CODE', style: body(10, color: C.textSecondary, w: FontWeight.w600)),
                 Text(code, style: cairo(26, w: FontWeight.w900, color: C.forest, spacing: 3), textDirection: TextDirection.ltr),
               ]),
             ),
@@ -357,8 +357,8 @@ Future<void> showCodePopup(BuildContext context, {required String title, require
                     const SizedBox(width: 12),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(store.name, style: cairo(15, w: FontWeight.w800, color: C.forest)),
-                      if (store.address.isNotEmpty) Row(children: [mi('location_on', size: 13, color: C.textTertiary), const SizedBox(width: 3), Expanded(child: Text(store.address, style: noto(11.5, color: C.textSecondary), overflow: TextOverflow.ellipsis))]),
-                      if (store.phone.isNotEmpty) Row(children: [mi('call', size: 13, color: C.green), const SizedBox(width: 3), Text(store.phone, style: noto(11.5, color: C.textSecondary), textDirection: TextDirection.ltr)]),
+                      if (store.address.isNotEmpty) Row(children: [mi('location_on', size: 13, color: C.textTertiary), const SizedBox(width: 3), Expanded(child: Text(store.address, style: body(11.5, color: C.textSecondary), overflow: TextOverflow.ellipsis))]),
+                      if (store.phone.isNotEmpty) Row(children: [mi('call', size: 13, color: C.green), const SizedBox(width: 3), Text(store.phone, style: body(11.5, color: C.textSecondary), textDirection: TextDirection.ltr)]),
                     ])),
                   ]),
                   if (store.hasLocation) ...[
@@ -376,7 +376,7 @@ Future<void> showCodePopup(BuildContext context, {required String title, require
               ),
             ],
             const SizedBox(height: 12),
-            Text(trf('رصيدك الآن {n} Wz', {'n': '$balance'}), style: noto(12, color: C.textTertiary)),
+            Text(trf('رصيدك الآن {n} Wz', {'n': '$balance'}), style: body(12, color: C.textTertiary)),
             const SizedBox(height: 16),
             GradientButton(label: tr('تم'), height: 52, onTap: () => Navigator.pop(context)),
           ]),

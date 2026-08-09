@@ -123,7 +123,7 @@ class _NotificationHostState extends ConsumerState<NotificationHost> with Widget
                       const SizedBox(width: 12),
                       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text(n.title, style: cairo(14, w: FontWeight.w800, color: C.forest)),
-                        Text(n.body, style: noto(12, color: C.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        Text(n.body, style: body(12, color: C.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
                       ])),
                       mi('notifications', size: 20, color: C.gold, fill: true),
                     ]),

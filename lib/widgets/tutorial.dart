@@ -109,7 +109,7 @@ class _TutorialViewState extends State<_TutorialView> {
                       const SizedBox(height: 22),
                       Text(tr(s.title), textAlign: TextAlign.center, style: cairo(24, w: FontWeight.w900, color: Colors.white)),
                       const SizedBox(height: 14),
-                      Text(tr(s.body), textAlign: TextAlign.center, style: noto(15, color: Colors.white.withValues(alpha: 0.82), height: 1.7)),
+                      Text(tr(s.body), textAlign: TextAlign.center, style: body(15, color: Colors.white.withValues(alpha: 0.82), height: 1.7)),
                     ]),
                   );
                 },

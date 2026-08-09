@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Design tokens taken directly from the WIIN redesign handoff.
 class C {
@@ -79,16 +78,30 @@ class C {
   ];
 }
 
-TextStyle cairo(double size, {FontWeight w = FontWeight.w700, Color color = C.ink, double? height, double? spacing}) =>
-    GoogleFonts.cairo(fontSize: size, fontWeight: w, color: color, height: height, letterSpacing: spacing);
+/// The single type family. Cairo covers Arabic, Latin and the French accents,
+/// so the app no longer mixes it with Noto Sans Arabic.
+///
+/// ⚠️ These are BUNDLED (assets/fonts, declared in pubspec). They used to come
+/// from `google_fonts`, which downloads from fonts.gstatic.com on FIRST LAUNCH
+/// and falls back to the platform font until that finishes — so a user opening
+/// the app offline, or on a slow connection, saw Roboto/SF rendering Arabic
+/// instead of the designed face. Bundling removes that failure and the
+/// launch-time network call. Do not reintroduce the package.
+const _fontFamily = 'Cairo';
 
-TextStyle noto(double size, {FontWeight w = FontWeight.w400, Color color = C.ink, double? height}) =>
-    GoogleFonts.notoSansArabic(fontSize: size, fontWeight: w, color: color, height: height);
+/// Display/heading style — heavier by default.
+TextStyle cairo(double size, {FontWeight w = FontWeight.w700, Color color = C.ink, double? height, double? spacing}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w, color: color, height: height, letterSpacing: spacing);
+
+/// Body style — same family, lighter by default. Named `body` because it is no
+/// longer Noto; a function called `noto()` returning Cairo would be a trap.
+TextStyle body(double size, {FontWeight w = FontWeight.w400, Color color = C.ink, double? height}) =>
+    TextStyle(fontFamily: _fontFamily, fontSize: size, fontWeight: w, color: color, height: height);
 
 final appTheme = ThemeData(
   useMaterial3: true,
+  fontFamily: _fontFamily,
   scaffoldBackgroundColor: C.sand,
   colorScheme: ColorScheme.fromSeed(seedColor: C.green, primary: C.green),
-  textTheme: GoogleFonts.notoSansArabicTextTheme(),
   splashFactory: InkRipple.splashFactory,
 );
