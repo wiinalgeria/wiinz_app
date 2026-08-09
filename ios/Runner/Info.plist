@@ -66,23 +66,32 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<!-- Purpose strings. Arabic first (the app is Arabic-first and the market is
-	     Algeria), English appended so an App Store reviewer reads them without a
-	     translator. See the localization note in HANDOFF-CURRENT.md if these ever
-	     need to become per-language InfoPlist.strings files. -->
+	<!-- Purpose strings. ENGLISH here in the base Info.plist; Arabic and French
+	     live in ar.lproj/fr.lproj/InfoPlist.strings and override these on a
+	     device set to those languages.
+	     ⚠️ DO NOT put Arabic first in this file again. Build 7 shipped
+	     Arabic-first strings with English trailing after an em-dash, and was
+	     REJECTED under Guideline 2.5.1 + 5.1.1 ("purpose strings … do not
+	     clearly state why access is needed") — an English-locale reviewer saw a
+	     wall of Arabic before reaching the reason. The base string is what any
+	     locale without its own .lproj falls back to, including Apple's.
+	     Each string must say WHAT is accessed, WHY, and WHAT HAPPENS TO THE
+	     DATA — the third part is what Guideline 5.1.1 asks for. -->
 	<key>NSCameraUsageDescription</key>
-	<string>يستخدم WIIN الكاميرا لمسح رموز QR في نقاط الجمع لتسجيل قواريرك وكسب النقاط. — WIIN uses the camera to scan the QR code at a collection point when you deposit bottles.</string>
+	<string>WIIN uses the camera only to scan the QR code displayed at a WIIN collection point, so the bottles you deposit there are credited to your account as Wz points. The camera is not used anywhere else, and no photo or video is ever recorded, stored or sent.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>يستخدم WIIN موقعك لعرض أقرب نقاط الجمع على الخريطة وترتيبها حسب المسافة. — WIIN uses your location to show nearby collection points on the map and sort them by distance.</string>
-	<!-- ⚠️ Required even though WIIN never requests "always" location. Apple's
-	     ITMS-90683 check is on the APIs the BINARY REFERENCES, not the ones you
-	     call: geolocator/permission_handler link the always-authorization API,
-	     so the purpose string must exist or the upload is flagged. Worded to
-	     match reality — the app only ever asks for while-in-use. -->
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>يستخدم WIIN موقعك أثناء استعمال التطبيق فقط، لعرض أقرب نقاط الجمع وترتيبها حسب المسافة. لا يتتبّع التطبيق موقعك في الخلفية. — WIIN uses your location only while you are using the app, to show nearby collection points and sort them by distance. It does not track your location in the background.</string>
+	<string>WIIN uses your location only while the app is open, to show the collection points nearest to you on the map and sort them by distance. Your location stays on your device: it is never uploaded, stored or shared.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>يستخدم WIIN مكتبة الصور لاختيار صورة ملفك الشخصي. — WIIN uses your photo library so you can pick a profile picture.</string>
+	<string>WIIN opens your photo library only when you tap your profile picture to change it. Only the single image you choose is uploaded, and it is used solely as your avatar inside the app.</string>
+	<!-- ⚠️ NSLocationAlwaysAndWhenInUseUsageDescription is DELIBERATELY ABSENT.
+	     Commit 0419291 added it to silence the ITMS-90683 delivery WARNING.
+	     Do not ship it. ITMS-90683 is a warning on a delivery Apple accepts —
+	     build 7 went straight into review carrying it. Declaring an
+	     always/background location purpose string in an app that has no
+	     background-location feature is the textbook trigger for the very
+	     Guideline 2.5.1/5.1.1 rejection this app just received, and it would
+	     also contradict the App Privacy answer (Location NOT collected) and the
+	     privacy policy at wiinalgeria.com/confidentialite. -->
 
 	<!-- The app ships no encryption of its own; it only talks HTTPS to the WIIN
 	     API, which is exempt. Declaring it here means TestFlight never blocks a

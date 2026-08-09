@@ -1,0 +1,9 @@
+/* WIIN — iOS permission purpose strings (English).
+   Mirrors the base Info.plist. Kept as an explicit en.lproj so that adding a
+   language later never silently changes what an English reviewer sees. */
+
+"NSCameraUsageDescription" = "WIIN uses the camera only to scan the QR code displayed at a WIIN collection point, so the bottles you deposit there are credited to your account as Wz points. The camera is not used anywhere else, and no photo or video is ever recorded, stored or sent.";
+
+"NSLocationWhenInUseUsageDescription" = "WIIN uses your location only while the app is open, to show the collection points nearest to you on the map and sort them by distance. Your location stays on your device: it is never uploaded, stored or shared.";
+
+"NSPhotoLibraryUsageDescription" = "WIIN opens your photo library only when you tap your profile picture to change it. Only the single image you choose is uploaded, and it is used solely as your avatar inside the app.";

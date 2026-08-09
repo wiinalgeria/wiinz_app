@@ -1,0 +1,10 @@
+/* WIIN — iOS permission purpose strings (Arabic).
+   Shown on devices set to Arabic. The base Info.plist stays English so that an
+   App Store reviewer on an English device reads a reason, not a script they
+   cannot parse — that was the Guideline 2.5.1/5.1.1 rejection of build 7. */
+
+"NSCameraUsageDescription" = "يستخدم WIIN الكاميرا فقط لمسح رمز QR المعروض في نقطة جمع WIIN، حتى تُحتسب القوارير التي تودعها نقاطًا (Wz) في حسابك. لا تُستخدم الكاميرا في أي مكان آخر، ولا يتم تسجيل أو حفظ أو إرسال أي صورة أو فيديو.";
+
+"NSLocationWhenInUseUsageDescription" = "يستخدم WIIN موقعك أثناء فتح التطبيق فقط، لعرض أقرب نقاط الجمع إليك على الخريطة وترتيبها حسب المسافة. يبقى موقعك على جهازك: لا يتم رفعه أو تخزينه أو مشاركته.";
+
+"NSPhotoLibraryUsageDescription" = "يفتح WIIN معرض الصور فقط عندما تضغط على صورة ملفك الشخصي لتغييرها. تُرفع الصورة التي تختارها وحدها، وتُستخدم كصورة شخصية داخل التطبيق فقط.";

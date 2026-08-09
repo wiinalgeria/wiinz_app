@@ -1,0 +1,9 @@
+/* WIIN — iOS permission purpose strings (French).
+   Shown on devices set to French. See ar.lproj for the rationale on why the
+   base Info.plist stays English. */
+
+"NSCameraUsageDescription" = "WIIN utilise l'appareil photo uniquement pour scanner le code QR affiché dans un point de collecte WIIN, afin que les bouteilles que vous y déposez soient créditées en points Wz sur votre compte. L'appareil photo n'est utilisé nulle part ailleurs, et aucune photo ni vidéo n'est enregistrée, conservée ou envoyée.";
+
+"NSLocationWhenInUseUsageDescription" = "WIIN utilise votre position uniquement lorsque l'application est ouverte, pour afficher les points de collecte les plus proches sur la carte et les trier par distance. Votre position reste sur votre appareil : elle n'est ni transmise, ni conservée, ni partagée.";
+
+"NSPhotoLibraryUsageDescription" = "WIIN ouvre votre photothèque uniquement lorsque vous appuyez sur votre photo de profil pour la changer. Seule l'image que vous sélectionnez est envoyée, et elle sert uniquement d'avatar dans l'application.";
