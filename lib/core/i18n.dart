@@ -362,6 +362,10 @@ final Map<String, String> _fr = {
   'إيداع الآن': 'Déposer maintenant',
   'دقيقة': 'min', 'ثانية': 'sec',
   // notifications
+  // timeAgo(): all eight branches must be here, including the two that are not
+  // {n} templates. Without them a fresh timestamp rendered as Arabic «الآن» /
+  // «أمس» in the middle of the French UI.
+  'الآن': 'à l\'instant', 'أمس': 'hier',
   'قبل {n} دقيقة': 'il y a {n} min', 'قبل {n} ساعة': 'il y a {n} h',
   'قبل {n} أيام': 'il y a {n} jours', 'قبل {n} أسابيع': 'il y a {n} sem.',
   'قبل {n} أشهر': 'il y a {n} mois', 'قبل {n} سنة': 'il y a {n} an(s)',
@@ -750,6 +754,9 @@ final Map<String, String> _en = {
   'إيداع الآن': 'Deposit now',
   'دقيقة': 'min', 'ثانية': 'sec',
   // notifications
+  // timeAgo(): see the note on the French side -- «الآن» and «أمس» are not
+  // {n} templates and were missing, so they leaked Arabic into the English UI.
+  'الآن': 'just now', 'أمس': 'yesterday',
   'قبل {n} دقيقة': '{n} min ago', 'قبل {n} ساعة': '{n} h ago',
   'قبل {n} أيام': '{n} days ago', 'قبل {n} أسابيع': '{n} weeks ago',
   'قبل {n} أشهر': '{n} months ago', 'قبل {n} سنة': '{n} year(s) ago',
