@@ -45,9 +45,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final password = TextEditingController();
   final confirmPassword = TextEditingController();
   final invite = TextEditingController();
+
+  // One node per text field so the keyboard's "next" key can move the caret
+  // itself. Chaining explicitly rather than calling FocusScope.nextFocus()
+  // is deliberate: next-focus walks the whole traversal order, which here
+  // runs through the wilaya/commune dropdowns and the gender buttons, so it
+  // would close the keyboard mid-form. The dropdowns all carry a default and
+  // are meant to be tapped, so the typing path skips over them.
+  final _fName = FocusNode();
+  final _fPhone = FocusNode();
+  final _fInvite = FocusNode();
+  final _fEmail = FocusNode();
+  final _fPassword = FocusNode();
+  final _fConfirm = FocusNode();
+
   bool _showPassword = false;
   bool _showConfirm = false;
   bool _showErrors = false; // turns on field-level red validation after a submit attempt
+
+  // Kept so the listeners can be removed again — a closure passed straight to
+  // addListener cannot be, and this screen is pushed and popped repeatedly.
+  void _onFieldChanged() { if (mounted) setState(() {}); }
+
+  List<TextEditingController> get _controllers => [name, phone, email, password, confirmPassword, invite];
+  List<FocusNode> get _nodes => [_fName, _fPhone, _fInvite, _fEmail, _fPassword, _fConfirm];
 
   @override
   void initState() {
@@ -56,8 +77,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     // live-refresh so the password red/green state, email validity and
     // required-field borders update as the user types
     for (final c in [name, phone, email, password, confirmPassword]) {
-      c.addListener(() { if (mounted) setState(() {}); });
+      c.addListener(_onFieldChanged);
     }
+  }
+
+  @override
+  void dispose() {
+    for (final c in [name, phone, email, password, confirmPassword]) {
+      c.removeListener(_onFieldChanged);
+    }
+    for (final c in _controllers) { c.dispose(); }
+    for (final n in _nodes) { n.dispose(); }
+    super.dispose();
   }
 
   // ---- signup field validation helpers ----
@@ -122,6 +153,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _submit() async {
     setState(() => error = null);
+    // Close the keyboard first: the submit can be slow on a bad connection and
+    // leaving it up hides the spinner and the error box underneath it.
+    FocusScope.of(context).unfocus();
     final notifier = ref.read(sessionProvider.notifier);
     if (signup) {
       setState(() => _showErrors = true);
@@ -154,13 +188,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         'inviteCode': invite.text.trim(),
       });
       if (!mounted) return;
-      if (err == null) { context.go('/home'); } else { setState(() => error = err); }
+      if (err == null) { _saveAutofill(); context.go('/home'); } else { setState(() => error = err); }
     } else {
       final ex = await notifier.login(email.text.trim(), password.text);
       if (!mounted) return;
-      if (ex == null) { context.go('/home'); } else { _showLoginError(ex); }
+      if (ex == null) { _saveAutofill(); context.go('/home'); } else { _showLoginError(ex); }
     }
   }
+
+  // Tells the platform the autofill context is finished, which is what makes
+  // Android/iOS offer "save this password". Only on success: prompting to save
+  // a credential the server just rejected would store the wrong one.
+  void _saveAutofill() => TextInput.finishAutofillContext();
 
   void _showLoginError(ApiException ex) {
     final badPassword = ex.code == 'bad_password';
@@ -192,6 +231,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   Future<void> _forgotPassword() async {
     final controller = TextEditingController(text: email.text.trim());
     bool sending = false;
+    // Declared up here so the field's onSubmitted and the button can share one
+    // implementation — otherwise pressing the keyboard's send key and tapping
+    // the button drift apart.
+    Future<void> send(BuildContext dctx, void Function(void Function()) setD) async {
+      final contact = controller.text.trim();
+      if (contact.isEmpty || sending) return;
+      setD(() => sending = true);
+      try {
+        await ref.read(apiClientProvider).requestPasswordReset(contact);
+      } catch (_) {}
+      if (!dctx.mounted) return;
+      Navigator.pop(dctx);
+      if (mounted) showToast(context, tr('تم إرسال طلبك ✓ سيتواصل معك الفريق قريباً'));
+    }
     await showDialog<void>(
       context: context,
       builder: (dctx) => StatefulBuilder(
@@ -212,6 +265,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   mi('person', size: 20, color: C.green), const SizedBox(width: 8),
                   Expanded(child: TextField(
                     controller: controller, textDirection: TextDirection.ltr, textAlign: startAlign,
+                    autofocus: true, // it is the only field in the dialog
+                    autocorrect: false, enableSuggestions: false,
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.username],
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => send(dctx, setD),
                     decoration: InputDecoration(hintText: tr('الهاتف أو البريد'), border: InputBorder.none, isDense: true, hintStyle: body(14, color: C.textTertiary)),
                     style: body(15, color: C.ink),
                   )),
@@ -221,17 +280,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             actions: [
               TextButton(onPressed: () => Navigator.pop(dctx), child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w700, color: C.textSecondary))),
               TextButton(
-                onPressed: sending ? null : () async {
-                  final contact = controller.text.trim();
-                  if (contact.isEmpty) return;
-                  setD(() => sending = true);
-                  try {
-                    await ref.read(apiClientProvider).requestPasswordReset(contact);
-                  } catch (_) {}
-                  if (!dctx.mounted) return;
-                  Navigator.pop(dctx);
-                  if (mounted) showToast(context, tr('تم إرسال طلبك ✓ سيتواصل معك الفريق قريباً'));
-                },
+                onPressed: sending ? null : () => send(dctx, setD),
                 child: Text(sending ? '...' : tr('إرسال الطلب'), style: cairo(14, w: FontWeight.w800, color: C.green)),
               ),
             ],
@@ -239,6 +288,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         ),
       ),
     );
+    controller.dispose();
   }
 
   // Birthdate via three dropdowns: Day · Month (Algerian names) · Year.
@@ -287,155 +337,185 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     ref.watch(localeProvider);
     final loading = ref.watch(sessionProvider).loading;
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // full-bleed green header (extends under the status bar, edge to edge)
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 24, bottom: 24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [Color(0xFF63c24e), C.green, Color(0xFF3c8a2b)]),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-              ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Align(alignment: AlignmentDirectional.centerStart, child: LanguagePill(textColor: Colors.white)),
+      // Tapping the background dismisses the keyboard. On a form this long it
+      // otherwise stays up over the submit button with no obvious way down.
+      // `opaque` so the empty space between fields counts as a hit, and
+      // `translucent` behaviour is not wanted — buttons and fields above still
+      // receive their own taps first.
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        // Groups the fields into one autofill context, which is what lets the
+        // OS save the credential as a set when the form is submitted.
+        child: AutofillGroup(
+          child: SingleChildScrollView(
+            // Scaffold.resizeToAvoidBottomInset already shrinks the body for
+            // the keyboard and EditableText scrolls the focused field into
+            // view, so no manual inset here — adding one double-counts.
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // full-bleed green header (extends under the status bar, edge to edge)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 24, bottom: 24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(begin: Alignment.topRight, end: Alignment.bottomLeft, colors: [Color(0xFF63c24e), C.green, Color(0xFF3c8a2b)]),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
                   ),
-                  const SizedBox(height: 6),
-                  Image.asset('assets/images/wiin-logo-white.png', width: 158),
-                  const SizedBox(height: 14),
-                  // The FR/EN slogans are far longer than the Arabic and wrap to
-                  // two lines, so they need to stay centred under the logo rather
-                  // than align to the text-direction start.
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(tr('اجمع القارورات وحافظ على بيئتك'),
-                      textAlign: TextAlign.center,
-                      style: body(14, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92), height: 1.5)),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Align(alignment: AlignmentDirectional.centerStart, child: LanguagePill(textColor: Colors.white)),
+                      ),
+                      const SizedBox(height: 6),
+                      Image.asset('assets/images/wiin-logo-white.png', width: 158),
+                      const SizedBox(height: 14),
+                      // The FR/EN slogans are far longer than the Arabic and wrap to
+                      // two lines, so they need to stay centred under the logo rather
+                      // than align to the text-direction start.
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Text(tr('اجمع القارورات وحافظ على بيئتك'),
+                          textAlign: TextAlign.center,
+                          style: body(14, w: FontWeight.w600, color: Colors.white.withValues(alpha: 0.92), height: 1.5)),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 26, 24, 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(tr(signup ? 'أنشئ حسابك' : 'مرحباً بعودتك'), style: cairo(23, w: FontWeight.w800, color: C.forest)),
-                  const SizedBox(height: 4),
-                  Text(tr(signup ? 'ابدأ رحلتك في إعادة التدوير' : 'سجّل الدخول لمتابعة كسب النقاط'), style: body(14, color: C.textSecondary)),
-                  const SizedBox(height: 24),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 26, 24, 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(tr(signup ? 'أنشئ حسابك' : 'مرحباً بعودتك'), style: cairo(23, w: FontWeight.w800, color: C.forest)),
+                      const SizedBox(height: 4),
+                      Text(tr(signup ? 'ابدأ رحلتك في إعادة التدوير' : 'سجّل الدخول لمتابعة كسب النقاط'), style: body(14, color: C.textSecondary)),
+                      const SizedBox(height: 24),
 
-                  if (signup) ...[
-                    _field('الاسم الكامل', name, 'person', hint: tr('اكتب اسمك'), borderColor: _reqBorder(name), footer: _reqFooter(name)),
-                    _field('رقم الهاتف', phone, 'phone', hint: '05 00 00 00 00', ltr: true, keyboard: TextInputType.phone, maxLength: 10, digitsOnly: true,
-                        borderColor: _reqBorder(phone), footer: _reqFooter(phone)),
-                    Row(children: [
-                      Expanded(child: _dropdown('الولاية', wilaya ?? _wilayas.first, _wilayas, (v) => setState(() {
-                        wilaya = v;
-                        commune = _communes.isNotEmpty ? _communes.first : null; // reset commune to the new wilaya's first
-                      }), 'map')),
-                      const SizedBox(width: 10),
-                      Expanded(child: _dropdown('البلدية', commune ?? (_communes.isNotEmpty ? _communes.first : ''), _communes, (v) => setState(() => commune = v), null)),
-                    ]),
-                    const SizedBox(height: 14),
-                    _birthdateField(),
-                    const SizedBox(height: 14),
-                    _genderPicker(),
-                    const SizedBox(height: 14),
-                    _field('رمز الدعوة (اختياري)', invite, 'confirmation_number', hint: 'WIIN-U-000', ltr: true),
-                  ],
+                      if (signup) ...[
+                        _field('الاسم الكامل', name, 'person', hint: tr('اكتب اسمك'), borderColor: _reqBorder(name), footer: _reqFooter(name),
+                            focusNode: _fName, nextFocus: _fPhone,
+                            autofill: const [AutofillHints.name], capitalization: TextCapitalization.words),
+                        _field('رقم الهاتف', phone, 'phone', hint: '05 00 00 00 00', ltr: true, keyboard: TextInputType.phone, maxLength: 10, digitsOnly: true,
+                            borderColor: _reqBorder(phone), footer: _reqFooter(phone),
+                            focusNode: _fPhone, nextFocus: _fInvite,
+                            autofill: const [AutofillHints.telephoneNumberNational]),
+                        Row(children: [
+                          Expanded(child: _dropdown('الولاية', wilaya ?? _wilayas.first, _wilayas, (v) => setState(() {
+                            wilaya = v;
+                            commune = _communes.isNotEmpty ? _communes.first : null; // reset commune to the new wilaya's first
+                          }), 'map')),
+                          const SizedBox(width: 10),
+                          Expanded(child: _dropdown('البلدية', commune ?? (_communes.isNotEmpty ? _communes.first : ''), _communes, (v) => setState(() => commune = v), null)),
+                        ]),
+                        const SizedBox(height: 14),
+                        _birthdateField(),
+                        const SizedBox(height: 14),
+                        _genderPicker(),
+                        const SizedBox(height: 14),
+                        _field('رمز الدعوة (اختياري)', invite, 'confirmation_number', hint: 'WIIN-U-000', ltr: true,
+                            focusNode: _fInvite, nextFocus: _fEmail),
+                      ],
 
-                  _field(signup ? 'البريد الإلكتروني (غير إلزامي)' : 'البريد الإلكتروني أو رقم الهاتف',
-                      email, 'mail',
-                      hint: signup ? 'exemple@domain.com' : 'name@wiinz.com أو 05 00 00 00 00',
-                      ltr: true, keyboard: signup ? TextInputType.emailAddress : TextInputType.text,
-                      borderColor: signup ? _emailBorder() : null, footer: signup ? _emailFooter() : null),
-                  _field('كلمة المرور', password, 'lock', obscure: true, ltr: true, hint: '••••••••',
-                      visible: _showPassword, onToggleVisible: () => setState(() => _showPassword = !_showPassword),
-                      borderColor: signup ? _pwBorder() : null, footer: signup ? _pwFooter() : null),
-                  if (signup)
-                    _field('تأكيد كلمة المرور', confirmPassword, 'lock', obscure: true, ltr: true, hint: '••••••••',
-                        visible: _showConfirm, onToggleVisible: () => setState(() => _showConfirm = !_showConfirm),
-                        borderColor: _confBorder(), footer: _confFooter()),
-                  const SizedBox(height: 8),
+                      _field(signup ? 'البريد الإلكتروني (غير إلزامي)' : 'البريد الإلكتروني أو رقم الهاتف',
+                          email, 'mail',
+                          hint: signup ? 'exemple@domain.com' : 'name@wiinz.com أو 05 00 00 00 00',
+                          ltr: true, keyboard: signup ? TextInputType.emailAddress : TextInputType.text,
+                          borderColor: signup ? _emailBorder() : null, footer: signup ? _emailFooter() : null,
+                          focusNode: _fEmail, nextFocus: _fPassword,
+                          // On login this box takes an email OR a phone number, so
+                          // it is a username, not an email, as far as autofill goes.
+                          autofill: signup ? const [AutofillHints.email] : const [AutofillHints.username]),
+                      _field('كلمة المرور', password, 'lock', obscure: true, ltr: true, hint: '••••••••',
+                          visible: _showPassword, onToggleVisible: () => setState(() => _showPassword = !_showPassword),
+                          borderColor: signup ? _pwBorder() : null, footer: signup ? _pwFooter() : null,
+                          focusNode: _fPassword, nextFocus: signup ? _fConfirm : null,
+                          // newPassword is what makes a manager offer to generate
+                          // and save one instead of trying to fill an existing one.
+                          autofill: signup ? const [AutofillHints.newPassword] : const [AutofillHints.password]),
+                      if (signup)
+                        _field('تأكيد كلمة المرور', confirmPassword, 'lock', obscure: true, ltr: true, hint: '••••••••',
+                            visible: _showConfirm, onToggleVisible: () => setState(() => _showConfirm = !_showConfirm),
+                            borderColor: _confBorder(), footer: _confFooter(),
+                            focusNode: _fConfirm, autofill: const [AutofillHints.newPassword]),
+                      const SizedBox(height: 8),
 
-                  if (error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(color: const Color(0xFFFCEBEA), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFF3C6C1))),
+                      if (error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(color: const Color(0xFFFCEBEA), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFF3C6C1))),
+                            child: Row(children: [
+                              mi('info', size: 20, color: C.danger),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(error!, style: cairo(13, w: FontWeight.w700, color: C.danger))),
+                            ]),
+                          ),
+                        ),
+
+                      GradientButton(
+                        label: tr(signup ? 'إنشاء الحساب' : 'تسجيل الدخول'),
+                        leading: loading
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            // "Forward" points left in Arabic and right in FR/EN.
+                            // This used to flip unconditionally, so the Latin
+                            // locales got a back-pointing arrow on a submit button.
+                            : Transform.flip(flipX: isRtl, child: mi('arrow_forward', color: Colors.white, size: 22)),
+                        onTap: loading ? () {} : _submit,
+                      ),
+
+                      if (!signup)
+                        Center(
+                          child: Pressable(
+                            pressedScale: 0.97,
+                            onTap: _forgotPassword,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                              child: Text(tr('نسيت كلمة المرور؟'), textAlign: TextAlign.center, style: cairo(16, w: FontWeight.w800, color: const Color(0xFF3c8a2b))),
+                            ),
+                          ),
+                        ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Row(children: [
-                          mi('info', size: 20, color: C.danger),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(error!, style: cairo(13, w: FontWeight.w700, color: C.danger))),
+                          const Expanded(child: Divider(color: C.inputBorder)),
+                          Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(tr('أو'), style: body(13, color: C.textTertiary))),
+                          const Expanded(child: Divider(color: C.inputBorder)),
                         ]),
                       ),
-                    ),
 
-                  GradientButton(
-                    label: tr(signup ? 'إنشاء الحساب' : 'تسجيل الدخول'),
-                    leading: loading
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        // "Forward" points left in Arabic and right in FR/EN.
-                        // This used to flip unconditionally, so the Latin
-                        // locales got a back-pointing arrow on a submit button.
-                        : Transform.flip(flipX: isRtl, child: mi('arrow_forward', color: Colors.white, size: 22)),
-                    onTap: loading ? () {} : _submit,
-                  ),
-
-                  if (!signup)
-                    Center(
-                      child: Pressable(
-                        pressedScale: 0.97,
-                        onTap: _forgotPassword,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                          child: Text(tr('نسيت كلمة المرور؟'), textAlign: TextAlign.center, style: cairo(16, w: FontWeight.w800, color: const Color(0xFF3c8a2b))),
+                      // large tappable toggle (bordered button)
+                      Pressable(
+                        pressedScale: 0.98,
+                        onTap: () => setState(() { signup = !signup; error = null; _showErrors = false; }),
+                        child: Container(
+                          height: 56,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F8EF),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFF3c8a2b), width: 1.6),
+                          ),
+                          child: Text.rich(
+                            TextSpan(
+                              text: '${tr(signup ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟')} ',
+                              style: body(15, w: FontWeight.w600, color: const Color(0xFF4A463E)),
+                              children: [TextSpan(text: tr(signup ? 'سجّل الدخول' : 'أنشئ حساباً'), style: cairo(17, w: FontWeight.w800, color: const Color(0xFF3c8a2b)))],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Row(children: [
-                      const Expanded(child: Divider(color: C.inputBorder)),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(tr('أو'), style: body(13, color: C.textTertiary))),
-                      const Expanded(child: Divider(color: C.inputBorder)),
-                    ]),
+                    ],
                   ),
-
-                  // large tappable toggle (bordered button)
-                  Pressable(
-                    pressedScale: 0.98,
-                    onTap: () => setState(() { signup = !signup; error = null; _showErrors = false; }),
-                    child: Container(
-                      height: 56,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F8EF),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF3c8a2b), width: 1.6),
-                      ),
-                      child: Text.rich(
-                        TextSpan(
-                          text: '${tr(signup ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟')} ',
-                          style: body(15, w: FontWeight.w600, color: const Color(0xFF4A463E)),
-                          children: [TextSpan(text: tr(signup ? 'سجّل الدخول' : 'أنشئ حساباً'), style: cairo(17, w: FontWeight.w800, color: const Color(0xFF3c8a2b)))],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -443,13 +523,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Widget _field(String label, TextEditingController c, String icon,
       {String? hint, bool obscure = false, bool ltr = false, TextInputType? keyboard, int? maxLength, bool digitsOnly = false,
-      bool? visible, VoidCallback? onToggleVisible, Color? borderColor, Widget? footer}) {
+      bool? visible, VoidCallback? onToggleVisible, Color? borderColor, Widget? footer,
+      FocusNode? focusNode, FocusNode? nextFocus, List<String>? autofill,
+      TextCapitalization capitalization = TextCapitalization.none}) {
     final formatters = <TextInputFormatter>[
       if (digitsOnly) FilteringTextInputFormatter.digitsOnly,
       if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
     ];
     final hasEye = obscure && onToggleVisible != null;
     final hidden = obscure && !(visible ?? false);
+    // The last field in the chain submits from the keyboard instead of showing
+    // a "next" that would go nowhere.
+    final isLast = nextFocus == null;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -470,12 +555,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               const SizedBox(width: 10),
               Expanded(child: TextField(
                 controller: c, obscureText: hidden, keyboardType: keyboard,
+                focusNode: focusNode,
                 inputFormatters: formatters.isEmpty ? null : formatters,
                 // `ltr` forces character order for phone/email/password. It also
                 // makes TextAlign.start resolve to left in every language, so
                 // alignment has to come from the app language instead.
                 textDirection: ltr ? TextDirection.ltr : null,
                 textAlign: startAlign,
+                textCapitalization: capitalization,
+                // Lets the OS/password manager fill the form. Without hints
+                // Android and iOS offer nothing at all, so every signup is
+                // typed by hand.
+                autofillHints: autofill,
+                // The keyboard drives the form: "next" walks the chain, and
+                // the final field submits. Before this every field showed the
+                // same key and the keyboard had to be dismissed by hand
+                // between one field and the next.
+                textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
+                onSubmitted: (_) {
+                  if (isLast) { _submit(); } else { FocusScope.of(context).requestFocus(nextFocus); }
+                },
+                // Autocorrect mangles an address or a code and the suggestion
+                // strip leaks what was typed into a password box.
+                autocorrect: !ltr && !obscure,
+                enableSuggestions: !ltr && !obscure,
                 decoration: InputDecoration(hintText: hint == null ? null : tr(hint), border: InputBorder.none, isDense: true, hintStyle: body(15, color: C.textTertiary)),
                 style: body(16, color: C.ink),
               )),

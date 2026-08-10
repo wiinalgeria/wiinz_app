@@ -362,6 +362,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     final name = TextEditingController(text: user.name);
     final phone = TextEditingController(text: user.phone);
     final address = TextEditingController(text: user.address);
+    // Phone sits between these two in the sheet but is read-only, so the
+    // keyboard's "next" skips it rather than landing on a locked box.
+    final fName = FocusNode(), fAddress = FocusNode();
     String wilaya = _wilayas.contains(user.wilaya) ? user.wilaya : _wilayas.first;
     final startCommunes = _communesOf(wilaya);
     String commune = startCommunes.contains(user.commune)
@@ -388,7 +391,12 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 child: Column(children: [
                   Stack(children: [
                     _avatar(ref.read(sessionProvider).user ?? user, 84),
-                    Positioned(bottom: 0, left: 0, child: Container(width: 30, height: 30,
+                    // Positioned does not mirror with Directionality — only
+                    // PositionedDirectional does — so `left: 0` pinned the
+                    // camera badge to the physical left in every language. As
+                    // `end` it stays exactly where it is in Arabic and moves to
+                    // the matching corner in FR/EN.
+                    PositionedDirectional(bottom: 0, end: 0, child: Container(width: 30, height: 30,
                       decoration: BoxDecoration(color: C.green, shape: BoxShape.circle, border: Border.all(color: C.sand, width: 2)),
                       child: mi('photo_camera', size: 17, color: Colors.white))),
                   ]),
@@ -397,11 +405,15 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 ]),
               ),
               const SizedBox(height: 18),
-              _editField('الاسم الكامل', name, 'person'),
+              _editField('الاسم الكامل', name, 'person',
+                  focusNode: fName, nextFocus: fAddress,
+                  autofill: const [AutofillHints.name], capitalization: TextCapitalization.words),
               // Phone is shown but not user-editable (it's the login identifier);
               // an admin changes it from the dashboard if needed.
               _editField('رقم الهاتف', phone, 'phone', ltr: true, readOnly: true, note: 'لا يمكن تغيير رقم الهاتف. تواصل مع الدعم لتعديله.'),
-              _editField('العنوان', address, 'location_on'),
+              _editField('العنوان', address, 'location_on',
+                  focusNode: fAddress,
+                  autofill: const [AutofillHints.fullStreetAddress], capitalization: TextCapitalization.sentences),
               Row(children: [
                 // Changing the wilaya resets the commune to that wilaya's first,
                 // so the commune list always belongs to the chosen wilaya.
@@ -429,7 +441,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           )),
         ),
       )),
-    );
+    ).whenComplete(() {
+      for (final c in [name, phone, address]) { c.dispose(); }
+      for (final n in [fName, fAddress]) { n.dispose(); }
+    });
   }
 
   Widget _editDropdown(String label, String value, List<String> items, String? icon, ValueChanged<String> onChanged) {
@@ -452,7 +467,9 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     ]));
   }
 
-  Widget _editField(String label, TextEditingController c, String icon, {bool ltr = false, bool readOnly = false, String? note}) {
+  Widget _editField(String label, TextEditingController c, String icon, {bool ltr = false, bool readOnly = false, String? note,
+      FocusNode? focusNode, FocusNode? nextFocus, List<String>? autofill,
+      TextCapitalization capitalization = TextCapitalization.none}) {
     return Padding(padding: const EdgeInsets.only(bottom: 14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(tr(label), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
       const SizedBox(height: 8),
@@ -462,11 +479,19 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
         child: Row(children: [mi(icon, size: 22, color: readOnly ? C.textTertiary : C.green), const SizedBox(width: 10),
           Expanded(child: TextField(controller: c, readOnly: readOnly, enableInteractiveSelection: !readOnly,
             textDirection: ltr ? TextDirection.ltr : null, textAlign: startAlign,
+            focusNode: focusNode,
+            textCapitalization: capitalization,
+            autofillHints: autofill,
+            autocorrect: !ltr, enableSuggestions: !ltr,
+            textInputAction: nextFocus == null ? TextInputAction.done : TextInputAction.next,
+            onSubmitted: (_) { if (nextFocus != null) FocusScope.of(context).requestFocus(nextFocus); },
             decoration: const InputDecoration(border: InputBorder.none, isDense: true),
             style: body(16, color: readOnly ? C.textSecondary : C.ink))),
           if (readOnly) mi('lock', size: 18, color: C.textTertiary),
         ])),
-      if (note != null) Padding(padding: const EdgeInsets.only(top: 6, right: 4), child: Text(tr(note), style: body(12.5, color: C.textTertiary))),
+      // Directional: as `right: 4` the note was indented from the correct edge
+      // in Arabic and from the wrong one in FR/EN.
+      if (note != null) Padding(padding: const EdgeInsetsDirectional.only(top: 6, start: 4), child: Text(tr(note), style: body(12.5, color: C.textTertiary))),
     ]));
   }
 
@@ -474,6 +499,7 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
   void _openSupport() {
     final subject = TextEditingController();
     final details = TextEditingController();
+    final fSubject = FocusNode(), fDetails = FocusNode();
     bool sending = false;
     showModalBottomSheet(
       context: context, backgroundColor: C.sand, isScrollControlled: true,
@@ -491,12 +517,20 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
               const SizedBox(height: 4),
               Text(tr('صف مشكلتك أو اقتراحك وسيتواصل معك فريق WIIN.'), style: body(14, color: C.textSecondary)),
               const SizedBox(height: 18),
-              _editField('عنوان المشكلة / الاقتراح', subject, 'help'),
+              _editField('عنوان المشكلة / الاقتراح', subject, 'help',
+                  focusNode: fSubject, nextFocus: fDetails, capitalization: TextCapitalization.sentences),
               Text(tr('التفاصيل'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
               const SizedBox(height: 8),
               Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: C.inputBorder, width: 1.5)),
                 child: TextField(controller: details, maxLines: 4, textAlign: startAlign,
+                  focusNode: fDetails,
+                  // Free prose: sentence case, and the return key has to insert
+                  // a newline rather than submit, which is what multiline +
+                  // TextInputAction.newline gives.
+                  textCapitalization: TextCapitalization.sentences,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
                   decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: tr('اكتب التفاصيل هنا…'), hintStyle: body(14, color: C.textTertiary)), style: body(15, color: C.ink))),
               const SizedBox(height: 18),
               Row(children: [
@@ -523,7 +557,10 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
           )),
         ),
       )),
-    );
+    ).whenComplete(() {
+      for (final c in [subject, details]) { c.dispose(); }
+      for (final n in [fSubject, fDetails]) { n.dispose(); }
+    });
   }
 
   // ---- About the app ----

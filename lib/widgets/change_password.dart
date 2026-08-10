@@ -39,19 +39,33 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
   final current = TextEditingController();
   final next = TextEditingController();
   final confirm = TextEditingController();
+  final fCurrent = FocusNode(), fNext = FocusNode(), fConfirm = FocusNode();
   bool showCur = false, showNew = false, showConf = false, saving = false;
   String? err;
   await showDialog<void>(
     context: context,
     builder: (dctx) => StatefulBuilder(
       builder: (dctx, setD) {
-        Widget pwField(TextEditingController c, String hint, bool show, VoidCallback toggle) => Container(
-          height: 52, margin: const EdgeInsets.only(top: 10), padding: const EdgeInsets.only(right: 14, left: 4),
+        Widget pwField(TextEditingController c, String hint, bool show, VoidCallback toggle,
+            {FocusNode? node, FocusNode? nextNode, List<String>? autofill, bool autofocus = false}) => Container(
+          height: 52, margin: const EdgeInsets.only(top: 10),
+          // Directional, not physical. The row is [icon, field, eye]; under the
+          // app's Directionality it mirrors, so the wide padding has to follow
+          // the icon rather than sit on a fixed side. As `right:14, left:4` it
+          // was correct in Arabic and put the roomy edge behind the eye button
+          // in FR/EN — the same physical-side bug that hit the text fields.
+          padding: const EdgeInsetsDirectional.only(start: 14, end: 4),
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: C.inputBorder, width: 1.5)),
           child: Row(children: [
             mi('lock', size: 20, color: C.green), const SizedBox(width: 8),
             Expanded(child: TextField(
               controller: c, obscureText: !show, textDirection: TextDirection.ltr, textAlign: startAlign,
+              focusNode: node, autofocus: autofocus,
+              autocorrect: false, enableSuggestions: false,
+              autofillHints: autofill,
+              // "next" through the three boxes; the last one saves.
+              textInputAction: nextNode == null ? TextInputAction.done : TextInputAction.next,
+              onSubmitted: (_) { if (nextNode != null) FocusScope.of(dctx).requestFocus(nextNode); },
               decoration: InputDecoration(hintText: hint, border: InputBorder.none, isDense: true, hintStyle: body(14, color: C.textTertiary)),
               style: body(15, color: C.ink),
             )),
@@ -72,9 +86,12 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
             scrollable: true,
             title: Text(tr('تغيير كلمة المرور'), style: cairo(18, w: FontWeight.w800, color: C.forest)),
             content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              pwField(current, tr('كلمة المرور الحالية'), showCur, () => setD(() => showCur = !showCur)),
-              pwField(next, tr('كلمة المرور الجديدة'), showNew, () => setD(() => showNew = !showNew)),
-              pwField(confirm, tr('تأكيد كلمة المرور الجديدة'), showConf, () => setD(() => showConf = !showConf)),
+              pwField(current, tr('كلمة المرور الحالية'), showCur, () => setD(() => showCur = !showCur),
+                  node: fCurrent, nextNode: fNext, autofocus: true, autofill: const [AutofillHints.password]),
+              pwField(next, tr('كلمة المرور الجديدة'), showNew, () => setD(() => showNew = !showNew),
+                  node: fNext, nextNode: fConfirm, autofill: const [AutofillHints.newPassword]),
+              pwField(confirm, tr('تأكيد كلمة المرور الجديدة'), showConf, () => setD(() => showConf = !showConf),
+                  node: fConfirm, autofill: const [AutofillHints.newPassword]),
               if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: body(13.5, color: C.danger))),
             ]),
             actions: [
@@ -104,4 +121,6 @@ Future<void> showChangePasswordDialog(BuildContext context, WidgetRef ref, {bool
       },
     ),
   );
+  for (final c in [current, next, confirm]) { c.dispose(); }
+  for (final n in [fCurrent, fNext, fConfirm]) { n.dispose(); }
 }

@@ -111,6 +111,9 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
     final address = TextEditingController(text: '${point['address'] ?? ''}');
     final phone = TextEditingController(text: '${point['phone'] ?? ''}');
     final details = TextEditingController(text: '${point['details'] ?? ''}');
+    // Hours sit between address and phone but are picked from wheels, so the
+    // typing chain jumps straight over them.
+    final fName = FocusNode(), fArea = FocusNode(), fAddress = FocusNode(), fPhone = FocusNode(), fDetails = FocusNode();
     // Hours are picked from wheels, not typed, so the stored value is always
     // "HH:MM - HH:MM". A legacy free-text value parses to nulls and is kept
     // as-is unless the holder actually picks a new range.
@@ -121,12 +124,23 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
     String? err;
 
     InputDecoration dec(String l) => InputDecoration(labelText: tr(l), border: const OutlineInputBorder(), isDense: true);
-    Widget field(TextEditingController c, String l, {int max = 1, bool phoneField = false}) => Padding(
+    Widget field(TextEditingController c, String l, {int max = 1, bool phoneField = false, FocusNode? node, FocusNode? nextNode}) => Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: TextField(
         controller: c, maxLines: max,
-        keyboardType: phoneField ? TextInputType.phone : TextInputType.text,
+        focusNode: node,
+        keyboardType: phoneField ? TextInputType.phone : (max > 1 ? TextInputType.multiline : TextInputType.text),
         textDirection: phoneField ? TextDirection.ltr : null,
+        textAlign: startAlign,
+        // Place names and an address read better in sentence case, and the
+        // phone box must not autocorrect.
+        textCapitalization: phoneField ? TextCapitalization.none : TextCapitalization.sentences,
+        autocorrect: !phoneField, enableSuggestions: !phoneField,
+        // A multi-line box keeps its newline key; the single-line ones walk the
+        // chain, and the last submits nothing (the dialog has an explicit
+        // confirm step, so "done" just closes the keyboard).
+        textInputAction: max > 1 ? TextInputAction.newline : (nextNode == null ? TextInputAction.done : TextInputAction.next),
+        onSubmitted: max > 1 ? null : (_) { if (nextNode != null) FocusScope.of(context).requestFocus(nextNode); },
         inputFormatters: phoneField ? [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)] : null,
         decoration: dec(l),
       ),
@@ -144,9 +158,9 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
             Text(tr('يُرسل التعديل كطلب للإدارة، ولا يُطبّق إلا بعد الموافقة. لا يمكن تغيير موقع النقطة على الخريطة.'),
                 style: body(13.5, color: C.textSecondary, height: 1.5)),
             const SizedBox(height: 14),
-            field(name, 'اسم النقطة'),
-            field(area, 'البلدية'),
-            field(address, 'العنوان'),
+            field(name, 'اسم النقطة', node: fName, nextNode: fArea),
+            field(area, 'البلدية', node: fArea, nextNode: fAddress),
+            field(address, 'العنوان', node: fAddress, nextNode: fPhone),
             HoursWheelField(
               label: tr('ساعات العمل'),
               from: hFrom, to: hTo,
@@ -156,8 +170,8 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
               onClear: () => setD(() { hFrom = null; hTo = null; }),
             ),
             const SizedBox(height: 10),
-            field(phone, 'الهاتف', phoneField: true),
-            field(details, 'قاعة رياضية، مؤسسة، ..الخ', max: 3),
+            field(phone, 'الهاتف', phoneField: true, node: fPhone, nextNode: fDetails),
+            field(details, 'قاعة رياضية، مؤسسة، ..الخ', max: 3, node: fDetails),
             if (err != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(err!, style: body(13, color: C.danger))),
           ]))),
           actions: [
@@ -207,6 +221,8 @@ class _HolderCardState extends ConsumerState<HolderCard> with WidgetsBindingObse
         ),
       )),
     );
+    for (final c in [name, area, address, phone, details]) { c.dispose(); }
+    for (final n in [fName, fArea, fAddress, fPhone, fDetails]) { n.dispose(); }
     if (ok == true && mounted) {
       showToast(context, tr('تم إرسال الطلب، سيُطبَّق بعد موافقة الإدارة ✓'));
       // Pull the queued request straight back in, so re-opening the form shows
