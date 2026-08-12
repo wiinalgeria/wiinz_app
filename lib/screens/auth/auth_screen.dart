@@ -19,7 +19,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   late bool signup = widget.initialSignup;
-  String gender = 'male';
+  String? gender; // optional — null until the user chooses (Apple 5.1.1(v))
   String? wilaya;
   String? commune;
   int? _bDay, _bMonth, _bYear; // birthdate parts (month is 1-12)
@@ -183,7 +183,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         'password': password.text,
         'wilaya': wilaya ?? _wilayas.first,
         'commune': commune ?? _communes.first,
-        'gender': gender,
+        'gender': gender ?? '', // blank when unanswered — never assume a value
         'birthdate': _birthdateIso,
         'inviteCode': invite.text.trim(),
       });
@@ -622,12 +622,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 
+  // Gender is OPTIONAL and starts unselected. Apple rejected build 8 under
+  // guideline 5.1.1(v) — an app may not REQUIRE personal information its core
+  // function does not need, and named gender specifically. Tapping the selected
+  // chip clears it again, so a user who taps by accident is not stuck having
+  // answered.
+  //
+  // ⚠️ Do not restore a default value here. `gender = 'male'` was what made
+  // this field impossible to leave blank, and it recorded an answer the user
+  // never gave. The server now stores '' when nothing is chosen.
   Widget _genderPicker() {
     Widget btn(String key, String label, String icon) {
       final on = gender == key;
       return Expanded(child: Pressable(
         pressedScale: 0.95,
-        onTap: () => setState(() => gender = key),
+        onTap: () => setState(() => gender = (gender == key) ? null : key),
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(color: on ? Colors.white : Colors.transparent, borderRadius: BorderRadius.circular(11),
@@ -643,12 +652,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(tr('الجنس'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
+        Text(tr('الجنس (اختياري)'), style: cairo(13, w: FontWeight.w600, color: const Color(0xFF4A463E))),
         const SizedBox(height: 8),
         Container(
           height: 56, padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(color: const Color(0xFFF5EFE2), borderRadius: BorderRadius.circular(16)),
           child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [btn('male', 'ذكر', 'male'), const SizedBox(width: 6), btn('female', 'أنثى', 'female')]),
+        ),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(top: 6, start: 4),
+          child: Text(tr('يمكنك ترك هذا الحقل فارغاً'), style: body(12.5, color: C.textTertiary)),
         ),
       ],
     );

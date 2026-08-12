@@ -100,6 +100,14 @@ class ApiClient {
   Future<void> requestPasswordReset(String contact) async => _post('/auth/reset-request', {'contact': contact});
   Future<Map<String, dynamic>> me() => _get('/me');
 
+  /// Permanently delete the signed-in account. Required by Apple guideline
+  /// 5.1.1(v) for any app that offers account creation — build 8 was rejected
+  /// for not having it. Throws ApiException('bad_password') if the confirmation
+  /// password is wrong. On success every token for this user is already dead:
+  /// the server resolves the user by id on each request.
+  Future<void> deleteAccount(String password) async =>
+      _post('/account/delete', {'password': password});
+
   // push device tokens (best-effort: never surface an error to the user)
   Future<void> registerPushToken(String token) async {
     try { await _post('/push/register', {'token': token}); } catch (_) {}

@@ -21,7 +21,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # consumed by the first AAB, so this MUST be bumped for every Play upload.
 # iOS ignores both values: codemagic.yaml passes --build-name/--build-number
 # explicitly, so the iOS build number comes from Codemagic's own counter.
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.12.2

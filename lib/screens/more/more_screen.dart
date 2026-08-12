@@ -9,6 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/api_client.dart'; // ApiException, for the delete-account error path
 import '../../core/push.dart';
 import '../../core/session.dart';
 import '../../models/models.dart';
@@ -131,7 +132,11 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
                 _settingRow('تغيير كلمة المرور', 'lock', _changePassword),
                 _settingRow('المساعدة والدعم', 'help', _openSupport),
                 _settingRow('تغيير اللغة', 'language', () => showLanguageSheet(context, ref), trailingText: langNames[currentLang]),
-                _settingRow('عن التطبيق', 'info', _openAbout, last: true),
+                _settingRow('عن التطبيق', 'info', _openAbout),
+                // Apple 5.1.1(v): account deletion has to be reachable from
+                // inside the app. Kept in the settings list rather than buried
+                // in the profile sheet so a reviewer finds it where they look.
+                _settingRow('حذف الحساب', 'delete_forever', _deleteAccount, last: true, danger: true),
               ]),
             ),
             const SizedBox(height: 12),
@@ -343,19 +348,132 @@ class _MoreScreenState extends ConsumerState<MoreScreen> {
     );
   }
 
-  Widget _settingRow(String label, String icon, VoidCallback onTap, {bool last = false, String? trailingText}) {
+  Widget _settingRow(String label, String icon, VoidCallback onTap, {bool last = false, String? trailingText, bool danger = false}) {
     return Pressable(pressedScale: 0.98, onTap: onTap, child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFF5EFE2)))),
       child: Row(children: [
-        Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFF1EEE6), borderRadius: BorderRadius.circular(12)), child: mi(icon, size: 22, color: const Color(0xFF6B6459))),
+        Container(width: 40, height: 40,
+          decoration: BoxDecoration(color: danger ? const Color(0xFFFCEBEA) : const Color(0xFFF1EEE6), borderRadius: BorderRadius.circular(12)),
+          child: mi(icon, size: 22, color: danger ? C.danger : const Color(0xFF6B6459))),
         const SizedBox(width: 14),
-        Expanded(child: Text(tr(label), style: cairo(15, w: FontWeight.w700, color: C.ink))),
+        Expanded(child: Text(tr(label), style: cairo(15, w: FontWeight.w700, color: danger ? C.danger : C.ink))),
         if (trailingText != null) Text(trailingText, style: cairo(13, w: FontWeight.w700, color: C.greenMid)),
         const SizedBox(width: 6),
         Transform.flip(flipX: true, child: mi('chevron_right', size: 22, color: const Color(0xFFC7BCA8))),
       ]),
     ));
+  }
+
+  // ---- Delete account (Apple App Store guideline 5.1.1(v)) ----
+  // Any app offering account creation must offer account deletion from inside
+  // the app; build 8 was rejected for not having it. It must be a real delete,
+  // not a deactivate, and must not require phoning or emailing anyone.
+  //
+  // Two steps on purpose: a plain-language warning first, then the password.
+  // Apple permits confirmation steps, and this is irreversible.
+  Future<void> _deleteAccount() async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => Directionality(
+        textDirection: appDirection,
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(children: [
+            mi('warning', size: 24, color: C.danger),
+            const SizedBox(width: 8),
+            Expanded(child: Text(tr('حذف الحساب'), style: cairo(18, w: FontWeight.w800, color: C.danger))),
+          ]),
+          content: Text(
+            tr('سيتم حذف حسابك ونقاطك وسجلك نهائياً. لا يمكن التراجع عن هذا الإجراء ولا استرجاع نقاطك.'),
+            style: body(14.5, color: C.textSecondary, height: 1.6)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dctx, false),
+              child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w800, color: C.textSecondary))),
+            TextButton(onPressed: () => Navigator.pop(dctx, true),
+              child: Text(tr('متابعة'), style: cairo(14, w: FontWeight.w800, color: C.danger))),
+          ],
+        ),
+      ),
+    );
+    if (proceed != true || !mounted) return;
+
+    final pw = TextEditingController();
+    final fPw = FocusNode();
+    bool working = false;
+    String? err;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dctx) => StatefulBuilder(
+        builder: (dctx, setD) {
+          Future<void> confirm() async {
+            if (pw.text.isEmpty || working) return;
+            setD(() { working = true; err = null; });
+            try {
+              await ref.read(apiClientProvider).deleteAccount(pw.text);
+              // The account is gone, so every token for it is already dead.
+              // Clear local session state and leave for the login screen.
+              await ref.read(sessionProvider.notifier).logout();
+              if (dctx.mounted) Navigator.pop(dctx);
+              if (mounted) context.go('/login');
+            } on ApiException catch (e) {
+              setD(() { working = false; err = e.code == 'bad_password' ? tr('كلمة المرور غير صحيحة') : e.message; });
+            } catch (_) {
+              setD(() { working = false; err = tr('حدث خطأ، حاول مجدداً'); });
+            }
+          }
+          return Directionality(
+            textDirection: appDirection,
+            child: AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              scrollable: true,
+              title: Text(tr('تأكيد الحذف'), style: cairo(18, w: FontWeight.w800, color: C.danger)),
+              content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(tr('أدخل كلمة المرور لتأكيد حذف حسابك.'), style: body(14, color: C.textSecondary, height: 1.5)),
+                Container(
+                  height: 52, margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsetsDirectional.only(start: 14, end: 14),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: C.inputBorder, width: 1.5)),
+                  child: Row(children: [
+                    mi('lock', size: 20, color: C.danger), const SizedBox(width: 8),
+                    Expanded(child: TextField(
+                      controller: pw, focusNode: fPw, obscureText: true, autofocus: true,
+                      textDirection: TextDirection.ltr, textAlign: startAlign,
+                      autocorrect: false, enableSuggestions: false,
+                      autofillHints: const [AutofillHints.password],
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => confirm(),
+                      decoration: InputDecoration(hintText: tr('كلمة المرور'), border: InputBorder.none, isDense: true, hintStyle: body(14, color: C.textTertiary)),
+                      style: body(15, color: C.ink),
+                    )),
+                  ]),
+                ),
+                if (err != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(err!, style: body(13, color: C.danger))),
+              ]),
+              actions: [
+                TextButton(onPressed: working ? null : () => Navigator.pop(dctx),
+                  child: Text(tr('إلغاء'), style: cairo(14, w: FontWeight.w800, color: C.textSecondary))),
+                TextButton(
+                  onPressed: working ? null : confirm,
+                  child: working
+                      ? Row(mainAxisSize: MainAxisSize.min, children: [
+                          const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2.2, color: C.danger)),
+                          const SizedBox(width: 8),
+                          Text(tr('جارٍ الحذف...'), style: cairo(14, w: FontWeight.w800, color: C.danger)),
+                        ])
+                      : Text(tr('حذف حسابي نهائياً'), style: cairo(14, w: FontWeight.w800, color: C.danger)),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    pw.dispose();
+    fPw.dispose();
   }
 
   void _editProfile(WiinzUser user) {
