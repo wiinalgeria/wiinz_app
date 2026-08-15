@@ -85,10 +85,20 @@ workflows:
           keychain add-certificates
           xcode-project use-profiles
 
+      # ⚠️ --build-name is READ FROM pubspec.yaml, not hardcoded. It used to say
+      # 1.0.0 literally, which is a trap: bumping pubspec to 1.0.1 for a new App
+      # Store version would still have produced a 1.0.0 build, and App Store
+      # Connect will not let you attach a 1.0.0 build to a 1.0.1 version — you
+      # only find out after a full build + upload cycle.
+      #
+      # The version line is `version: 1.0.1+4`; strip the label and the +N, since
+      # the build number comes from Codemagic's own counter below.
       - name: Flutter build ipa
         script: |
+          BUILD_NAME=$(grep '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
+          echo "Building marketing version $BUILD_NAME (build $BUILD_NUMBER)"
           flutter build ipa --release \
-            --build-name=1.0.0 \
+            --build-name=$BUILD_NAME \
             --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
 
